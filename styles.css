@@ -1626,6 +1626,19 @@ textarea:focus {
   color: var(--gold-primary);
 }
 
+.btn-card-action.btn-add-case-doc {
+  background: rgba(197, 160, 89, 0.08);
+  border-color: rgba(197, 160, 89, 0.35);
+  color: var(--navy-primary);
+  font-weight: 600;
+}
+
+.btn-card-action.btn-add-case-doc:hover {
+  background: var(--gold-primary);
+  border-color: var(--gold-secondary);
+  color: #0d1b2a;
+}
+
 .btn-card-action.danger:hover {
   background: rgba(220, 38, 38, 0.06);
   border-color: var(--status-urgent-border);

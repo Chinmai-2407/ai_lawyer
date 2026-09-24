@@ -401,6 +401,7 @@ let state = {
   stagedDocs: [], // staged documents for new case intake
   activeDocsCaseId: null,
   currentModalAttachedDoc: null,
+  currentQuickAttachedDoc: null,
   previewDoc: null,
   targetEditUserId: null,
   targetResetUserId: null
@@ -626,6 +627,28 @@ const dom = {
   copyDocAiBtn: document.getElementById('copyDocAiBtn'),
   openExternalDocBtn: document.getElementById('openExternalDocBtn'),
   insertAiNotesBtn: document.getElementById('insertAiNotesBtn'),
+
+  // Add New Document to Existing Case Modal
+  addNewDocModal: document.getElementById('addNewDocModal'),
+  addNewDocModalTitle: document.getElementById('addNewDocModalTitle'),
+  addNewDocModalSubtitle: document.getElementById('addNewDocModalSubtitle'),
+  closeAddNewDocModalBtn: document.getElementById('closeAddNewDocModalBtn'),
+  cancelAddNewDocModalBtn: document.getElementById('cancelAddNewDocModalBtn'),
+  addNewDocForm: document.getElementById('addNewDocForm'),
+  selectExistingCase: document.getElementById('selectExistingCase'),
+  addNewDocCasePreview: document.getElementById('addNewDocCasePreview'),
+  quickAddDocDropzone: document.getElementById('quickAddDocDropzone'),
+  quickAddDocInput: document.getElementById('quickAddDocInput'),
+  quickAddDropzoneDefault: document.getElementById('quickAddDropzoneDefault'),
+  quickAddDropzoneAttached: document.getElementById('quickAddDropzoneAttached'),
+  quickAddAttachedFileName: document.getElementById('quickAddAttachedFileName'),
+  quickAddAttachedFileSize: document.getElementById('quickAddAttachedFileSize'),
+  removeQuickAddDocBtn: document.getElementById('removeQuickAddDocBtn'),
+  quickAddDocCategory: document.getElementById('quickAddDocCategory'),
+  quickAddDocTitle: document.getElementById('quickAddDocTitle'),
+  quickAddDocNotes: document.getElementById('quickAddDocNotes'),
+  quickAddAutoAiSummary: document.getElementById('quickAddAutoAiSummary'),
+  btnOpenGlobalAddDocModal: document.getElementById('btnOpenGlobalAddDocModal'),
 
   // User Add/Edit Modal
   userModal: document.getElementById('userModal'),
@@ -1338,6 +1361,34 @@ function setupEventListeners() {
   }
   if (dom.openExternalDocBtn) {
     dom.openExternalDocBtn.addEventListener('click', openCurrentDocInNewTab);
+  }
+
+  // Add New Document to Existing Case Modal Event Handlers
+  if (dom.btnOpenGlobalAddDocModal) {
+    dom.btnOpenGlobalAddDocModal.addEventListener('click', () => openAddNewDocModal());
+  }
+  if (dom.closeAddNewDocModalBtn) {
+    dom.closeAddNewDocModalBtn.addEventListener('click', closeAddNewDocModal);
+  }
+  if (dom.cancelAddNewDocModalBtn) {
+    dom.cancelAddNewDocModalBtn.addEventListener('click', closeAddNewDocModal);
+  }
+  if (dom.addNewDocModal) {
+    dom.addNewDocModal.addEventListener('click', (e) => {
+      if (e.target === dom.addNewDocModal) closeAddNewDocModal();
+    });
+  }
+  if (dom.selectExistingCase) {
+    dom.selectExistingCase.addEventListener('change', updateAddNewDocCasePreview);
+  }
+  if (dom.quickAddDocInput) {
+    dom.quickAddDocInput.addEventListener('change', handleQuickAddDocSelect);
+  }
+  if (dom.removeQuickAddDocBtn) {
+    dom.removeQuickAddDocBtn.addEventListener('click', resetQuickAddDocDropzone);
+  }
+  if (dom.addNewDocForm) {
+    dom.addNewDocForm.addEventListener('submit', handleAddNewDocSubmit);
   }
 
   // Admin Portal: Open Add User Modal
@@ -3138,15 +3189,14 @@ function createCaseCardHTML(item, todayStr) {
         </div>
 
         <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+          <button type="button" class="card-doc-attachment add-doc-pill btn-add-case-doc" data-id="${item.id}" title="Add new document to this case">
+            <i class="fa-solid fa-file-circle-plus gold-text"></i> + Add Doc
+          </button>
           ${docsCount > 0 ? `
             <span class="card-doc-attachment btn-manage-docs" data-id="${item.id}" title="Manage ${docsCount} case document(s) in Vault">
               <i class="fa-solid fa-folder-open gold-text"></i> ${docsCount} Doc${docsCount !== 1 ? 's' : ''}
             </span>
-          ` : `
-            <span class="card-doc-attachment add-doc-pill btn-manage-docs" data-id="${item.id}" title="Attach document to this docket">
-              <i class="fa-solid fa-plus"></i> Add Docs
-            </span>
-          `}
+          ` : ''}
           <span class="badge-group" title="Practice Group"><i class="fa-solid fa-users"></i> ${escapeHTML(item.group || item.caseCategory)}</span>
           <span class="badge-assignee ${isMyCase ? 'my-assignment' : ''}" title="Assigned Subordinate Counsel">
             <i class="fa-solid fa-user-check"></i> ${escapeHTML(item.assignedToName || 'Unassigned')}
@@ -3199,6 +3249,9 @@ function createCaseCardHTML(item, todayStr) {
           <a href="tel:${escapeHTML(item.clientPhone)}" class="btn-card-action" title="Call Client">
             <i class="fa-solid fa-phone"></i> Call
           </a>
+          <button type="button" class="btn-card-action btn-add-case-doc" data-id="${item.id}" title="Add New Document to this Case" style="font-weight: 700; border-color: rgba(197, 160, 89, 0.4);">
+            <i class="fa-solid fa-file-circle-plus gold-text"></i> + Add Doc
+          </button>
           <button type="button" class="btn-card-action btn-manage-docs" data-id="${item.id}" title="View, Add & Manage Documents (${docsCount})">
             <i class="fa-solid fa-folder-open"></i> Docs <span class="updates-count-dot">${docsCount}</span>
           </button>
@@ -3222,6 +3275,15 @@ function createCaseCardHTML(item, todayStr) {
 }
 
 function attachCardActionListeners() {
+  // Add Document to Case button
+  document.querySelectorAll('.btn-add-case-doc').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const caseId = btn.getAttribute('data-id');
+      openAddNewDocModal(caseId);
+    });
+  });
+
   // Manage Documents button
   document.querySelectorAll('.btn-manage-docs').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -3440,6 +3502,217 @@ function highlightSearchMatch(text, query, mode, currentField) {
 
   const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
   return escaped.replace(regex, '<mark class="search-highlight">$1</mark>');
+}
+
+// ==========================================================================
+// 7.2.5 DEDICATED ADD DOCUMENT TO EXISTING CASE MODAL
+// ==========================================================================
+
+function openAddNewDocModal(targetCaseId = null) {
+  if (!state.cases || state.cases.length === 0) {
+    showToast('No cases found in registry to add documents to. Please create a case first.', 'error');
+    return;
+  }
+
+  // Populate cases dropdown
+  if (dom.selectExistingCase) {
+    dom.selectExistingCase.innerHTML = state.cases.map(c => `
+      <option value="${c.id}" ${targetCaseId && targetCaseId === c.id ? 'selected' : ''}>
+        ${escapeHTML(c.caseNumber)} - ${escapeHTML(c.caseTitle)} (${escapeHTML(c.clientName)})
+      </option>
+    `).join('');
+
+    // If targetCaseId is specified, ensure it is selected
+    if (targetCaseId) {
+      dom.selectExistingCase.value = targetCaseId;
+    }
+  }
+
+  // Update dynamic case preview card
+  updateAddNewDocCasePreview();
+
+  // Reset file inputs & text
+  resetQuickAddDocDropzone();
+  if (dom.quickAddDocTitle) dom.quickAddDocTitle.value = '';
+  if (dom.quickAddDocNotes) dom.quickAddDocNotes.value = '';
+  if (dom.quickAddDocCategory) dom.quickAddDocCategory.value = 'Court Order / Judgment';
+  if (dom.quickAddAutoAiSummary) dom.quickAddAutoAiSummary.checked = true;
+
+  // Show modal
+  if (dom.addNewDocModal) dom.addNewDocModal.classList.remove('hidden');
+}
+
+function closeAddNewDocModal() {
+  if (dom.addNewDocModal) dom.addNewDocModal.classList.add('hidden');
+  resetQuickAddDocDropzone();
+}
+
+function updateAddNewDocCasePreview() {
+  if (!dom.selectExistingCase || !dom.addNewDocCasePreview) return;
+  const selectedId = dom.selectExistingCase.value;
+  const caseItem = state.cases.find(c => c.id === selectedId);
+
+  if (!caseItem) {
+    dom.addNewDocCasePreview.innerHTML = '';
+    return;
+  }
+
+  const docsCount = caseItem.documents ? caseItem.documents.length : (caseItem.attachedDoc ? 1 : 0);
+
+  dom.addNewDocCasePreview.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem;">
+      <div>
+        <div style="font-weight:700; color:var(--navy-primary); font-size:0.95rem; margin-bottom:0.2rem;">
+          <i class="fa-solid fa-gavel gold-text"></i> ${escapeHTML(caseItem.caseTitle)}
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-secondary);">
+          <strong>Docket:</strong> ${escapeHTML(caseItem.caseNumber)} • 
+          <strong>Client:</strong> ${escapeHTML(caseItem.clientName)} vs. ${escapeHTML(caseItem.opposingParty || 'Opposite Party')}
+        </div>
+        <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem;">
+          <i class="fa-solid fa-building-columns"></i> ${escapeHTML(caseItem.courtName)} • 
+          <i class="fa-regular fa-calendar"></i> Next: ${formatDateDisplay(caseItem.hearingDate)}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <span class="case-doc-cat-badge" style="background:#e0f2fe; color:#0369a1; font-weight:700;">
+          <i class="fa-solid fa-folder-open"></i> ${docsCount} Doc${docsCount !== 1 ? 's' : ''} on record
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+function handleQuickAddDocSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+  const fileType = file.type || getFileTypeFromName(file.name);
+
+  state.currentQuickAttachedDoc = {
+    name: file.name,
+    size: fileSize,
+    type: fileType,
+    fileData: null,
+    textContent: null
+  };
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    if (state.currentQuickAttachedDoc) {
+      state.currentQuickAttachedDoc.fileData = evt.target.result;
+    }
+  };
+  reader.readAsDataURL(file);
+
+  if (file.name.toLowerCase().endsWith('.txt')) {
+    const textReader = new FileReader();
+    textReader.onload = function(te) {
+      if (state.currentQuickAttachedDoc) {
+        state.currentQuickAttachedDoc.textContent = te.target.result;
+      }
+    };
+    textReader.readAsText(file);
+  }
+
+  if (dom.quickAddDropzoneDefault) dom.quickAddDropzoneDefault.classList.add('hidden');
+  if (dom.quickAddDropzoneAttached) dom.quickAddDropzoneAttached.classList.remove('hidden');
+  if (dom.quickAddAttachedFileName) dom.quickAddAttachedFileName.textContent = file.name;
+  if (dom.quickAddAttachedFileSize) dom.quickAddAttachedFileSize.textContent = fileSize;
+
+  // Auto-populate title if empty
+  if (dom.quickAddDocTitle && !dom.quickAddDocTitle.value.trim()) {
+    dom.quickAddDocTitle.value = file.name.replace(/\.[^/.]+$/, '').replace(/[_\-]+/g, ' ');
+  }
+}
+
+function resetQuickAddDocDropzone() {
+  state.currentQuickAttachedDoc = null;
+  if (dom.quickAddDocInput) dom.quickAddDocInput.value = '';
+  if (dom.quickAddDropzoneDefault) dom.quickAddDropzoneDefault.classList.remove('hidden');
+  if (dom.quickAddDropzoneAttached) dom.quickAddDropzoneAttached.classList.add('hidden');
+}
+
+function handleAddNewDocSubmit(e) {
+  e.preventDefault();
+
+  if (!dom.selectExistingCase) return;
+  const caseId = dom.selectExistingCase.value;
+  const caseItem = state.cases.find(c => c.id === caseId);
+
+  if (!caseItem) {
+    showToast('Please select a valid case docket from the registry.', 'error');
+    return;
+  }
+
+  const titleVal = dom.quickAddDocTitle ? dom.quickAddDocTitle.value.trim() : '';
+  const attached = state.currentQuickAttachedDoc;
+
+  if (!attached && !titleVal) {
+    showToast('Please choose a document file or provide a document title.', 'error');
+    return;
+  }
+
+  const fileName = attached ? attached.name : `${titleVal.replace(/\s+/g, '_')}.pdf`;
+  const fileSize = attached ? attached.size : `${(Math.random() * 2 + 0.8).toFixed(1)} MB`;
+  const docTitle = titleVal || fileName;
+  const category = dom.quickAddDocCategory ? dom.quickAddDocCategory.value : 'Other Document';
+  const notesVal = dom.quickAddDocNotes ? dom.quickAddDocNotes.value.trim() : '';
+  const runAi = dom.quickAddAutoAiSummary ? dom.quickAddAutoAiSummary.checked : true;
+
+  const newDoc = {
+    id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    name: fileName,
+    size: fileSize,
+    type: attached ? attached.type : getFileTypeFromName(fileName),
+    fileData: attached ? attached.fileData : null,
+    textContent: attached ? attached.textContent : null,
+    category: category,
+    title: docTitle,
+    notes: notesVal,
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: state.currentUser ? state.currentUser.name : 'Advocate'
+  };
+
+  // Run AI Summary immediately if enabled
+  if (runAi) {
+    newDoc.aiSummary = generateAiDocumentSummary(caseItem, newDoc);
+  }
+
+  if (!caseItem.documents || !Array.isArray(caseItem.documents)) {
+    caseItem.documents = [];
+  }
+  caseItem.documents.unshift(newDoc);
+
+  // Sync attachedDoc for backwards compatibility
+  caseItem.attachedDoc = { name: newDoc.name, size: newDoc.size };
+
+  // Log update to docket timeline
+  if (!caseItem.updates || !Array.isArray(caseItem.updates)) {
+    caseItem.updates = [];
+  }
+  caseItem.updates.unshift({
+    id: 'upd_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+    author: state.currentUser ? state.currentUser.name : 'Advocate',
+    authorRole: state.currentUser ? state.currentUser.role : 'Advocate',
+    type: 'filing',
+    title: `Document Filed: ${newDoc.title}`,
+    notes: `Added "${newDoc.name}" (${newDoc.category}, ${newDoc.size}) to case docket.${notesVal ? ' Notes: ' + notesVal : ''}`
+  });
+
+  saveCasesToStorage();
+  closeAddNewDocModal();
+  renderCasesList();
+
+  // If vault modal is open for this case, update its list too
+  if (state.activeDocsCaseId === caseItem.id && dom.modalDocsList) {
+    renderModalDocsList(caseItem);
+  }
+
+  showToast(`📄 Document "${newDoc.title}" successfully added to Case ${caseItem.caseNumber}!`, 'success');
 }
 
 // ==========================================================================
