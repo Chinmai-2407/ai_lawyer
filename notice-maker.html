@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LexJuris - Official Legal Notice Studio & Drafter</title>
+  <meta name="description"
+    content="Official legal notice maker and automated statutory drafting studio for advocates, counsels, and law chambers.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="notice-maker-page">
+
+  <!-- Ambient Glow Blobs -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+  <div class="bg-glow glow-3"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <a href="index.html" class="nav-brand" title="Return to LexJuris Dashboard">
+        <i class="fa-solid fa-scale-balanced brand-icon-sm"></i>
+        <span class="nav-brand-text">LEX<span class="gold-text">JURIS</span></span>
+        <span class="tag-jurisdiction">High Court & Supreme Court Registry</span>
+      </a>
+
+      <!-- View Switcher Tabs -->
+      <nav class="nav-views-switcher" aria-label="Workspace Views">
+        <a href="index.html" class="nav-tab-btn" title="Legal Dockets & Active Briefs">
+          <i class="fa-solid fa-briefcase"></i> <span>Legal Dockets</span>
+        </a>
+        <a href="notice-maker.html" class="nav-tab-btn active" title="Official Legal Notice Studio">
+          <i class="fa-solid fa-file-signature gold-text"></i> <span>Notice Maker</span>
+          <span class="badge-pill-gold">Studio</span>
+        </a>
+        <a href="javascript:void(0)" onclick="alert('Access Denied: Only the Chambers Administrator can access the Admin Portal.');" class="nav-tab-btn admin-portal-tab-btn" title="Chambers Administration">
+          <i class="fa-solid fa-crown gold-text"></i> <span>Admin Portal</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Live Notice Metrics -->
+    <div class="nav-metrics">
+      <div class="metric-item" title="Available Official Notice Formats">
+        <i class="fa-solid fa-stamp metric-icon gold"></i>
+        <div>
+          <span class="metric-val" id="statNoticeFormats">8 Formats</span>
+          <span class="metric-lbl">Statutory Types</span>
+        </div>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric-item" title="Active Drafting Mode">
+        <i class="fa-solid fa-feather-pointed metric-icon blue"></i>
+        <div>
+          <span class="metric-val" id="statDraftMode">Quick Fill</span>
+          <span class="metric-lbl">Only Main Facts</span>
+        </div>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric-item" title="Bar Council Compliant">
+        <i class="fa-solid fa-shield-check metric-icon green"></i>
+        <div>
+          <span class="metric-val">100% Valid</span>
+          <span class="metric-lbl">Bar Compliance</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button id="toggleFullscreenBtn" class="btn-icon-subtle" title="Toggle Fullscreen Workspace">
+        <i class="fa-solid fa-expand"></i>
+      </button>
+
+      <div class="counsel-profile">
+        <div class="avatar-badge" id="userAvatarContainer">
+          <span id="userInitials">VS</span>
+          <span class="avatar-role-indicator" id="avatarRoleIndicator" title="Senior Advocate">👑</span>
+        </div>
+        <div class="counsel-info">
+          <div class="counsel-name-row">
+            <span class="counsel-name" id="displayUserName">Adv. Vikramaditya Sharma</span>
+            <span class="user-role-badge" id="userRoleBadge">Senior Advocate</span>
+          </div>
+          <span class="counsel-role" id="displayUserSubtitle">Senior Advocate • Bar Reg: D/1998/2012</span>
+        </div>
+      </div>
+
+      <a href="index.html" class="btn btn-outline-subtle btn-sm" title="Back to Case Management">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Back to Dockets</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ================= MAIN NOTICE STUDIO WORKSPACE ================= -->
+  <main class="notice-workspace-container">
+    
+    <!-- LEFT PANEL: Dynamic Form & Main Content Input (42%) -->
+    <section class="notice-builder-panel">
+      
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <div class="panel-icon gold-bg">
+            <i class="fa-solid fa-file-invoice"></i>
+          </div>
+          <div>
+            <h2 class="panel-title">Statutory Notice Drafter</h2>
+            <p class="panel-subtitle">Official format is automated — input only the case particulars</p>
+          </div>
+        </div>
+
+        <div class="quick-header-actions">
+          <button type="button" id="btnQuickDemoLoad" class="btn btn-outline-gold btn-sm" title="Load sample scenario">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Demo Scenario</span>
+          </button>
+          <button type="button" id="btnResetNoticeForm" class="btn-icon-subtle" title="Reset all fields">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Category Selection Pills Grid -->
+      <div class="notice-category-selector-wrap">
+        <label class="section-label"><i class="fa-solid fa-scale-unbalanced"></i> Select Official Notice Category:</label>
+        <div class="notice-types-grid" id="noticeTypesGrid">
+          <button type="button" class="notice-type-card active" data-type="ni_act_138">
+            <div class="card-type-icon"><i class="fa-solid fa-money-check-dollar"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Sec 138 NI Act</span>
+              <span class="card-type-sub">Cheque Dishonour (15 Days)</span>
+            </div>
+          </button>
+
+          <button type="button" class="notice-type-card" data-type="money_recovery">
+            <div class="card-type-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Money Recovery</span>
+              <span class="card-type-sub">Unpaid Invoices & Dues</span>
+            </div>
+          </button>
+
+          <button type="button" class="notice-type-card" data-type="tenant_eviction">
+            <div class="card-type-icon"><i class="fa-solid fa-house-chimney-crack"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Tenant Eviction</span>
+              <span class="card-type-sub">Sec 106 T.P. Act & Arrears</span>
+            </div>
+          </button>
+
+          <button type="button" class="notice-type-card" data-type="contract_breach">
+            <div class="card-type-icon"><i class="fa-solid fa-file-contract"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Breach of Contract</span>
+              <span class="card-type-sub">Specific Performance</span>
+            </div>
+          </button>
+
+          <button type="button" class="notice-type-card" data-type="consumer_deficiency">
+            <div class="card-type-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Consumer Protection</span>
+              <span class="card-type-sub">Deficiency of Service (CPA)</span>
+            </div>
+          </button>
+
+          <button type="button" class="notice-type-card" data-type="defamation_cease">
+            <div class="card-type-icon"><i class="fa-solid fa-comment-slash"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Defamation & Cease</span>
+              <span class="card-type-sub">Sec 499 IPC / Damages</span>
+            </div>
+          </button>
+
+          <button type="button" class="notice-type-card" data-type="employment_dues">
+            <div class="card-type-icon"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Employment Claim</span>
+              <span class="card-type-sub">Severance, F&F & Gratuity</span>
+            </div>
+          </button>
+
+          <button type="button" class="notice-type-card" data-type="property_partition">
+            <div class="card-type-icon"><i class="fa-solid fa-landmark"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Property Partition</span>
+              <span class="card-type-sub">Ancestral Share & Division</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Input Form -->
+      <form id="noticeBuilderForm" class="notice-form" onsubmit="event.preventDefault();">
+        
+        <!-- Accordion Section 1: Optional Docket Linking & Dispatch Metadata -->
+        <div class="form-collapsible-group">
+          <div class="group-header">
+            <span><i class="fa-solid fa-link gold-text"></i> Docket Link & Reference</span>
+            <span class="badge-mini">Auto-Configured</span>
+          </div>
+          <div class="group-content">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="linkDocketSelect"><i class="fa-solid fa-briefcase"></i> Link Existing Case Docket (Optional)</label>
+                <select id="linkDocketSelect">
+                  <option value="">-- Start Fresh Notice / Unlinked --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="noticeDispatchMode"><i class="fa-solid fa-paper-plane"></i> Dispatch Mode</label>
+                <select id="noticeDispatchMode">
+                  <option value="REGISTERED POST WITH ACKNOWLEDGEMENT DUE (RPAD)">Registered Post A.D. (RPAD)</option>
+                  <option value="SPEED POST / REGISTERED A.D.">Speed Post & Registered A.D.</option>
+                  <option value="REGISTERED A.D. & OFFICIAL LEGAL EMAIL">Registered A.D. + Legal Email</option>
+                  <option value="BY HAND DELIVERY & SPEED POST">By Hand Delivery + Speed Post</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="noticeRefNumber"><i class="fa-solid fa-hashtag"></i> Notice Reference Number</label>
+                <input type="text" id="noticeRefNumber" value="LJ/NOT/2026/048">
+              </div>
+              <div class="form-group">
+                <label for="noticeDate"><i class="fa-regular fa-calendar-days"></i> Notice Date</label>
+                <input type="date" id="noticeDate">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion Section 2: Parties Information -->
+        <div class="form-collapsible-group">
+          <div class="group-header">
+            <span><i class="fa-solid fa-users gold-text"></i> Client & Opposite Party Particulars</span>
+          </div>
+          <div class="group-content">
+            
+            <!-- Client Details -->
+            <div class="sub-section-title"><i class="fa-solid fa-user-shield"></i> Client (Notice Sender)</div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="clientFullName">Client Full Name <span class="req">*</span></label>
+                <input type="text" id="clientFullName" placeholder="e.g. Rajesh V. Sharma" required>
+              </div>
+              <div class="form-group">
+                <label for="clientParentage">Parentage / Entity Capacity</label>
+                <input type="text" id="clientParentage" placeholder="e.g. S/o Late Shri R. K. Sharma / Sole Proprietor">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="clientFullAddress">Client Full Postal Address</label>
+              <input type="text" id="clientFullAddress" placeholder="e.g. H-42, Defence Colony, New Delhi - 110024">
+            </div>
+
+            <!-- Recipient Details -->
+            <div class="sub-section-title" style="margin-top: 1rem;"><i class="fa-solid fa-user-xmark"></i> Addressee / Notice Recipient (Opposite Party)</div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="recipientFullName">Recipient Name / Company <span class="req">*</span></label>
+                <input type="text" id="recipientFullName" placeholder="e.g. ABC Logistics & Enterprises Pvt Ltd" required>
+              </div>
+              <div class="form-group">
+                <label for="recipientDesignation">Attention / Designation</label>
+                <input type="text" id="recipientDesignation" placeholder="e.g. The Managing Director / Authorized Signatory">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="recipientFullAddress">Recipient Full Postal Address <span class="req">*</span></label>
+              <textarea id="recipientFullAddress" rows="2" placeholder="e.g. Plot No. 88, Sector 18, Udyog Vihar, Gurugram, Haryana - 122015" required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion Section 3: DYNAMIC NOTICE SPECIFIC CORE FACTS -->
+        <div class="form-collapsible-group highlight-box">
+          <div class="group-header">
+            <span><i class="fa-solid fa-bolt-lightning gold-text"></i> Main Transaction & Default Particulars</span>
+            <span class="badge-mini gold">Core Inputs Only</span>
+          </div>
+          <div class="group-content">
+            
+            <!-- Dynamic Slot 1: Cheque / Section 138 NI Act Fields -->
+            <div id="dynamicFields_ni_act" class="dynamic-category-fields">
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label for="niChequeNumber">Cheque Number <span class="req">*</span></label>
+                  <input type="text" id="niChequeNumber" placeholder="e.g. 482019">
+                </div>
+                <div class="form-group">
+                  <label for="niChequeDate">Cheque Date <span class="req">*</span></label>
+                  <input type="date" id="niChequeDate">
+                </div>
+                <div class="form-group">
+                  <label for="niChequeAmount">Cheque Amount (₹) <span class="req">*</span></label>
+                  <input type="text" id="niChequeAmount" placeholder="e.g. 5,50,000">
+                </div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="niBankDetails">Drawee Bank & Branch</label>
+                  <input type="text" id="niBankDetails" placeholder="e.g. HDFC Bank, Connaught Place Branch, New Delhi">
+                </div>
+                <div class="form-group">
+                  <label for="niMemoDate">Return Memo Date</label>
+                  <input type="date" id="niMemoDate">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="niDishonourReason">Dishonour Reason (Memo Remark)</label>
+                <select id="niDishonourReason">
+                  <option value="Funds Insufficient">Funds Insufficient</option>
+                  <option value="Exceeds Arrangement">Exceeds Arrangement</option>
+                  <option value="Stop Payment by Drawer">Stop Payment by Drawer</option>
+                  <option value="Account Closed">Account Closed</option>
+                  <option value="Signature Differs">Drawer's Signature Differs</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Dynamic Slot 2: Money Recovery / Commercial Dues Fields -->
+            <div id="dynamicFields_money_recovery" class="dynamic-category-fields hidden">
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label for="mrTotalDebt">Total Outstanding (₹) <span class="req">*</span></label>
+                  <input type="text" id="mrTotalDebt" placeholder="e.g. 12,45,000">
+                </div>
+                <div class="form-group">
+                  <label for="mrInterestRate">Interest Claimed (% p.a.)</label>
+                  <input type="text" id="mrInterestRate" placeholder="e.g. 18% p.a.">
+                </div>
+                <div class="form-group">
+                  <label for="mrInvoiceNumber">Invoice / Contract Ref</label>
+                  <input type="text" id="mrInvoiceNumber" placeholder="e.g. INV-2024/8892">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="mrTransactionNature">Nature of Goods / Commercial Services</label>
+                <input type="text" id="mrTransactionNature" placeholder="e.g. Supply of Industrial Electronic Hardware & Cloud Hosting Services">
+              </div>
+            </div>
+
+            <!-- Dynamic Slot 3: Tenant Eviction Fields -->
+            <div id="dynamicFields_tenant_eviction" class="dynamic-category-fields hidden">
+              <div class="form-group">
+                <label for="tePropertyAddress">Tenanted Demised Premises <span class="req">*</span></label>
+                <input type="text" id="tePropertyAddress" placeholder="e.g. Ground Floor, Commercial Flat No. 12B, Barakhamba Road, New Delhi">
+              </div>
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label for="teMonthlyRent">Monthly Rent (₹)</label>
+                  <input type="text" id="teMonthlyRent" placeholder="e.g. 75,000/- per month">
+                </div>
+                <div class="form-group">
+                  <label for="teArrearsAmount">Total Rent Arrears (₹)</label>
+                  <input type="text" id="teArrearsAmount" placeholder="e.g. 3,00,000 (4 months)">
+                </div>
+                <div class="form-group">
+                  <label for="teVacateDays">Vacate Notice Period</label>
+                  <select id="teVacateDays">
+                    <option value="15 days">15 Days (Sec 106 TPA)</option>
+                    <option value="30 days">30 Days</option>
+                    <option value="immediately">Immediate Termination</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Slot 4: Contract Breach Fields -->
+            <div id="dynamicFields_contract_breach" class="dynamic-category-fields hidden">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="cbAgreementDate">Agreement / Contract Date</label>
+                  <input type="date" id="cbAgreementDate">
+                </div>
+                <div class="form-group">
+                  <label for="cbAgreementTitle">Agreement Title / Nomenclature</label>
+                  <input type="text" id="cbAgreementTitle" placeholder="e.g. Master Services & Software Development Agreement">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="cbClauseBreached">Material Clause(s) Defaulted</label>
+                <input type="text" id="cbClauseBreached" placeholder="e.g. Clause 8.2 (Deliverable Deadlines) & Clause 14 (Confidentiality)">
+              </div>
+            </div>
+
+            <!-- Dynamic Slot 5: Consumer Protection Fields -->
+            <div id="dynamicFields_consumer_deficiency" class="dynamic-category-fields hidden">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="cpProductService">Product / Service Purchased</label>
+                  <input type="text" id="cpProductService" placeholder="e.g. Luxury Sedan Automobile / AC Unit / Airline Booking">
+                </div>
+                <div class="form-group">
+                  <label for="cpPurchaseAmount">Amount Paid (₹)</label>
+                  <input type="text" id="cpPurchaseAmount" placeholder="e.g. 18,50,000">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="cpDefectNature">Nature of Inherent Defect / Deficiency</label>
+                <input type="text" id="cpDefectNature" placeholder="e.g. Persistent Engine Breakdown and Total Denial of Authorized Warranty Repairs">
+              </div>
+            </div>
+
+            <!-- Dynamic Slot 6: Defamation Fields -->
+            <div id="dynamicFields_defamation_cease" class="dynamic-category-fields hidden">
+              <div class="form-group">
+                <label for="defPlatform">Medium / Platform of Defamatory Content</label>
+                <input type="text" id="defPlatform" placeholder="e.g. Social Media Post on X / Press Conference / YouTube Video">
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="defDamagesClaim">Claim for Damages (₹)</label>
+                  <input type="text" id="defDamagesClaim" placeholder="e.g. 1,00,00,000/- (One Crore)">
+                </div>
+                <div class="form-group">
+                  <label for="defApologyWindow">Apology Window</label>
+                  <select id="defApologyWindow">
+                    <option value="7 days">7 Days</option>
+                    <option value="15 days">15 Days</option>
+                    <option value="48 hours">48 Hours</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Slot 7: Employment Claim Fields -->
+            <div id="dynamicFields_employment_dues" class="dynamic-category-fields hidden">
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label for="empDesignation">Employee Role</label>
+                  <input type="text" id="empDesignation" placeholder="e.g. Principal Software Architect">
+                </div>
+                <div class="form-group">
+                  <label for="empTenure">Tenure</label>
+                  <input type="text" id="empTenure" placeholder="e.g. July 2021 to August 2026">
+                </div>
+                <div class="form-group">
+                  <label for="empUnpaidDues">Claim Amount (₹)</label>
+                  <input type="text" id="empUnpaidDues" placeholder="e.g. 8,20,000 (Salary + Gratuity)">
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Slot 8: Property Partition Fields -->
+            <div id="dynamicFields_property_partition" class="dynamic-category-fields hidden">
+              <div class="form-group">
+                <label for="propSchedule">Schedule of Joint Property</label>
+                <input type="text" id="propSchedule" placeholder="e.g. Residential Villa No. 5, Civil Lines, measuring 500 sq yards">
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="propShareClaim">Client's Undivided Share</label>
+                  <input type="text" id="propShareClaim" placeholder="e.g. 1/3rd Undivided Coparcenary Share">
+                </div>
+                <div class="form-group">
+                  <label for="propPartitionMode">Requested Partition</label>
+                  <input type="text" id="propPartitionMode" placeholder="e.g. Metes and bounds partition with separate possession">
+                </div>
+              </div>
+            </div>
+
+            <!-- Core Factual Narrative Box -->
+            <div class="form-group" style="margin-top: 1rem;">
+              <div class="label-with-action">
+                <label for="mainFactualGrounds"><i class="fa-solid fa-paragraph"></i> Main Factual Grounds & Sequence of Events</label>
+                <button type="button" class="btn-link-action" id="btnEnhanceNarrative" title="Format raw notes into legal paragraphs">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Polish Legal Narrative
+                </button>
+              </div>
+              <textarea id="mainFactualGrounds" rows="5" placeholder="Enter brief bullet points or facts. The statutory citations and legal warnings are already handled automatically."></textarea>
+              <span class="form-hint">Each paragraph or bullet point will automatically be numbered and legally aligned in the official notice.</span>
+            </div>
+
+            <!-- Statutory Demand Window -->
+            <div class="form-grid-2" style="margin-top: 0.5rem;">
+              <div class="form-group">
+                <label for="demandCureWindow"><i class="fa-solid fa-hourglass-half"></i> Statutory Demand Period</label>
+                <select id="demandCureWindow">
+                  <option value="15 (Fifteen) days" selected>15 (Fifteen) Days — Statutory Standard</option>
+                  <option value="7 (Seven) days">7 (Seven) Days</option>
+                  <option value="21 (Twenty-One) days">21 (Twenty-One) Days</option>
+                  <option value="30 (Thirty) days">30 (Thirty) Days</option>
+                  <option value="48 (Forty-Eight) hours">48 (Forty-Eight) Hours (Urgent)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="noticeAdvocateFee">Litigation / Notice Drafting Fee Claimed</label>
+                <input type="text" id="noticeAdvocateFee" value="₹11,000/- (Rupees Eleven Thousand Only)">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Accordion Section 4: Counsel Letterhead Information -->
+        <div class="form-collapsible-group">
+          <div class="group-header">
+            <span><i class="fa-solid fa-id-badge gold-text"></i> Advocate Letterhead & Chambers Registry</span>
+          </div>
+          <div class="group-content">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="advocateFullName">Advocate Name</label>
+                <input type="text" id="advocateFullName" value="Adv. Vikramaditya Sharma">
+              </div>
+              <div class="form-group">
+                <label for="advocateBarReg">Bar Council Registration No.</label>
+                <input type="text" id="advocateBarReg" value="D/1998/2012">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="advocateChambersAddress">Chambers Office Address</label>
+              <input type="text" id="advocateChambersAddress" value="Chamber No. 412, Lawyers Chambers Block, High Court of Delhi, New Delhi - 110003">
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="advocatePhone">Official Contact No.</label>
+                <input type="text" id="advocatePhone" value="+91 98112 44321">
+              </div>
+              <div class="form-group">
+                <label for="advocateEmail">Chambers Email</label>
+                <input type="text" id="advocateEmail" value="advocate.sharma@lexjuris.in">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- RIGHT PANEL: Live Official Legal Notice Studio & Paper Preview (58%) -->
+    <section class="notice-preview-panel">
+      
+      <!-- Studio Action Control Ribbon -->
+      <div class="preview-toolbar">
+        <div class="toolbar-left">
+          <span class="preview-status-pill"><i class="fa-solid fa-circle-check"></i> Live Court Parchment</span>
+          <span class="preview-zoom-label" id="previewPageIndicator">Page 1 of 1 (A4 Official)</span>
+        </div>
+
+        <div class="toolbar-actions">
+          <button type="button" id="btnFontToggle" class="btn btn-outline-subtle btn-sm" title="Toggle between Classic Serif & Modern Clean Font">
+            <i class="fa-solid fa-font"></i> <span>Font: Serif</span>
+          </button>
+          <button type="button" id="btnCopyNoticeText" class="btn btn-outline-subtle btn-sm" title="Copy full legal notice text">
+            <i class="fa-regular fa-copy"></i> <span>Copy Text</span>
+          </button>
+          <button type="button" id="btnDownloadWord" class="btn btn-outline-gold btn-sm" title="Download editable Word document">
+            <i class="fa-solid fa-file-word"></i> <span>Download .DOC</span>
+          </button>
+          <button type="button" id="btnPrintNotice" class="btn btn-primary btn-sm" title="Print Bar Council compliant legal notice">
+            <i class="fa-solid fa-print"></i> <span>Print / PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Legal Paper Parchment Viewport -->
+      <div class="parchment-viewport-container">
+        
+        <div class="legal-parchment-paper" id="legalPaperDocument">
+          
+          <!-- Official Advocate Crest / Letterhead -->
+          <header class="legal-paper-header">
+            <div class="letterhead-crest">
+              <i class="fa-solid fa-scale-balanced crest-icon"></i>
+            </div>
+            <h1 class="advocate-heading-name" id="docAdvocateName">ADV. VIKRAMADITYA SHARMA</h1>
+            <div class="advocate-court-qualifications">B.A. LL.B. (Hons.), LL.M. • ADVOCATE ON RECORD / SENIOR COUNSEL</div>
+            <div class="advocate-bar-council" id="docAdvocateBar">Bar Council of Delhi Enrollment No.: D/1998/2012</div>
+            <div class="advocate-address-line" id="docAdvocateAddress">Chambers: Chamber No. 412, Lawyers Chambers Block, High Court of Delhi, New Delhi - 110003</div>
+            <div class="advocate-contact-line" id="docAdvocateContact">Phone: +91 98112 44321 • Email: advocate.sharma@lexjuris.in</div>
+          </header>
+
+          <div class="legal-divider-double"></div>
+
+          <!-- Dispatch Mode & Reference Bar -->
+          <div class="doc-dispatch-meta">
+            <div class="meta-left">
+              <strong class="dispatch-badge-text" id="docDispatchMode">BY REGISTERED POST WITH A.D. / SPEED POST</strong>
+              <div class="meta-ref-row">REF NO: <span id="docRefNo">LJ/NOT/2026/048</span></div>
+            </div>
+            <div class="meta-right">
+              <div class="meta-date-row">DATED: <span id="docNoticeDate">08/09/2026</span></div>
+              <div class="meta-badge-confidential">LEGAL NOTICE / URGENT</div>
+            </div>
+          </div>
+
+          <!-- Addressee Block -->
+          <div class="doc-addressee-section">
+            <div class="addressee-label">TO,</div>
+            <div class="addressee-name" id="docRecipientName">ABC LOGISTICS & ENTERPRISES PVT LTD</div>
+            <div class="addressee-desig" id="docRecipientDesig">Attention: The Managing Director / Authorized Signatory</div>
+            <div class="addressee-address" id="docRecipientAddress">Plot No. 88, Sector 18, Udyog Vihar, Gurugram, Haryana - 122015</div>
+          </div>
+
+          <!-- Subject Line -->
+          <div class="doc-subject-banner">
+            <strong>SUBJECT: </strong>
+            <span id="docSubjectText">LEGAL NOTICE UNDER SECTION 138 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881 READ WITH SECTION 420 OF THE INDIAN PENAL CODE FOR DISHONOUR OF CHEQUE NO. 482019 DATED 15/08/2026 FOR ₹5,50,000/-</span>
+          </div>
+
+          <!-- Main Legal Body Text -->
+          <div class="doc-body-content">
+            <p class="doc-salutation">Sir / Madam,</p>
+
+            <p class="doc-preamble" id="docPreambleText">
+              Under instructions from and on behalf of my client, <strong><span id="docClientName">Rajesh V. Sharma</span></strong>, <span id="docClientParentage">S/o Late Shri R. K. Sharma</span>, residing at <span id="docClientAddress">H-42, Defence Colony, New Delhi - 110024</span> (hereinafter referred to as <strong>"My Client"</strong>), I hereby serve upon you this formal Legal Notice as hereunder:
+            </p>
+
+            <!-- Numbered Paragraphs -->
+            <div class="doc-numbered-paragraphs" id="docNumberedParagraphs">
+              <!-- Dynamically rendered -->
+            </div>
+
+            <!-- Demand & Requisition Clause -->
+            <div class="doc-demand-clause" id="docDemandClause">
+              <!-- Dynamically rendered -->
+            </div>
+
+            <!-- Consequences Warning Clause -->
+            <div class="doc-warning-clause" id="docWarningClause">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+
+          <!-- Signature & Sign-off Block -->
+          <div class="doc-signature-block">
+            <div class="sign-left">
+              <div class="copy-note">Copy retained in chambers for legal record and court exhibit.</div>
+              <div class="client-auth-note">Issued upon verified client instructions.</div>
+            </div>
+            <div class="sign-right">
+              <div class="advocate-sign-wrap">
+                <div class="sign-placeholder">[ Digitally / Physically Signed ]</div>
+                <div class="sign-name" id="docSignAdvocateName">Adv. Vikramaditya Sharma</div>
+                <div class="sign-title">Advocate for the Client</div>
+                <div class="sign-bar" id="docSignBarReg">Bar Reg: D/1998/2012</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="notice-maker.js"></script>
+</body>
+
+</html>
