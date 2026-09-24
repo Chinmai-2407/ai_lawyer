@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LexJuris - Advocate & Legal Case Management Portal</title>
+  <meta name="description"
+    content="Professional case intake, client management, and court hearing scheduling portal for advocates and legal practitioners.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- Background Decorative Ambient Glows -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+  <div class="bg-glow glow-3"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- ================= AUTHENTICATION VIEW ================= -->
+  <section id="authSection" class="auth-section">
+    <div class="auth-container" id="authContainer">
+      <div class="auth-brand">
+        <div class="brand-icon-wrapper">
+          <i class="fa-solid fa-scale-balanced brand-icon"></i>
+        </div>
+        <h1 class="brand-title">LEX<span class="gold-text">JURIS</span></h1>
+        <p class="brand-subtitle">Advocate Practice & Court Scheduling Suite</p>
+      </div>
+
+      <div class="auth-card">
+        
+        <!-- Auth View Switcher (Sign In vs Sign Up Tabs) -->
+        <div class="auth-tabs-nav" role="tablist">
+          <button type="button" class="auth-tab-btn active" id="tabLoginBtn" role="tab" aria-selected="true">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In
+          </button>
+          <button type="button" class="auth-tab-btn" id="tabSignupBtn" role="tab" aria-selected="false">
+            <i class="fa-solid fa-user-plus"></i> Create Account
+          </button>
+        </div>
+
+        <!-- ================= 1. LOGIN CONTAINER ================= -->
+        <div id="loginFormContainer" class="auth-form-container">
+          <div class="auth-header">
+            <h2 id="authFormTitle">Counsel Portal Login</h2>
+            <p id="authFormDesc">Enter your credentials to access your active legal dockets</p>
+          </div>
+
+          <!-- Quick Demo Fill Banner -->
+          <div class="auth-demo-picker">
+            <span class="demo-picker-label"><i class="fa-solid fa-users-gear"></i> Instant Demo Quick-Login:</span>
+            <div class="demo-pills-grid">
+              <button type="button" class="demo-badge-pill admin-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('admin@lexjuris.in');" title="Login as Chambers Admin / Managing Partner">
+                <i class="fa-solid fa-crown gold-text"></i> <span><strong>Chambers Admin</strong> (Master Oversight)</span>
+              </button>
+              <button type="button" class="demo-badge-pill counsel-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('advocate.sharma@lexjuris.in');" title="Login as Group Head (Constitutional & Writ)">
+                <i class="fa-solid fa-gavel"></i> <span><strong>Adv. Sharma</strong> (👑 Head of Group)</span>
+              </button>
+              <button type="button" class="demo-badge-pill associate-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('ananya.singh@lexjuris.in');" title="Login as Subordinate Counsel (Adv. Singh)">
+                <i class="fa-solid fa-scale-balanced"></i> <span><strong>Adv. Singh</strong> (👤 Subordinate 1)</span>
+              </button>
+              <button type="button" class="demo-badge-pill associate-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('siddharth.rao@lexjuris.in');" title="Login as Subordinate Counsel (Adv. Rao)">
+                <i class="fa-solid fa-user-shield"></i> <span><strong>Adv. Rao</strong> (👤 Subordinate 2)</span>
+              </button>
+              <button type="button" class="demo-badge-pill clerk-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('clerk.docket@lexjuris.in');" title="Login as Registry Clerk">
+                <i class="fa-solid fa-clipboard-list"></i> <span><strong>Ramesh C.</strong> (Registry Clerk)</span>
+              </button>
+            </div>
+          </div>
+
+          <form id="authForm" class="auth-form" onsubmit="if(window.handleLogin) window.handleLogin(event);" novalidate>
+            <div class="form-group">
+              <label for="authEmail"><i class="fa-regular fa-envelope"></i> Professional Email</label>
+              <input type="email" id="authEmail" value="admin@lexjuris.in" placeholder="e.g. admin@lexjuris.in" required
+                autocomplete="email">
+              <span class="error-msg" id="authEmailError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="authPassword"><i class="fa-solid fa-lock"></i> Password</label>
+              <div class="password-wrapper">
+                <input type="password" id="authPassword" value="AdminPass2024!" placeholder="••••••••" required autocomplete="current-password">
+                <button type="button" class="btn-toggle-pwd" id="togglePwdBtn" aria-label="Toggle password visibility">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+              <span class="error-msg" id="authPasswordError"></span>
+            </div>
+
+            <div class="form-row-auth">
+              <label class="checkbox-container">
+                <input type="checkbox" id="rememberMe" checked>
+                <span class="checkmark"></span>
+                Remember workstation
+              </label>
+              <a href="#" id="forgotPwdLink" class="auth-link" onclick="if(window.showBarCouncilHelp) window.showBarCouncilHelp(event);">Bar Council Help?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginSubmitBtn">
+              <span>Enter Chambers</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </form>
+
+          <div class="auth-switch-prompt">
+            <span>New advocate or chambers member?</span>
+            <button type="button" class="btn-switch-auth-link" id="gotoSignupLink">Register Chambers Account</button>
+          </div>
+        </div>
+
+        <!-- ================= 2. SIGN UP / REGISTRATION CONTAINER ================= -->
+        <div id="signupFormContainer" class="auth-form-container hidden">
+          <div class="auth-header">
+            <h2>Practitioner Registration</h2>
+            <p>Create your verified advocate or legal chambers account</p>
+          </div>
+
+          <form id="signupForm" class="auth-form" novalidate>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="signupName"><i class="fa-regular fa-user"></i> Full Practitioner Name <span class="req">*</span></label>
+                <input type="text" id="signupName" placeholder="e.g. Adv. Siddharth Rao" required autocomplete="name">
+                <span class="error-msg" id="signupNameError"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="signupEmail"><i class="fa-regular fa-envelope"></i> Professional Email <span class="req">*</span></label>
+                <input type="email" id="signupEmail" placeholder="e.g. siddharth.rao@lexjuris.in" required autocomplete="email">
+                <span class="error-msg" id="signupEmailError"></span>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="signupRole"><i class="fa-solid fa-shield-halved"></i> Chambers Role <span class="req">*</span></label>
+                <select id="signupRole" required>
+                  <option value="Senior Advocate">Senior Advocate (Senior Counsel)</option>
+                  <option value="Associate Advocate" selected>Associate Advocate (Associate Counsel)</option>
+                  <option value="Chambers Administrator">Chambers Administrator (Managing Partner)</option>
+                  <option value="Registry Clerk">Registry Clerk (Filing Staff)</option>
+                  <option value="Paralegal / Intern">Paralegal / Legal Intern</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="signupBarReg"><i class="fa-solid fa-id-card"></i> Bar Council Reg. No. <span class="req">*</span></label>
+                <input type="text" id="signupBarReg" placeholder="e.g. D/5120/2023" required>
+                <span class="error-msg" id="signupBarRegError"></span>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="signupDept"><i class="fa-solid fa-landmark"></i> Primary Department</label>
+                <select id="signupDept">
+                  <option value="Constitutional & Writ">Constitutional & Writ Practice</option>
+                  <option value="Criminal Defense">Criminal Defense & Bail</option>
+                  <option value="Corporate & M&A" selected>Corporate & Commercial</option>
+                  <option value="Civil Litigation">Civil Litigation & Property</option>
+                  <option value="Arbitration & ADR">Arbitration & Dispute Resolution</option>
+                  <option value="Taxation & Customs">Taxation & Customs</option>
+                  <option value="Family & Matrimonial">Family & Matrimonial</option>
+                  <option value="Intellectual Property">Intellectual Property (IPR)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="signupPhone"><i class="fa-solid fa-phone"></i> Contact Phone <span class="req">*</span></label>
+                <input type="tel" id="signupPhone" placeholder="+91 98100 12345" required autocomplete="tel">
+                <span class="error-msg" id="signupPhoneError"></span>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label for="signupPassword"><i class="fa-solid fa-lock"></i> Create Password <span class="req">*</span></label>
+                  <button type="button" class="btn-link-action" id="btnGenSignupPwd"><i class="fa-solid fa-dice"></i> Generate</button>
+                </div>
+                <div class="password-wrapper">
+                  <input type="password" id="signupPassword" placeholder="Min. 6 chars" required autocomplete="new-password">
+                  <button type="button" class="btn-toggle-pwd" id="toggleSignupPwdBtn" aria-label="Toggle password visibility">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+                <span class="error-msg" id="signupPasswordError"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="signupConfirmPassword"><i class="fa-solid fa-shield-check"></i> Confirm Password <span class="req">*</span></label>
+                <div class="password-wrapper">
+                  <input type="password" id="signupConfirmPassword" placeholder="Re-enter password" required autocomplete="new-password">
+                </div>
+                <span class="error-msg" id="signupConfirmPasswordError"></span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:0.25rem;">
+              <label class="checkbox-container">
+                <input type="checkbox" id="signupTermsCheck" checked required>
+                <span class="checkmark"></span>
+                I certify that I am a licensed advocate/practitioner registered with the Bar Council.
+              </label>
+              <span class="error-msg" id="signupTermsError"></span>
+            </div>
+
+            <button type="submit" class="btn btn-gold btn-block btn-lg" id="signupSubmitBtn">
+              <i class="fa-solid fa-user-shield"></i>
+              <span>Register & Enter Chambers</span>
+            </button>
+          </form>
+
+          <div class="auth-switch-prompt">
+            <span>Already registered with LexJuris?</span>
+            <button type="button" class="btn-switch-auth-link" id="gotoLoginLink">Sign In to Chambers</button>
+          </div>
+        </div>
+
+        <div class="auth-footer">
+          <p><i class="fa-solid fa-shield-halved"></i> 256-Bit Encrypted Legal Vault & Bar Council Compliance</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN APPLICATION DASHBOARD ================= -->
+  <div id="appContainer" class="app-container hidden">
+
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="nav-left">
+        <div class="nav-brand">
+          <i class="fa-solid fa-scale-balanced brand-icon-sm"></i>
+          <span class="nav-brand-text">LEX<span class="gold-text">JURIS</span></span>
+          <span class="tag-jurisdiction">High Court & Supreme Court Registry</span>
+        </div>
+
+        <!-- View Switcher Tabs in Nav -->
+        <nav class="nav-views-switcher" aria-label="Workspace Views">
+          <button type="button" id="workspaceNavBtn" class="nav-tab-btn active" title="Active Dockets & Case Intake">
+            <i class="fa-solid fa-briefcase"></i> <span>Legal Dockets</span>
+          </button>
+          <a href="notice-maker.html" id="noticeNavBtn" class="nav-tab-btn" title="Official Legal Notice Studio & Statutory Drafter">
+            <i class="fa-solid fa-file-signature gold-text"></i> <span>Notice Maker</span>
+            <span class="badge-pill-gold">Studio</span>
+          </a>
+          <button type="button" id="adminNavBtn" class="nav-tab-btn admin-portal-tab-btn" title="Chambers Administration & User Management">
+            <i class="fa-solid fa-crown gold-text"></i> <span>Admin Portal</span>
+            <span class="admin-nav-badge" id="adminUserCountBadge">0</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Quick Operational Metrics Bar -->
+      <div class="nav-metrics">
+        <div class="metric-item" title="Hearings scheduled for today">
+          <i class="fa-solid fa-gavel metric-icon gold"></i>
+          <div>
+            <span class="metric-val" id="statTodayHearings">0</span>
+            <span class="metric-lbl">Today's Court</span>
+          </div>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item" title="Total active client briefs">
+          <i class="fa-solid fa-folder-open metric-icon blue"></i>
+          <div>
+            <span class="metric-val" id="statActiveCases">0</span>
+            <span class="metric-lbl">Active Dockets</span>
+          </div>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item" title="Urgent hearing listings">
+          <i class="fa-solid fa-bell metric-icon red"></i>
+          <div>
+            <span class="metric-val" id="statUrgentCases">0</span>
+            <span class="metric-lbl">Urgent / Bench</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <button id="toggleFullscreenAppBtn" class="btn-icon-subtle" title="Toggle Fullscreen Workspace">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+        <div class="counsel-profile">
+          <div class="avatar-badge" id="userAvatarContainer">
+            <span id="userInitials">VS</span>
+            <span class="avatar-role-indicator" id="avatarRoleIndicator" title="Chambers Administrator">👑</span>
+          </div>
+          <div class="counsel-info">
+            <div class="counsel-name-row">
+              <span class="counsel-name" id="displayUserName">Adv. Vikramaditya Sharma</span>
+              <span class="user-role-badge" id="userRoleBadge">Senior Advocate</span>
+            </div>
+            <span class="counsel-role" id="displayUserSubtitle">Senior Advocate • Bar Reg: D/1998/2012</span>
+          </div>
+        </div>
+        <button id="logoutBtn" class="btn btn-outline-danger btn-sm" title="Sign out of Legal Chambers">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Split Grid Layout (Cases & Schedule) -->
+    <main class="main-workspace" id="caseWorkspace">
+
+      <!-- ================= LEFT COLUMN: NEW CASE INTAKE ================= -->
+      <section class="workspace-panel panel-left" aria-labelledby="intakePanelTitle">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <div class="panel-icon gold-bg">
+              <i class="fa-solid fa-folder-plus"></i>
+            </div>
+            <div>
+              <h2 id="intakePanelTitle" class="panel-title">New Case Intake</h2>
+              <p class="panel-subtitle">Register fresh client brief & court schedule</p>
+            </div>
+          </div>
+          <button type="button" id="resetFormBtn" class="btn-icon-subtle" title="Clear form fields">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+
+        <form id="newCaseForm" class="case-form" novalidate>
+
+          <!-- Smart Document Upload Auto-Fill Box -->
+          <div class="doc-upload-container">
+            <div class="doc-upload-header">
+              <span class="doc-upload-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Document Scanner</span>
+              <span class="doc-upload-hint">Upload petition, notice or order to auto-fill</span>
+            </div>
+
+            <div class="doc-dropzone" id="docDropzone">
+              <input type="file" id="caseDocInput" class="doc-file-input"
+                accept=".pdf,.docx,.doc,.txt,.rtf,.png,.jpg,.jpeg">
+              <div class="dropzone-inner" id="dropzoneDefault">
+                <div class="dropzone-icon-wrap">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div class="dropzone-text">
+                  <strong>Drag & drop legal document</strong> or <span class="browse-link">browse files</span>
+                </div>
+                <div class="dropzone-sub">Supports PDF, DOCX, TXT, Court Notices, Petitions & Scans</div>
+              </div>
+
+              <!-- Scanning Progress Animation State (Hidden by default) -->
+              <div class="dropzone-scanning hidden" id="dropzoneScanning">
+                <div class="scanner-laser"></div>
+                <i class="fa-solid fa-file-contract scanning-file-icon"></i>
+                <div class="scanning-status-text" id="scanningStatusText">Analyzing legal docket structure...</div>
+                <div class="scanning-progress-bar">
+                  <div class="scanning-progress-fill" id="scanningProgressFill"></div>
+                </div>
+              </div>
+
+              <!-- File Attached State (Hidden by default) -->
+              <div class="dropzone-attached hidden" id="dropzoneAttached">
+                <div class="attached-file-info">
+                  <i class="fa-solid fa-file-lines attached-icon"></i>
+                  <div class="attached-details">
+                    <span class="attached-name" id="attachedFileName">petition.pdf</span>
+                    <span class="attached-size" id="attachedFileSize">1.2 MB • Extracted 100%</span>
+                  </div>
+                </div>
+                <button type="button" id="removeDocBtn" class="btn-remove-doc" title="Remove document and reset fields">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sample Document Quick Tests -->
+            <div class="sample-docs-row">
+              <span class="sample-docs-label"><i class="fa-regular fa-lightbulb"></i> Try Sample Docs:</span>
+              <div class="sample-doc-chips">
+                <button type="button" class="sample-chip" data-sample="writ">
+                  <i class="fa-solid fa-file-pdf"></i> Writ Petition.pdf
+                </button>
+                <button type="button" class="sample-chip" data-sample="bail">
+                  <i class="fa-solid fa-file-shield"></i> Bail Application.pdf
+                </button>
+                <button type="button" class="sample-chip" data-sample="commercial">
+                  <i class="fa-solid fa-file-contract"></i> Arbitration Notice.docx
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Details Section -->
+          <div class="form-section-title">
+            <i class="fa-solid fa-user-tie"></i> Client Information
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="clientName">Client Full Name <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-regular fa-user"></i>
+                <input type="text" id="clientName" placeholder="e.g. Rajesh Mehra" required>
+              </div>
+              <span class="error-msg" id="clientNameError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="clientPhone">Phone / Contact <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-phone"></i>
+                <input type="tel" id="clientPhone" placeholder="+91 98765 43210" required>
+              </div>
+              <span class="error-msg" id="clientPhoneError"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="opposingParty">Opposing Party / Respondent</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-user-ninja"></i>
+              <input type="text" id="opposingParty" placeholder="e.g. Union of India / Tata Steel Ltd.">
+            </div>
+          </div>
+
+          <!-- Case Details Section -->
+          <div class="form-section-title">
+            <i class="fa-solid fa-scale-unbalanced-flip"></i> Legal Docket Details
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="caseTitle">Case Title / Matter <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-heading"></i>
+                <input type="text" id="caseTitle" placeholder="e.g. Mehra vs. Municipal Corp" required>
+              </div>
+              <span class="error-msg" id="caseTitleError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="caseNumber">Case / Suit No. <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-hashtag"></i>
+                <input type="text" id="caseNumber" placeholder="e.g. WP(C) 4521/2024" required>
+              </div>
+              <span class="error-msg" id="caseNumberError"></span>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="caseCategory">Law Practice Category <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-landmark"></i>
+                <select id="caseCategory" required>
+                  <option value="Civil Litigation">Civil Litigation</option>
+                  <option value="Criminal Defense">Criminal Defense</option>
+                  <option value="Corporate & M&A">Corporate & Commercial</option>
+                  <option value="Constitutional & Writ">Constitutional & Writ</option>
+                  <option value="Family & Matrimonial">Family & Matrimonial</option>
+                  <option value="Intellectual Property">Intellectual Property (IPR)</option>
+                  <option value="Taxation & Customs">Taxation & Customs</option>
+                  <option value="Arbitration & ADR">Arbitration & Dispute</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="priorityLevel">Listing Urgency</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-flag"></i>
+                <select id="priorityLevel">
+                  <option value="Standard">Standard Priority</option>
+                  <option value="High">High Urgency</option>
+                  <option value="Critical">Critical / Interim Relief</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group & Subordinate Assignment Section -->
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="caseGroup"><i class="fa-solid fa-users-viewfinder"></i> Practice Group <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-layer-group"></i>
+                <select id="caseGroup" required>
+                  <option value="Constitutional & Writ" selected>Constitutional & Writ</option>
+                  <option value="Corporate & M&A">Corporate & Commercial</option>
+                  <option value="Criminal Defense">Criminal Defense & Bail</option>
+                  <option value="Civil Litigation">Civil Litigation</option>
+                  <option value="Arbitration & ADR">Arbitration & Dispute</option>
+                  <option value="Taxation & Customs">Taxation & Customs</option>
+                  <option value="Family & Matrimonial">Family & Matrimonial</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="caseAssignee"><i class="fa-solid fa-user-check"></i> Assign Subordinate Counsel <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-user-tie"></i>
+                <select id="caseAssignee" required>
+                  <!-- Dynamically populated -->
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Court & Scheduling Section -->
+          <div class="form-section-title">
+            <i class="fa-regular fa-calendar-check"></i> Court & Hearing Scheduling
+          </div>
+
+          <div class="form-group">
+            <label for="courtName">Court / Forum / Bench <span class="req">*</span></label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-building-columns"></i>
+              <input type="text" id="courtName" placeholder="e.g. High Court, Courtroom No. 4, Bench 2" required>
+            </div>
+            <span class="error-msg" id="courtNameError"></span>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="hearingDate">Hearing Date <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-regular fa-calendar"></i>
+                <input type="date" id="hearingDate" required>
+              </div>
+              <span class="error-msg" id="hearingDateError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="hearingTime">Hearing / Listing Time <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-regular fa-clock"></i>
+                <input type="time" id="hearingTime" required>
+              </div>
+              <span class="error-msg" id="hearingTimeError"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="caseNotes">Case Brief / Argument Strategy Notes</label>
+            <textarea id="caseNotes" rows="3"
+              placeholder="Key points: Anticipatory bail plea, cited precedent Kesavananda Bharati, request for ex-parte stay..."></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="form-action-row">
+            <button type="submit" class="btn btn-gold btn-block btn-lg" id="submitCaseBtn">
+              <i class="fa-solid fa-gavel"></i>
+              <span>File & Schedule Hearing</span>
+            </button>
+          </div>
+
+        </form>
+      </section>
+
+      <!-- ================= RIGHT COLUMN: ACTIVE CASES & COURT SCHEDULE ================= -->
+      <section class="workspace-panel panel-right" aria-labelledby="activeCasesTitle">
+
+        <!-- Controls & Header -->
+        <div class="panel-header active-cases-header">
+          <div class="panel-title-wrap">
+            <div class="panel-icon blue-bg">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <div>
+              <h2 id="activeCasesTitle" class="panel-title">Active Cases & Court Scheduling</h2>
+              <p class="panel-subtitle">Sorted by client name and hearing countdowns</p>
+            </div>
+          </div>
+
+          <div class="header-action-group">
+            <button id="exportCasesBtn" class="btn btn-outline-gold btn-sm" title="Export today's cause list">
+              <i class="fa-solid fa-download"></i> Cause List
+            </button>
+            <button id="addSampleDataBtn" class="btn btn-outline-subtle btn-sm" title="Load sample courtroom dockets">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Load Samples
+            </button>
+          </div>
+        </div>
+
+        <!-- Group-Based Access Scope Banner -->
+        <div id="accessScopeBanner" class="access-scope-banner" role="status" aria-live="polite">
+          <!-- Populated dynamically via updateAccessScopeBanner() -->
+        </div>
+
+        <!-- Search & Filter Ribbon -->
+        <div class="search-filter-ribbon">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="clientSearchInput" placeholder="Search by Client Name, Case Number, or Court..."
+              aria-label="Search cases">
+            <button id="clearSearchBtn" class="btn-clear-search hidden" title="Clear search"><i
+                class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <!-- Filter Pills -->
+          <div class="filter-pills" role="tablist">
+            <button class="filter-pill active" data-filter="all">All Cases (<span id="countAll">0</span>)</button>
+            <button class="filter-pill" data-filter="today"><i class="fa-solid fa-bolt"></i> Today's Court (<span
+                id="countToday">0</span>)</button>
+            <button class="filter-pill" data-filter="upcoming"><i class="fa-regular fa-clock"></i> Upcoming (<span
+                id="countUpcoming">0</span>)</button>
+            <button class="filter-pill" data-filter="critical"><i class="fa-solid fa-fire"></i> Urgent (<span
+                id="countCritical">0</span>)</button>
+            <button class="filter-pill" data-filter="closed"><i class="fa-solid fa-check"></i> Resolved (<span
+                id="countClosed">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Live Case Stream Feed -->
+        <div class="cases-scroll-container">
+          <div id="casesList" class="cases-list-grid">
+            <!-- Dynamic Case Cards Rendered Here -->
+          </div>
+
+          <!-- Empty State (Hidden when items exist) -->
+          <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon-wrap">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <h3>No Legal Dockets Found</h3>
+            <p id="emptyStateMsg">There are no cases matching the selected criteria. Use the intake form on the left to
+              register a new case.</p>
+            <button id="emptyStateActionBtn" class="btn btn-gold btn-sm">
+              <i class="fa-solid fa-plus"></i> Add New Case
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- ================= ADMIN PORTAL & USER MANAGEMENT WORKSPACE ================= -->
+    <main class="main-workspace admin-workspace-grid hidden" id="adminWorkspace">
+      
+      <!-- Top Admin Header Banner -->
+      <div class="admin-top-banner">
+        <div class="admin-banner-left">
+          <div class="admin-crown-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <div class="admin-banner-title-row">
+              <h2 class="admin-banner-title">Chambers Administration & Access Control</h2>
+              <span class="badge-role-admin"><i class="fa-solid fa-lock"></i> RBAC Security Level 1</span>
+            </div>
+            <p class="admin-banner-subtitle">Create new login credentials, assign legal roles, configure departmental access, and monitor audit security logs.</p>
+          </div>
+        </div>
+
+        <div class="admin-banner-actions">
+          <button type="button" class="btn btn-gold btn-md" id="openAddUserModalBtn">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Add New Login User</span>
+          </button>
+          <button type="button" class="btn btn-outline-gold btn-md" id="exportUsersBtn" title="Export all user credentials & roster">
+            <i class="fa-solid fa-file-export"></i>
+            <span>Export Roster</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Statistics Cards -->
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card stat-total-users">
+          <div class="stat-card-icon gold"><i class="fa-solid fa-users"></i></div>
+          <div class="stat-card-content">
+            <span class="stat-card-val" id="adminStatTotalUsers">0</span>
+            <span class="stat-card-label">Total Login Accounts</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card stat-advocates">
+          <div class="stat-card-icon blue"><i class="fa-solid fa-gavel"></i></div>
+          <div class="stat-card-content">
+            <span class="stat-card-val" id="adminStatAdvocates">0</span>
+            <span class="stat-card-label">Senior Advocates</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card stat-associates">
+          <div class="stat-card-icon cyan"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="stat-card-content">
+            <span class="stat-card-val" id="adminStatAssociates">0</span>
+            <span class="stat-card-label">Associate Counsels</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card stat-clerks">
+          <div class="stat-card-icon purple"><i class="fa-solid fa-clipboard-user"></i></div>
+          <div class="stat-card-content">
+            <span class="stat-card-val" id="adminStatClerks">0</span>
+            <span class="stat-card-label">Registry & Clerks</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card stat-dockets">
+          <div class="stat-card-icon green"><i class="fa-solid fa-folder-tree"></i></div>
+          <div class="stat-card-content">
+            <span class="stat-card-val" id="adminStatDockets">0</span>
+            <span class="stat-card-label">Total Active Dockets</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Admin Panels Split Grid: User Table (Left 70%) & Audit Trail (Right 30%) -->
+      <div class="admin-panels-container">
+
+        <!-- User Directory Panel -->
+        <section class="admin-panel user-roster-panel">
+          <div class="admin-panel-header">
+            <div class="admin-panel-title-wrap">
+              <i class="fa-solid fa-id-card-clip gold-text"></i>
+              <div>
+                <h3 class="admin-panel-title">Chambers User Directory</h3>
+                <p class="admin-panel-subtitle">Manage advocate accounts, access roles & security status</p>
+              </div>
+            </div>
+            
+            <div class="admin-table-actions">
+              <button type="button" class="btn-icon-subtle" id="refreshUsersBtn" title="Refresh user roster">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- User Search and Filter Controls -->
+          <div class="admin-controls-ribbon">
+            <div class="admin-search-box">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="adminUserSearchInput" placeholder="Search by name, email, Bar Reg ID, department..." aria-label="Search users">
+              <button id="clearUserSearchBtn" class="btn-clear-search hidden" title="Clear search">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div class="admin-role-filter-pills" id="adminRoleFilterPills" role="tablist">
+              <button class="filter-pill active" data-role-filter="all">All Accounts (<span id="countAdminAll">0</span>)</button>
+              <button class="filter-pill" data-role-filter="admin"><i class="fa-solid fa-crown gold-text"></i> Admins (<span id="countAdminAdmins">0</span>)</button>
+              <button class="filter-pill" data-role-filter="senior"><i class="fa-solid fa-gavel"></i> Senior Counsel (<span id="countAdminSenior">0</span>)</button>
+              <button class="filter-pill" data-role-filter="associate"><i class="fa-solid fa-scale-balanced"></i> Associates (<span id="countAdminAssoc">0</span>)</button>
+              <button class="filter-pill" data-role-filter="clerk"><i class="fa-solid fa-clipboard-list"></i> Clerks (<span id="countAdminClerks">0</span>)</button>
+            </div>
+          </div>
+
+          <!-- Responsive Users Table -->
+          <div class="user-table-scroll-wrap">
+            <table class="user-roster-table" id="usersTable">
+              <thead>
+                <tr>
+                  <th>Legal Practitioner / User</th>
+                  <th>Contact & Email</th>
+                  <th>Chambers Role</th>
+                  <th>Department / Focus</th>
+                  <th>Account Status</th>
+                  <th style="text-align: right;">Administrative Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <!-- User rows rendered dynamically via JavaScript -->
+              </tbody>
+            </table>
+
+            <!-- User Empty State -->
+            <div id="adminUserEmptyState" class="empty-state hidden">
+              <div class="empty-icon-wrap">
+                <i class="fa-solid fa-user-slash"></i>
+              </div>
+              <h3>No User Accounts Found</h3>
+              <p>No chambers members match the selected search or role filter criteria.</p>
+              <button type="button" class="btn btn-gold btn-sm" onclick="if(window.openAddUserModal) window.openAddUserModal();">
+                <i class="fa-solid fa-user-plus"></i> Add New User Now
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Side: Security Audit Logs & Roles Guide -->
+        <aside class="admin-panel audit-logs-panel">
+          <div class="admin-panel-header">
+            <div class="admin-panel-title-wrap">
+              <i class="fa-solid fa-clock-rotate-left gold-text"></i>
+              <div>
+                <h3 class="admin-panel-title">Chambers Audit Trail</h3>
+                <p class="admin-panel-subtitle">Real-time security log</p>
+              </div>
+            </div>
+            <button type="button" class="btn-clear-logs" id="clearAuditLogsBtn" title="Clear audit history">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+
+          <!-- Live Audit Stream -->
+          <div class="audit-stream-container" id="auditStreamContainer">
+            <div class="audit-log-list" id="auditLogList">
+              <!-- Dynamically populated audit events -->
+            </div>
+          </div>
+
+          <!-- Chambers RBAC Reference Card -->
+          <div class="rbac-guide-card">
+            <div class="rbac-guide-header">
+              <i class="fa-solid fa-shield-halved gold-text"></i>
+              <strong>Role Permission Matrix</strong>
+            </div>
+            <ul class="rbac-permission-list">
+              <li><span class="role-badge-mini admin">Admin</span> Full chambers oversight, create/edit users, reset passwords, audit access.</li>
+              <li><span class="role-badge-mini senior">Sr. Advocate</span> Case intake, court appearances, strategy drafting, AI assistant.</li>
+              <li><span class="role-badge-mini associate">Associate</span> Docket updates, document analysis, client filing.</li>
+              <li><span class="role-badge-mini clerk">Clerk</span> Registry scheduling, hearing dates, cause list downloads.</li>
+            </ul>
+          </div>
+        </aside>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= ADD / EDIT USER MODAL ================= -->
+  <div id="userModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
+    <div class="modal-card user-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-user-gear gold-text"></i>
+          <div>
+            <h3 id="userModalTitle">Add New Chambers User</h3>
+            <p id="userModalSubtitle" class="modal-subtitle">Register a new advocate, associate or clerk login credential</p>
+          </div>
+        </div>
+        <button id="closeUserModalBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="userForm" class="modal-body" novalidate>
+        <input type="hidden" id="editUserId">
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="modalUserName"><i class="fa-regular fa-user"></i> Full Practitioner Name <span class="req">*</span></label>
+            <input type="text" id="modalUserName" placeholder="e.g. Adv. Priya Deshmukh" required>
+            <span class="error-msg" id="modalUserNameError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="modalUserEmail"><i class="fa-regular fa-envelope"></i> Professional Email (Login ID) <span class="req">*</span></label>
+            <input type="email" id="modalUserEmail" placeholder="e.g. priya.deshmukh@lexjuris.in" required>
+            <span class="error-msg" id="modalUserEmailError"></span>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="modalUserRole"><i class="fa-solid fa-shield-halved"></i> Chambers Access Role <span class="req">*</span></label>
+            <select id="modalUserRole" required>
+              <option value="Senior Advocate">Senior Advocate (Full Practice & Case Intake)</option>
+              <option value="Associate Advocate">Associate Advocate (Case Updates & Drafting)</option>
+              <option value="Chambers Administrator">Chambers Administrator (Full Admin & User Control)</option>
+              <option value="Registry Clerk">Registry Clerk (Hearing Scheduling & Cause List)</option>
+              <option value="Paralegal / Intern">Paralegal / Intern (Research & Docket Intake)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="modalUserBarReg"><i class="fa-solid fa-id-card"></i> Bar Council Reg. No. / Staff ID</label>
+            <input type="text" id="modalUserBarReg" placeholder="e.g. D/4982/2022">
+          </div>
+        </div>
+
+        <!-- Password Field with Instant Strong Generator -->
+        <div class="form-group" id="userPasswordGroup">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+            <label for="modalUserPassword"><i class="fa-solid fa-key"></i> <span id="pwdLabelText">Login Password</span> <span class="req">*</span></label>
+            <button type="button" class="btn-link-action" id="btnGenRandomPwd"><i class="fa-solid fa-dice"></i> Generate Strong Password</button>
+          </div>
+          <div class="password-wrapper">
+            <input type="text" id="modalUserPassword" placeholder="Minimum 6 characters (e.g. Lex#9824!)" required>
+            <button type="button" class="btn-toggle-pwd" id="toggleModalPwdBtn" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <span class="error-msg" id="modalUserPasswordError"></span>
+          <span class="form-hint" id="passwordFieldHint">This password will be used by the member to enter the Chambers portal.</span>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="modalUserDept"><i class="fa-solid fa-landmark"></i> Department / Practice Group</label>
+            <select id="modalUserDept">
+              <option value="Constitutional & Writ">Constitutional & Writ Practice</option>
+              <option value="Criminal Defense">Criminal Defense & Bail</option>
+              <option value="Corporate & M&A">Corporate & Commercial</option>
+              <option value="Civil Litigation">Civil Litigation & Property</option>
+              <option value="Arbitration & ADR">Arbitration & Dispute Resolution</option>
+              <option value="Taxation & Customs">Taxation & Customs</option>
+              <option value="Family & Matrimonial">Family & Matrimonial Law</option>
+              <option value="Chambers Administration">Chambers Administration / Management</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="modalUserGroupRole"><i class="fa-solid fa-sitemap"></i> Group Hierarchy Role <span class="req">*</span></label>
+            <select id="modalUserGroupRole" required>
+              <option value="subordinate" selected>Subordinate Counsel (Assigned Cases Only)</option>
+              <option value="head">Head of Group (Full Group & Updates Access)</option>
+              <option value="admin">Chambers Admin (Master Firm-Wide Access)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="modalUserPhone"><i class="fa-solid fa-phone"></i> Contact Phone Number</label>
+          <input type="tel" id="modalUserPhone" placeholder="+91 98765 43210">
+        </div>
+
+        <div class="form-group">
+          <label for="modalUserStatus"><i class="fa-solid fa-circle-check"></i> Account Status</label>
+          <select id="modalUserStatus">
+            <option value="Active">Active (Can Login & Access Dockets)</option>
+            <option value="Suspended">Suspended (Access Temporarily Revoked)</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelUserModalBtn" class="btn btn-outline-subtle">Cancel</button>
+          <button type="submit" class="btn btn-gold" id="saveUserBtn">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save Chambers User</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= RESET USER PASSWORD MODAL ================= -->
+  <div id="resetUserPasswordModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resetPwdModalTitle">
+    <div class="modal-card reset-pwd-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-key gold-text"></i>
+          <div>
+            <h3 id="resetPwdModalTitle">Reset Member Password</h3>
+            <p id="resetPwdModalSubtitle" class="modal-subtitle">Assign a new secure passcode for advocate</p>
+          </div>
+        </div>
+        <button id="closeResetPwdModalBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="resetPwdForm" class="modal-body" novalidate>
+        <input type="hidden" id="resetTargetUserId">
+
+        <div class="reset-user-summary" id="resetUserSummary">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="form-group">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+            <label for="newResetPassword"><i class="fa-solid fa-lock"></i> New Password <span class="req">*</span></label>
+            <button type="button" class="btn-link-action" id="btnGenResetPwd"><i class="fa-solid fa-dice"></i> Auto-Generate</button>
+          </div>
+          <div class="password-wrapper">
+            <input type="text" id="newResetPassword" placeholder="Enter new strong password" required>
+          </div>
+          <span class="error-msg" id="newResetPasswordError"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-container">
+            <input type="checkbox" id="copyCredsToClipboard" checked>
+            <span class="checkmark"></span>
+            Copy new login credentials to clipboard upon saving
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelResetPwdModalBtn" class="btn btn-outline-subtle">Cancel</button>
+          <button type="submit" class="btn btn-gold" id="saveResetPwdBtn">
+            <i class="fa-solid fa-check"></i>
+            <span>Update Password & Save</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= BAR COUNCIL HELP MODAL ================= -->
+  <div id="barHelpModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="barHelpTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-scale-balanced gold-text"></i>
+          <div>
+            <h3 id="barHelpTitle">Chambers Access & Bar Registry Help</h3>
+            <p class="modal-subtitle">LexJuris Authentication & Support</p>
+          </div>
+        </div>
+        <button id="closeBarHelpBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="help-info-box">
+          <h4><i class="fa-solid fa-crown gold-text"></i> Need Login Access?</h4>
+          <p>Please contact your <strong>Senior Managing Partner / Chambers Administrator</strong> at <code>admin@lexjuris.in</code> to request an official login account.</p>
+        </div>
+        <div class="help-info-box" style="margin-top: 1rem;">
+          <h4><i class="fa-solid fa-key gold-text"></i> Default Demo Passwords:</h4>
+          <ul style="margin-left: 1.2rem; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+            <li><strong>Chambers Admin:</strong> <code>admin@lexjuris.in</code> / <code>AdminPass2024!</code></li>
+            <li><strong>Senior Advocate:</strong> <code>advocate.sharma@lexjuris.in</code> / <code>Justice2024!</code></li>
+            <li><strong>Associate Counsel:</strong> <code>ananya.singh@lexjuris.in</code> / <code>Associate2024!</code></li>
+            <li><strong>Registry Clerk:</strong> <code>clerk.docket@lexjuris.in</code> / <code>Clerk2024!</code></li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="closeBarHelpModalBtn" class="btn btn-gold">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= RESCHEDULE / EDIT CASE MODAL ================= -->
+  <div id="caseModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-calendar-days gold-text"></i>
+          <div>
+            <h3 id="modalTitle">Reschedule Court Hearing</h3>
+            <p id="modalSubtitle" class="modal-subtitle">Docket: WP(C) 1204/2024</p>
+          </div>
+        </div>
+        <button id="closeModalBtn" class="btn-close-modal" aria-label="Close dialog"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="rescheduleForm" class="modal-body">
+        <input type="hidden" id="editCaseId">
+
+        <div class="modal-client-preview" id="modalClientSummary">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="form-group">
+          <label for="editCourtName"><i class="fa-solid fa-building-columns"></i> Court / Bench / Room</label>
+          <input type="text" id="editCourtName" required>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="editHearingDate"><i class="fa-regular fa-calendar"></i> Next Hearing Date</label>
+            <input type="date" id="editHearingDate" required>
+          </div>
+
+          <div class="form-group">
+            <label for="editHearingTime"><i class="fa-regular fa-clock"></i> Hearing Time</label>
+            <input type="time" id="editHearingTime" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editCaseStatus"><i class="fa-solid fa-tag"></i> Docket Status</label>
+          <select id="editCaseStatus">
+            <option value="Active">Active - In Proceeding</option>
+            <option value="Adjourned">Adjourned - Next Date</option>
+            <option value="Arguments">Listed for Final Arguments</option>
+            <option value="Order Reserved">Order / Judgment Reserved</option>
+            <option value="Disposed">Disposed / Resolved</option>
+          </select>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="editCaseGroup"><i class="fa-solid fa-layer-group"></i> Practice Group</label>
+            <select id="editCaseGroup">
+              <option value="Constitutional & Writ">Constitutional & Writ</option>
+              <option value="Corporate & M&A">Corporate & Commercial</option>
+              <option value="Criminal Defense">Criminal Defense</option>
+              <option value="Civil Litigation">Civil Litigation</option>
+              <option value="Arbitration & ADR">Arbitration & Dispute</option>
+              <option value="Taxation & Customs">Taxation & Customs</option>
+              <option value="Family & Matrimonial">Family & Matrimonial</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="editCaseAssignee"><i class="fa-solid fa-user-check"></i> Assigned Subordinate Counsel</label>
+            <select id="editCaseAssignee">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editNotes"><i class="fa-solid fa-file-pen"></i> Chamber Notes & Orders Passed</label>
+          <textarea id="editNotes" rows="3" placeholder="Note orders passed by Hon'ble Judge, list next compliance..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelModalBtn" class="btn btn-outline-subtle">Cancel</button>
+          <button type="submit" class="btn btn-gold">
+            <i class="fa-solid fa-check"></i> Save & Update Schedule
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= CASE UPDATES & TIMELINE MODAL ================= -->
+  <div id="caseUpdatesModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="caseUpdatesModalTitle">
+    <div class="modal-card case-updates-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-clock-rotate-left gold-text"></i>
+          <div>
+            <h3 id="caseUpdatesModalTitle">Docket Updates & Activity Stream</h3>
+            <p id="caseUpdatesModalSubtitle" class="modal-subtitle">WP(C) 4521/2024 • Rajesh Mehra</p>
+          </div>
+        </div>
+        <button id="closeCaseUpdatesModalBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body" style="padding-bottom: 0.5rem;">
+        <input type="hidden" id="updatesTargetCaseId">
+
+        <!-- Case Overview Meta Bar -->
+        <div class="updates-case-meta" id="updatesCaseMeta">
+          <!-- Dynamic meta summary: Group, Assignee, Court, Status -->
+        </div>
+
+        <!-- Add New Update Form -->
+        <div class="add-update-box">
+          <h4 class="add-update-title"><i class="fa-solid fa-plus-circle gold-text"></i> Log Case Update / Court Proceeding</h4>
+          <form id="addCaseUpdateForm" class="add-update-form">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="updateTitle"><i class="fa-solid fa-heading"></i> Update Summary / Heading <span class="req">*</span></label>
+                <input type="text" id="updateTitle" placeholder="e.g. Interim Order passed, Rejoinder filed" required>
+              </div>
+              <div class="form-group">
+                <label for="updateType"><i class="fa-solid fa-tag"></i> Update Type</label>
+                <select id="updateType">
+                  <option value="filing">Document / Petition Filing</option>
+                  <option value="hearing">Court Hearing Proceeding</option>
+                  <option value="order">Judicial Order / Direction</option>
+                  <option value="instruction">Senior Counsel Instruction</option>
+                  <option value="status">Status / Adjournment</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="updateNotes"><i class="fa-solid fa-align-left"></i> Detailed Notes & Next Steps <span class="req">*</span></label>
+              <textarea id="updateNotes" rows="2" placeholder="Record brief notes of proceeding, judge observations, or next compliance..." required></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+              <button type="submit" class="btn btn-gold btn-sm">
+                <i class="fa-solid fa-paper-plane"></i> Post Update to Docket
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Chronological Updates Timeline -->
+        <div class="updates-timeline-section">
+          <h4 class="timeline-heading"><i class="fa-solid fa-timeline gold-text"></i> Chronological Activity & Updates (<span id="updatesCountBadge">0</span>)</h4>
+          <div id="caseUpdatesTimeline" class="updates-timeline">
+            <!-- Dynamically populated timeline cards -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="closeCaseUpdatesModalBottomBtn" class="btn btn-outline-subtle">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JURISAI PERSONAL CHATBOT WIDGET ================= -->
+  <div id="aiChatWidget" class="ai-chat-widget">
+    
+    <!-- Floating Trigger Button -->
+    <button id="toggleAiChatBtn" class="btn-floating-ai" title="Open JurisAI Legal Assistant">
+      <div class="ai-pulse-ring"></div>
+      <i class="fa-solid fa-brain ai-icon"></i>
+      <span class="ai-badge-text">JurisAI</span>
+      <span class="ai-status-indicator" id="aiStatusDot" title="AI Status: Ready"></span>
+    </button>
+
+    <!-- Slide-out Chat Panel -->
+    <div id="aiChatPanel" class="ai-chat-panel hidden" role="region" aria-label="JurisAI Chatbot">
+      
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="chat-title-group">
+          <div class="chat-bot-avatar">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+          <div>
+            <div class="chat-bot-name">JurisAI <span class="gold-text">Chambers</span></div>
+            <div class="chat-bot-engine" id="chatEngineLabel">
+              <span class="engine-pill local" id="enginePill">Local LLM (Ollama)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-header-actions">
+          <button type="button" id="fullscreenChatBtn" class="btn-icon-chat" title="Toggle Fullscreen AI Studio">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+          <button type="button" id="aiSettingsBtn" class="btn-icon-chat" title="AI Settings & Local Model Config">
+            <i class="fa-solid fa-sliders"></i>
+          </button>
+          <button type="button" id="clearChatBtn" class="btn-icon-chat" title="Clear Chat History">
+            <i class="fa-solid fa-broom"></i>
+          </button>
+          <button type="button" id="closeChatBtn" class="btn-icon-chat" title="Minimize Assistant">
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Settings Drawer (Hidden by default) -->
+      <div id="aiSettingsDrawer" class="ai-settings-drawer hidden">
+        <div class="settings-drawer-header">
+          <span><i class="fa-solid fa-gear gold-text"></i> AI Engine Configuration</span>
+          <button type="button" id="closeSettingsDrawerBtn" class="btn-icon-subtle"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="settings-drawer-body">
+          <div class="form-group">
+            <label for="aiEngineSelect"><i class="fa-solid fa-microchip"></i> Select Engine</label>
+            <select id="aiEngineSelect">
+              <option value="local_ollama">Local LLM (Ollama / Localhost)</option>
+              <option value="gemini_api">Google Gemini API (Cloud Key)</option>
+              <option value="smart_mock">Built-in Smart Legal Brain (Offline)</option>
+            </select>
+          </div>
+
+          <!-- Local Ollama Config Section -->
+          <div id="ollamaConfigSection" class="config-sub-section">
+            <div class="form-group">
+              <label for="ollamaHostUrl"><i class="fa-solid fa-network-wired"></i> Ollama Server URL</label>
+              <div style="display: flex; gap: 0.4rem;">
+                <input type="text" id="ollamaHostUrl" value="http://localhost:11434" placeholder="http://localhost:11434">
+                <button type="button" id="testOllamaBtn" class="btn btn-outline-gold btn-sm" title="Check connection to Ollama server">
+                  <i class="fa-solid fa-plug"></i> Test
+                </button>
+              </div>
+              <span id="ollamaStatusMsg" style="font-size: 0.72rem; min-height: 14px;"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="ollamaModelName"><i class="fa-solid fa-cube"></i> Model Name</label>
+              <div style="display: flex; gap: 0.4rem;">
+                <select id="ollamaModelSelect" class="hidden" style="margin-bottom: 0.35rem;"></select>
+                <input type="text" id="ollamaModelName" value="llama3.2" placeholder="e.g. llama3.2, llama3, deepseek-r1, mistral">
+              </div>
+            </div>
+
+            <div class="ollama-help-tip" id="ollamaTerminalTip">
+              <i class="fa-solid fa-terminal"></i> Download model in terminal: <code>ollama run llama3.2</code> (or <code>llama3</code>)
+            </div>
+          </div>
+
+          <!-- Cloud API Key Config Section (Hidden by default) -->
+          <div id="apiConfigSection" class="config-sub-section hidden">
+            <div class="form-group">
+              <label for="cloudApiKey"><i class="fa-solid fa-key"></i> Gemini API Key</label>
+              <input type="password" id="cloudApiKey" placeholder="AIzaSy...">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="aiPersonaSelect"><i class="fa-solid fa-masks-theater"></i> Chatbot Persona</label>
+            <select id="aiPersonaSelect">
+              <option value="co_counsel">Personal Chambers Co-Counsel (Balanced & Strategic)</option>
+              <option value="friendly">Warm & Friendly Personal AI Companion</option>
+              <option value="opposing">Opposing Counsel (Moot Court Prep & Tough Cross-Exam)</option>
+              <option value="researcher">Strict Statutory & Case Law Researcher</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="userNicknameInput"><i class="fa-regular fa-id-badge"></i> What should JurisAI call you?</label>
+            <input type="text" id="userNicknameInput" placeholder="e.g. Adv. Sharma or Chinmay" value="Counsel">
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-container">
+              <input type="checkbox" id="voiceSpeakResponses">
+              <span class="checkmark"></span>
+              <i class="fa-solid fa-volume-high gold-text"></i> Speak responses aloud (Voice Synthesis)
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-container" style="align-items: flex-start;">
+              <input type="checkbox" id="shareDataConsent">
+              <span class="checkmark" style="margin-top: 2px;"></span>
+              <div>
+                <i class="fa-solid fa-shield-halved" style="color:var(--status-urgent);"></i> <strong>Share Chamber Data with AI</strong>
+                <p style="font-size:0.65rem; color:var(--text-muted); margin-top:2px;">Allows JurisAI to read your dockets and client names for context-aware answers. Keep unchecked for maximum privacy.</p>
+              </div>
+            </label>
+          </div>
+
+          <button type="button" id="saveAiSettingsBtn" class="btn btn-gold btn-sm btn-block">
+            <i class="fa-solid fa-check"></i> Save Personal Settings
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Action Prompt Chips -->
+      <div class="chat-quick-prompts">
+        <button type="button" class="quick-prompt-chip" data-prompt="What court hearings do I have scheduled today and tomorrow?">
+          <i class="fa-solid fa-calendar-day"></i> Upcoming Hearings
+        </button>
+        <button type="button" class="quick-prompt-chip" data-prompt="Add a new urgent case for client Ananya Roy in Delhi High Court tomorrow at 11 AM">
+          <i class="fa-solid fa-plus"></i> Add Case via Chat
+        </button>
+        <button type="button" class="quick-prompt-chip" data-prompt="Draft a formal legal notice for breach of commercial contract under Indian Contract Act.">
+          <i class="fa-solid fa-feather-pointed"></i> Draft Notice
+        </button>
+        <button type="button" class="quick-prompt-chip" data-prompt="Act as opposing counsel and challenge my anticipatory bail argument.">
+          <i class="fa-solid fa-bolt"></i> Moot Challenge
+        </button>
+      </div>
+
+      <!-- Messages Stream -->
+      <div id="chatMessages" class="chat-messages-container">
+        <!-- Default Welcome Message -->
+        <div class="chat-bubble bot-bubble">
+          <div class="bubble-avatar"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="bubble-content">
+            <p><strong>Hello!</strong> I am your personal <strong>JurisAI Companion & Chambers Co-Counsel</strong>. You can chat with me naturally, speak by voice 🎙️, ask me anything, or tell me to manage your court dockets!</p>
+            <p style="margin-top:0.4rem; font-size:0.8rem; color:var(--text-secondary);">
+              💬 <em>Try saying:</em> "What cases do I have this week?", "Add a case for Amit Verma", or "Draft a bail application".
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Typing Indicator (Hidden by default) -->
+      <div id="chatTypingIndicator" class="chat-typing-indicator hidden">
+        <div class="bubble-avatar"><i class="fa-solid fa-scale-balanced"></i></div>
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="typing-label" id="typingLabel">JurisAI is thinking...</span>
+      </div>
+
+      <!-- Chat Input Area -->
+      <form id="aiChatForm" class="chat-input-container">
+        <button type="button" id="voiceInputBtn" class="btn-icon-chat btn-voice-input" title="Speak to JurisAI (Voice Input)">
+          <i class="fa-solid fa-microphone"></i>
+        </button>
+        <textarea id="aiChatInput" rows="1" placeholder="Chat with JurisAI, speak by voice, or manage cases..." required></textarea>
+        <button type="submit" id="sendAiBtn" class="btn-send-chat" title="Send message">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- JavaScript Module -->
+  <script src="app.js"></script>
+</body>
+</html>
