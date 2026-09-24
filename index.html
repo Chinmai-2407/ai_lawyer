@@ -709,6 +709,11 @@
                 </button>
               </div>
             </div>
+
+            <!-- Quick Add Document to Existing Case Button -->
+            <button type="button" class="btn btn-gold btn-sm" id="btnOpenGlobalAddDocModal" title="Upload and add a document to any existing case docket">
+              <i class="fa-solid fa-file-circle-plus"></i> + Add Document to Case
+            </button>
           </div>
 
           <!-- Filter Pills -->
@@ -1287,6 +1292,108 @@
       <div class="modal-footer">
         <button type="button" id="closeCaseUpdatesModalBottomBtn" class="btn btn-outline-subtle">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= ADD NEW DOCUMENT TO CASE MODAL ================= -->
+  <div id="addNewDocModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="addNewDocModalTitle">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-file-circle-plus gold-text"></i>
+          <div>
+            <h3 id="addNewDocModalTitle">Add Document to Existing Case</h3>
+            <p id="addNewDocModalSubtitle" class="modal-subtitle">Upload and attach legal records, orders, or exhibits to a case</p>
+          </div>
+        </div>
+        <button id="closeAddNewDocModalBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="addNewDocForm" class="modal-body">
+        <!-- Target Case Selector -->
+        <div class="form-group" id="targetCaseSelectGroup">
+          <label for="selectExistingCase"><i class="fa-solid fa-scale-balanced gold-text"></i> Select Existing Case Docket <span class="req">*</span></label>
+          <select id="selectExistingCase" required>
+            <!-- Populated dynamically with all existing cases -->
+          </select>
+        </div>
+
+        <!-- Selected Case Context Card -->
+        <div class="modal-client-preview" id="addNewDocCasePreview" style="margin-bottom: 1rem;">
+          <!-- Populated dynamically with Case Title, Client, Court, Status -->
+        </div>
+
+        <!-- File Upload Dropzone -->
+        <div class="form-group">
+          <label><i class="fa-solid fa-cloud-arrow-up gold-text"></i> Upload Document File <span class="req">*</span></label>
+          <div class="doc-upload-dropzone" id="quickAddDocDropzone">
+            <input type="file" id="quickAddDocInput" class="doc-file-input" accept=".pdf,.docx,.doc,.txt,.rtf,.png,.jpg,.jpeg">
+            <div class="dropzone-inner" id="quickAddDropzoneDefault">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.6rem; color: var(--gold-primary);"></i>
+              <div class="dropzone-text"><strong>Click to browse</strong> or drag &amp; drop document</div>
+              <div class="dropzone-sub">Supports PDF, DOCX, TXT, Images (Affidavits, Orders, Petitions)</div>
+            </div>
+            <div class="dropzone-attached hidden" id="quickAddDropzoneAttached">
+              <div class="attached-file-info">
+                <i class="fa-solid fa-file-circle-check attached-icon gold-text"></i>
+                <div class="attached-details">
+                  <span class="attached-name" id="quickAddAttachedFileName">document.pdf</span>
+                  <span class="attached-size" id="quickAddAttachedFileSize">0 KB</span>
+                </div>
+              </div>
+              <button type="button" id="removeQuickAddDocBtn" class="btn-remove-doc" title="Remove selected file">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document Metadata Grid -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="quickAddDocCategory"><i class="fa-solid fa-tag"></i> Document Category <span class="req">*</span></label>
+            <select id="quickAddDocCategory" required>
+              <option value="Court Order / Judgment">Court Order / Judgment / Stay</option>
+              <option value="Petition / Plaint">Petition / Plaint / Writ</option>
+              <option value="Evidence / Exhibit">Evidence / Exhibit / Annexure</option>
+              <option value="Written Statement">Written Statement / Reply</option>
+              <option value="Rejoinder">Rejoinder / Replication</option>
+              <option value="Bail Application">Bail Application / Surety</option>
+              <option value="Vakalatnama">Vakalatnama / Memo of Appearance</option>
+              <option value="Legal Notice">Statutory Legal Notice</option>
+              <option value="Affidavit">Affidavit / Verification</option>
+              <option value="Agreement / Contract">Agreement / Commercial Contract</option>
+              <option value="Other Document">Other Case Document</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="quickAddDocTitle"><i class="fa-solid fa-heading"></i> Document Title / Description <span class="req">*</span></label>
+            <input type="text" id="quickAddDocTitle" placeholder="e.g. Certified Copy of High Court Stay Order" required>
+          </div>
+        </div>
+
+        <!-- Optional Notes / Synopsis -->
+        <div class="form-group">
+          <label for="quickAddDocNotes"><i class="fa-solid fa-pen-nib"></i> Filing Notes &amp; Observations (Optional)</label>
+          <textarea id="quickAddDocNotes" rows="2" placeholder="Key provisions, clauses, or instructions regarding this document..."></textarea>
+        </div>
+
+        <!-- AI Analysis Checkbox Option -->
+        <div style="background: rgba(197, 160, 89, 0.08); border: 1px dashed var(--gold-border); border-radius: var(--radius-sm); padding: 0.65rem 0.85rem; margin-top: 0.25rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--navy-primary);">
+            <input type="checkbox" id="quickAddAutoAiSummary" checked style="accent-color: var(--gold-primary);">
+            <span><i class="fa-solid fa-wand-magic-sparkles gold-text"></i> Automatically run JurisAI analysis &amp; generate legal synopsis</span>
+          </label>
+        </div>
+
+        <div class="modal-footer" style="padding-left: 0; padding-right: 0; padding-bottom: 0;">
+          <button type="button" id="cancelAddNewDocModalBtn" class="btn btn-outline-subtle">Cancel</button>
+          <button type="submit" class="btn btn-gold" id="submitAddNewDocBtn">
+            <i class="fa-solid fa-plus"></i> Upload &amp; Attach to Case
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
