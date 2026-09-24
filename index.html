@@ -655,6 +655,78 @@
       <!-- ================= RIGHT COLUMN: ACTIVE CASES & COURT SCHEDULE ================= -->
       <section class="workspace-panel panel-right" aria-labelledby="activeCasesTitle">
 
+      <!-- ================= COMPACT QUICK-ADD CASE BOX ================= -->
+      <div class="quick-add-box" id="quickAddCaseBox">
+        <div class="quick-add-header" id="quickAddToggleHeader">
+          <div class="quick-add-header-left">
+            <div class="panel-icon gold-bg">
+              <i class="fa-solid fa-folder-plus"></i>
+            </div>
+            <div>
+              <div class="quick-add-title">New Case Intake</div>
+              <div class="quick-add-subtitle">Click to quickly register a new client brief</div>
+            </div>
+          </div>
+          <button type="button" class="quick-add-toggle-btn" id="quickAddToggleBtn">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Case</span>
+            <i class="fa-solid fa-chevron-down toggle-chevron"></i>
+          </button>
+        </div>
+
+        <div class="quick-add-form-body" id="quickAddFormBody">
+          <form id="quickAddCaseForm" novalidate>
+            <!-- Row 1: Client Name, Phone, Case Title, Case No -->
+            <div class="quick-add-grid">
+              <div class="form-group">
+                <label for="qa_clientName"><i class="fa-regular fa-user"></i> Client Name <span class="req">*</span></label>
+                <input type="text" id="qa_clientName" placeholder="e.g. Rajesh Mehra" required>
+              </div>
+              <div class="form-group">
+                <label for="qa_clientPhone"><i class="fa-solid fa-phone"></i> Phone <span class="req">*</span></label>
+                <input type="tel" id="qa_clientPhone" placeholder="+91 98765 43210" required>
+              </div>
+              <div class="form-group">
+                <label for="qa_caseTitle"><i class="fa-solid fa-heading"></i> Case Title <span class="req">*</span></label>
+                <input type="text" id="qa_caseTitle" placeholder="e.g. Mehra vs. MCD" required>
+              </div>
+              <div class="form-group">
+                <label for="qa_caseNumber"><i class="fa-solid fa-hashtag"></i> Case / Suit No. <span class="req">*</span></label>
+                <input type="text" id="qa_caseNumber" placeholder="e.g. WP(C) 4521/2024" required>
+              </div>
+            </div>
+
+            <!-- Row 2: Category, Court, Hearing Date, Submit -->
+            <div class="quick-add-row2">
+              <div class="form-group">
+                <label for="qa_caseCategory"><i class="fa-solid fa-landmark"></i> Category <span class="req">*</span></label>
+                <select id="qa_caseCategory" required>
+                  <option value="Civil Litigation">Civil Litigation</option>
+                  <option value="Criminal Defense">Criminal Defense</option>
+                  <option value="Constitutional &amp; Writ">Constitutional &amp; Writ</option>
+                  <option value="Corporate &amp; M&amp;A">Corporate &amp; Commercial</option>
+                  <option value="Family &amp; Matrimonial">Family &amp; Matrimonial</option>
+                  <option value="Intellectual Property">Intellectual Property</option>
+                  <option value="Taxation &amp; Customs">Taxation &amp; Customs</option>
+                  <option value="Arbitration &amp; ADR">Arbitration &amp; ADR</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="qa_courtName"><i class="fa-solid fa-building-columns"></i> Court / Bench <span class="req">*</span></label>
+                <input type="text" id="qa_courtName" placeholder="e.g. Delhi High Court, Bench 2" required>
+              </div>
+              <div class="form-group">
+                <label for="qa_hearingDate"><i class="fa-regular fa-calendar"></i> Hearing Date <span class="req">*</span></label>
+                <input type="date" id="qa_hearingDate" required>
+              </div>
+              <button type="submit" class="btn btn-gold btn-sm" id="qaSubmitBtn" style="white-space:nowrap; height:36px; padding: 0 1rem;">
+                <i class="fa-solid fa-gavel"></i> File Case
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
         <!-- Controls & Header -->
         <div class="panel-header active-cases-header">
           <div class="panel-title-wrap">

@@ -5718,3 +5718,116 @@ if (document.readyState === 'loading') {
   initApp();
 }
 
+// ==========================================================================
+// QUICK-ADD CASE BOX — Toggle & Submit Logic
+// ==========================================================================
+
+(function setupQuickAddBox() {
+  function init() {
+    const toggleBtn = document.getElementById('quickAddToggleBtn');
+    const formBody  = document.getElementById('quickAddFormBody');
+    const form      = document.getElementById('quickAddCaseForm');
+    const header    = document.getElementById('quickAddToggleHeader');
+
+    if (!toggleBtn || !formBody || !form) return;
+
+    // Set today's date as default for hearing date
+    const qaDate = document.getElementById('qa_hearingDate');
+    if (qaDate) {
+      const today = new Date();
+      qaDate.value = today.toISOString().split('T')[0];
+    }
+
+    // Toggle expand/collapse on button or header click
+    function toggleForm() {
+      const isOpen = formBody.classList.contains('expanded');
+      formBody.classList.toggle('expanded', !isOpen);
+      toggleBtn.classList.toggle('open', !isOpen);
+      toggleBtn.querySelector('span').textContent = isOpen ? 'Add Case' : 'Close';
+    }
+
+    toggleBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleForm();
+    });
+
+    header.addEventListener('click', function(e) {
+      if (e.target === toggleBtn || toggleBtn.contains(e.target)) return;
+      toggleForm();
+    });
+
+    // Submit quick-add form
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const clientName  = (document.getElementById('qa_clientName')?.value  || '').trim();
+      const clientPhone = (document.getElementById('qa_clientPhone')?.value || '').trim();
+      const caseTitle   = (document.getElementById('qa_caseTitle')?.value   || '').trim();
+      const caseNumber  = (document.getElementById('qa_caseNumber')?.value  || '').trim();
+      const caseCategory= document.getElementById('qa_caseCategory')?.value || 'Civil Litigation';
+      const courtName   = (document.getElementById('qa_courtName')?.value   || '').trim();
+      const hearingDate = document.getElementById('qa_hearingDate')?.value  || '';
+
+      // Basic validation
+      if (!clientName || !clientPhone || !caseTitle || !caseNumber || !courtName || !hearingDate) {
+        if (typeof showToast === 'function') showToast('Please fill all required fields.', 'error');
+        return;
+      }
+
+      // Build new case object matching existing schema
+      const currentUser = (typeof state !== 'undefined' && state.currentUser) ? state.currentUser : null;
+      const newCase = {
+        id: 'case_' + Date.now() + '_qa',
+        clientName,
+        clientPhone,
+        opposingParty: '',
+        caseTitle,
+        caseNumber,
+        caseCategory,
+        group: (currentUser && currentUser.group) ? currentUser.group : 'Constitutional & Writ',
+        assignedTo: '',
+        assignedToName: currentUser ? currentUser.name : '',
+        assignedToEmail: currentUser ? currentUser.email : '',
+        assignedBy: currentUser ? currentUser.name : '',
+        priority: 'Standard',
+        courtName,
+        hearingDate,
+        hearingTime: '10:00',
+        notes: '',
+        status: 'Active',
+        updates: [],
+        documents: [],
+        createdAt: new Date().toISOString()
+      };
+
+      // Add to state and save
+      if (typeof state !== 'undefined') {
+        state.cases.unshift(newCase);
+        if (typeof saveCasesToStorage === 'function') saveCasesToStorage();
+        if (typeof logAuditEvent === 'function') {
+          logAuditEvent('Case Filed (Quick Add)', `Case "${caseTitle}" registered for client ${clientName}.`, 'create');
+        }
+        if (typeof renderDashboard === 'function') renderDashboard();
+      }
+
+      if (typeof showToast === 'function') {
+        showToast(`Case "${caseTitle}" filed successfully!`, 'success');
+      }
+
+      // Reset & collapse
+      form.reset();
+      if (qaDate) qaDate.value = new Date().toISOString().split('T')[0];
+      formBody.classList.remove('expanded');
+      toggleBtn.classList.remove('open');
+      toggleBtn.querySelector('span').textContent = 'Add Case';
+    });
+  }
+
+  // Wait for DOM
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
