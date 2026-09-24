@@ -4973,31 +4973,127 @@ function escapeHTML(str) {
 }
 
 // ==========================================================================
-// 11. JURISAI PERSONAL CHATBOT ENGINE (LOCAL LLM & SMART BRAIN)
+// 11. JURISAI PERSONAL CHATBOT ENGINE (MULTI-LLM & SMART BRAIN)
 // ==========================================================================
 
 const AI_STORAGE_KEYS = {
   ENGINE: 'jurisai_engine_type',
+  PROVIDER: 'jurisai_llm_provider',
+  API_KEY: 'jurisai_llm_api_key',
+  MODEL: 'jurisai_llm_model',
+  BASE_URL: 'jurisai_llm_base_url',
+  BANNER_DISMISSED: 'jurisai_banner_dismissed',
   OLLAMA_HOST: 'jurisai_ollama_host',
   OLLAMA_MODEL: 'jurisai_ollama_model',
-  CLOUD_KEY: 'jurisai_cloud_key',
+  CLOUD_KEY: 'jurisai_cloud_key', // backward compatibility
   PERSONA: 'jurisai_persona_type',
   NICKNAME: 'jurisai_user_nickname',
   VOICE_SPEAK: 'jurisai_voice_speak',
   SHARE_DATA: 'jurisai_share_data'
 };
 
+const LLM_PROVIDERS = {
+  gemini: {
+    id: 'gemini',
+    name: 'Google Gemini',
+    badgeClass: 'gemini',
+    defaultModel: 'gemini-1.5-flash',
+    models: ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
+    defaultBaseUrl: 'https://generativelanguage.googleapis.com',
+    placeholder: 'AIzaSy...',
+    label: 'Gemini API Key',
+    helpUrl: 'https://aistudio.google.com/app/apikey',
+    helpText: 'Get Free Gemini Key (Google AI Studio)'
+  },
+  openai: {
+    id: 'openai',
+    name: 'OpenAI',
+    badgeClass: 'openai',
+    defaultModel: 'gpt-4o-mini',
+    models: ['gpt-4o-mini', 'gpt-4o', 'o3-mini'],
+    defaultBaseUrl: 'https://api.openai.com/v1',
+    placeholder: 'sk-proj-...',
+    label: 'OpenAI API Key',
+    helpUrl: 'https://platform.openai.com/api-keys',
+    helpText: 'Get OpenAI API Key'
+  },
+  groq: {
+    id: 'groq',
+    name: 'Groq Cloud',
+    badgeClass: 'groq',
+    defaultModel: 'llama-3.3-70b-versatile',
+    models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'deepseek-r1-distill-llama-70b'],
+    defaultBaseUrl: 'https://api.groq.com/openai/v1',
+    placeholder: 'gsk_...',
+    label: 'Groq API Key',
+    helpUrl: 'https://console.groq.com/keys',
+    helpText: 'Get Free Groq Key (Ultra-Fast Inference)'
+  },
+  openrouter: {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    badgeClass: 'openrouter',
+    defaultModel: 'deepseek/deepseek-chat',
+    models: ['deepseek/deepseek-chat', 'deepseek/deepseek-r1', 'anthropic/claude-3.5-sonnet'],
+    defaultBaseUrl: 'https://openrouter.ai/api/v1',
+    placeholder: 'sk-or-v1-...',
+    label: 'OpenRouter API Key',
+    helpUrl: 'https://openrouter.ai/keys',
+    helpText: 'Get OpenRouter Key'
+  },
+  custom: {
+    id: 'custom',
+    name: 'Custom Endpoint',
+    badgeClass: 'cloud',
+    defaultModel: 'llama3',
+    models: ['llama3', 'mistral', 'deepseek-chat'],
+    defaultBaseUrl: 'http://localhost:1234/v1',
+    placeholder: 'Optional API token...',
+    label: 'API Key / Token',
+    helpUrl: '',
+    helpText: ''
+  },
+  local_ollama: {
+    id: 'local_ollama',
+    name: 'Local Ollama',
+    badgeClass: 'local',
+    defaultModel: 'llama3.2',
+    models: ['llama3.2', 'deepseek-r1', 'mistral'],
+    defaultBaseUrl: 'http://localhost:11434',
+    placeholder: '',
+    label: 'No API Key needed',
+    helpUrl: 'https://ollama.com',
+    helpText: 'Ollama Documentation'
+  },
+  smart_mock: {
+    id: 'smart_mock',
+    name: 'Smart Legal Brain',
+    badgeClass: 'local',
+    defaultModel: 'offline-rule-engine',
+    models: [],
+    defaultBaseUrl: '',
+    placeholder: '',
+    label: 'No API Key needed',
+    helpUrl: '',
+    helpText: ''
+  }
+};
+
 let aiState = {
   isOpen: false,
   isThinking: false,
-  engine: localStorage.getItem(AI_STORAGE_KEYS.ENGINE) || 'local_ollama',
+  provider: localStorage.getItem(AI_STORAGE_KEYS.PROVIDER) || 'gemini',
+  engine: localStorage.getItem(AI_STORAGE_KEYS.ENGINE) || 'gemini',
+  apiKey: localStorage.getItem(AI_STORAGE_KEYS.API_KEY) || localStorage.getItem(AI_STORAGE_KEYS.CLOUD_KEY) || '',
+  model: localStorage.getItem(AI_STORAGE_KEYS.MODEL) || 'gemini-1.5-flash',
+  baseUrl: localStorage.getItem(AI_STORAGE_KEYS.BASE_URL) || 'https://generativelanguage.googleapis.com',
   ollamaHost: localStorage.getItem(AI_STORAGE_KEYS.OLLAMA_HOST) || 'http://localhost:11434',
-  ollamaModel: localStorage.getItem(AI_STORAGE_KEYS.OLLAMA_MODEL) || 'llama3.2:1b',
-  cloudKey: localStorage.getItem(AI_STORAGE_KEYS.CLOUD_KEY) || '',
+  ollamaModel: localStorage.getItem(AI_STORAGE_KEYS.OLLAMA_MODEL) || 'llama3.2',
   persona: localStorage.getItem(AI_STORAGE_KEYS.PERSONA) || 'co_counsel',
   nickname: localStorage.getItem(AI_STORAGE_KEYS.NICKNAME) || 'Counsel',
   voiceSpeak: localStorage.getItem(AI_STORAGE_KEYS.VOICE_SPEAK) === 'true',
   shareData: localStorage.getItem(AI_STORAGE_KEYS.SHARE_DATA) === 'true',
+  bannerDismissed: localStorage.getItem(AI_STORAGE_KEYS.BANNER_DISMISSED) === 'true',
   messages: []
 };
 
@@ -5025,8 +5121,33 @@ function setupAiChatbot() {
   const cloudKeyInput = document.getElementById('cloudApiKey');
   const ollamaSection = document.getElementById('ollamaConfigSection');
   const apiSection = document.getElementById('apiConfigSection');
-  const enginePill = document.getElementById('enginePill');
   const quickPrompts = document.querySelectorAll('.quick-prompt-chip');
+
+  const openApiKeyModalBtn = document.getElementById('openApiKeyModalBtn');
+  const drawerOpenApiKeyBtn = document.getElementById('drawerOpenApiKeyBtn');
+  const bannerAddKeyBtn = document.getElementById('bannerAddKeyBtn');
+  const bannerDismissBtn = document.getElementById('bannerDismissBtn');
+  const apiKeyPromptBanner = document.getElementById('aiApiKeyPromptBanner');
+
+  const aiApiKeyModal = document.getElementById('aiApiKeyModal');
+  const closeApiKeyModalBtn = document.getElementById('closeApiKeyModalBtn');
+  const modalCancelApiKeyBtn = document.getElementById('modalCancelApiKeyBtn');
+  const modalSaveApiKeyBtn = document.getElementById('modalSaveApiKeyBtn');
+  const modalTestApiKeyBtn = document.getElementById('modalTestApiKeyBtn');
+  const modalLlmProvider = document.getElementById('modalLlmProvider');
+  const modalApiKeyInput = document.getElementById('modalApiKeyInput');
+  const modalApiKeyLabel = document.getElementById('modalApiKeyLabel');
+  const modalApiKeyHelpLink = document.getElementById('modalApiKeyHelpLink');
+  const modalApiModelInput = document.getElementById('modalApiModelInput');
+  const modalApiBaseUrlInput = document.getElementById('modalApiBaseUrlInput');
+  const modalApiBaseUrlGroup = document.getElementById('modalApiBaseUrlGroup');
+  const toggleApiKeyVisBtn = document.getElementById('toggleApiKeyVisBtn');
+  const modalApiKeySection = document.getElementById('modalApiKeySection');
+  const modalOllamaSection = document.getElementById('modalOllamaSection');
+  const modalOllamaHost = document.getElementById('modalOllamaHost');
+  const modalOllamaModel = document.getElementById('modalOllamaModel');
+  const modalTestStatusBox = document.getElementById('modalTestStatusBox');
+  const modalModelChipsContainer = document.getElementById('modalModelChipsContainer');
 
   const testOllamaBtn = document.getElementById('testOllamaBtn');
   const ollamaStatusMsg = document.getElementById('ollamaStatusMsg');
@@ -5035,14 +5156,17 @@ function setupAiChatbot() {
   if (!toggleBtn || !chatPanel) return;
 
   // Initialize UI with saved settings
-  if (engineSelect) engineSelect.value = aiState.engine;
+  if (engineSelect) engineSelect.value = aiState.provider || aiState.engine;
   if (personaSelect) personaSelect.value = aiState.persona;
   if (nicknameInput) nicknameInput.value = aiState.nickname;
   if (voiceSpeakCheckbox) voiceSpeakCheckbox.checked = aiState.voiceSpeak;
   if (shareDataCheckbox) shareDataCheckbox.checked = aiState.shareData;
   if (ollamaHostInput) ollamaHostInput.value = aiState.ollamaHost;
   if (ollamaModelInput) ollamaModelInput.value = aiState.ollamaModel;
-  if (cloudKeyInput) cloudKeyInput.value = aiState.cloudKey;
+  if (cloudKeyInput) cloudKeyInput.value = aiState.apiKey;
+
+  // Manage banner visibility
+  updateApiKeyBanner();
   updateEngineDisplayPill();
 
   // Test Ollama Connection & Fetch Models
@@ -5060,7 +5184,6 @@ function setupAiChatbot() {
           const modelNames = data.models.map(m => m.name);
           ollamaStatusMsg.innerHTML = `<span style="color:#10b981;"><i class="fa-solid fa-circle-check"></i> Connected! Found ${modelNames.length} model(s): <strong>${modelNames.join(', ')}</strong></span>`;
           
-          // Populate select
           if (ollamaModelSelect) {
             ollamaModelSelect.innerHTML = modelNames.map(m => `<option value="${m}">${m}</option>`).join('');
             ollamaModelSelect.classList.remove('hidden');
@@ -5149,33 +5272,44 @@ function setupAiChatbot() {
     settingsDrawer.classList.add('hidden');
   });
 
-  // Engine Select Switch
-  engineSelect.addEventListener('change', () => {
-    const selected = engineSelect.value;
-    if (selected === 'local_ollama') {
-      ollamaSection.classList.remove('hidden');
-      apiSection.classList.add('hidden');
-    } else if (selected === 'gemini_api') {
-      ollamaSection.classList.add('hidden');
-      apiSection.classList.remove('hidden');
-    } else {
-      ollamaSection.classList.add('hidden');
-      apiSection.classList.add('hidden');
-    }
-  });
+  // Engine Select in Drawer Switch
+  if (engineSelect) {
+    engineSelect.addEventListener('change', () => {
+      const selected = engineSelect.value;
+      if (selected === 'local_ollama') {
+        ollamaSection?.classList.remove('hidden');
+        apiSection?.classList.add('hidden');
+      } else if (selected === 'smart_mock') {
+        ollamaSection?.classList.add('hidden');
+        apiSection?.classList.add('hidden');
+      } else {
+        ollamaSection?.classList.add('hidden');
+        apiSection?.classList.remove('hidden');
+      }
+    });
+  }
 
-  // Save Settings
+  // Drawer Save Settings
   if (saveSettingsBtn) {
     saveSettingsBtn.addEventListener('click', () => {
-      aiState.engine = engineSelect ? engineSelect.value : 'local_ollama';
+      const selectedProvider = engineSelect ? engineSelect.value : 'gemini';
+      aiState.provider = selectedProvider;
+      aiState.engine = selectedProvider;
       aiState.persona = personaSelect ? personaSelect.value : 'co_counsel';
       aiState.nickname = nicknameInput ? nicknameInput.value.trim() || 'Counsel' : 'Counsel';
       aiState.voiceSpeak = voiceSpeakCheckbox ? voiceSpeakCheckbox.checked : false;
       aiState.shareData = shareDataCheckbox ? shareDataCheckbox.checked : false;
       aiState.ollamaHost = ollamaHostInput ? ollamaHostInput.value.trim() : 'http://localhost:11434';
-      aiState.ollamaModel = ollamaModelInput ? ollamaModelInput.value.trim() : 'llama3.2:1b';
-      aiState.cloudKey = cloudKeyInput ? cloudKeyInput.value.trim() : '';
+      aiState.ollamaModel = ollamaModelInput ? ollamaModelInput.value.trim() : 'llama3.2';
+      
+      const keyVal = cloudKeyInput ? cloudKeyInput.value.trim() : '';
+      if (keyVal) {
+        aiState.apiKey = keyVal;
+        localStorage.setItem(AI_STORAGE_KEYS.API_KEY, keyVal);
+        localStorage.setItem(AI_STORAGE_KEYS.CLOUD_KEY, keyVal);
+      }
 
+      localStorage.setItem(AI_STORAGE_KEYS.PROVIDER, aiState.provider);
       localStorage.setItem(AI_STORAGE_KEYS.ENGINE, aiState.engine);
       localStorage.setItem(AI_STORAGE_KEYS.PERSONA, aiState.persona);
       localStorage.setItem(AI_STORAGE_KEYS.NICKNAME, aiState.nickname);
@@ -5183,12 +5317,237 @@ function setupAiChatbot() {
       localStorage.setItem(AI_STORAGE_KEYS.SHARE_DATA, aiState.shareData);
       localStorage.setItem(AI_STORAGE_KEYS.OLLAMA_HOST, aiState.ollamaHost);
       localStorage.setItem(AI_STORAGE_KEYS.OLLAMA_MODEL, aiState.ollamaModel);
-      localStorage.setItem(AI_STORAGE_KEYS.CLOUD_KEY, aiState.cloudKey);
 
       updateEngineDisplayPill();
+      updateApiKeyBanner();
       settingsDrawer.classList.add('hidden');
       showToast('JurisAI settings saved securely.', 'success');
     });
+  }
+
+  // ----------------------------------------------------
+  // DEDICATED API KEY & LLM SETUP MODAL LOGIC
+  // ----------------------------------------------------
+  function syncModalProviderUi(providerId) {
+    const config = LLM_PROVIDERS[providerId] || LLM_PROVIDERS.gemini;
+    
+    if (providerId === 'local_ollama') {
+      modalApiKeySection?.classList.add('hidden');
+      modalOllamaSection?.classList.remove('hidden');
+    } else if (providerId === 'smart_mock') {
+      modalApiKeySection?.classList.add('hidden');
+      modalOllamaSection?.classList.add('hidden');
+    } else {
+      modalApiKeySection?.classList.remove('hidden');
+      modalOllamaSection?.classList.add('hidden');
+      
+      if (modalApiKeyLabel) {
+        modalApiKeyLabel.innerHTML = `<i class="fa-solid fa-key"></i> ${config.label} <span class="req">*</span>`;
+      }
+      if (modalApiKeyInput) {
+        modalApiKeyInput.placeholder = config.placeholder || 'Paste API key here...';
+      }
+      if (modalApiKeyHelpLink) {
+        if (config.helpUrl) {
+          modalApiKeyHelpLink.style.display = 'inline-block';
+          modalApiKeyHelpLink.href = config.helpUrl;
+          modalApiKeyHelpLink.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> ${config.helpText}`;
+        } else {
+          modalApiKeyHelpLink.style.display = 'none';
+        }
+      }
+
+      if (modalApiModelInput && (!modalApiModelInput.value || config.models.includes(modalApiModelInput.value) || modalApiModelInput.value === 'gemini-1.5-flash')) {
+        modalApiModelInput.value = config.defaultModel;
+      }
+      if (modalApiBaseUrlInput) {
+        modalApiBaseUrlInput.value = config.defaultBaseUrl || '';
+      }
+      if (modalApiBaseUrlGroup) {
+        modalApiBaseUrlGroup.style.display = (providerId === 'custom' || providerId === 'openrouter') ? 'block' : 'block';
+      }
+
+      // Populate Quick Model Chips
+      if (modalModelChipsContainer) {
+        if (config.models && config.models.length > 0) {
+          modalModelChipsContainer.style.display = 'flex';
+          modalModelChipsContainer.innerHTML = '<span style="font-size:0.7rem; color:var(--text-muted); align-self:center;">Popular:</span>' +
+            config.models.map(m => `<button type="button" class="btn-chip-model ${m === modalApiModelInput.value ? 'active' : ''}" data-model="${m}">${m}</button>`).join('');
+          
+          modalModelChipsContainer.querySelectorAll('.btn-chip-model').forEach(chip => {
+            chip.addEventListener('click', () => {
+              const mName = chip.getAttribute('data-model');
+              if (modalApiModelInput) modalApiModelInput.value = mName;
+              modalModelChipsContainer.querySelectorAll('.btn-chip-model').forEach(c => c.classList.remove('active'));
+              chip.classList.add('active');
+            });
+          });
+        } else {
+          modalModelChipsContainer.style.display = 'none';
+        }
+      }
+    }
+
+    if (modalTestStatusBox) {
+      modalTestStatusBox.style.display = 'none';
+      modalTestStatusBox.innerHTML = '';
+    }
+  }
+
+  function openAiApiKeyModal() {
+    if (!aiApiKeyModal) return;
+    const currentProvider = aiState.provider || 'gemini';
+    if (modalLlmProvider) modalLlmProvider.value = currentProvider;
+    if (modalApiKeyInput) modalApiKeyInput.value = aiState.apiKey || '';
+    if (modalApiModelInput) modalApiModelInput.value = aiState.model || (LLM_PROVIDERS[currentProvider]?.defaultModel || 'gemini-1.5-flash');
+    if (modalApiBaseUrlInput) modalApiBaseUrlInput.value = aiState.baseUrl || (LLM_PROVIDERS[currentProvider]?.defaultBaseUrl || '');
+    if (modalOllamaHost) modalOllamaHost.value = aiState.ollamaHost;
+    if (modalOllamaModel) modalOllamaModel.value = aiState.ollamaModel;
+
+    syncModalProviderUi(currentProvider);
+    aiApiKeyModal.classList.remove('hidden');
+    if (modalApiKeyInput && !modalApiKeyInput.value && currentProvider !== 'local_ollama' && currentProvider !== 'smart_mock') {
+      setTimeout(() => modalApiKeyInput.focus(), 100);
+    }
+  }
+  window.openAiApiKeyModal = openAiApiKeyModal;
+
+  function closeAiApiKeyModal() {
+    if (aiApiKeyModal) aiApiKeyModal.classList.add('hidden');
+  }
+
+  if (openApiKeyModalBtn) openApiKeyModalBtn.addEventListener('click', openAiApiKeyModal);
+  if (drawerOpenApiKeyBtn) {
+    drawerOpenApiKeyBtn.addEventListener('click', () => {
+      settingsDrawer?.classList.add('hidden');
+      openAiApiKeyModal();
+    });
+  }
+  if (bannerAddKeyBtn) bannerAddKeyBtn.addEventListener('click', openAiApiKeyModal);
+
+  if (bannerDismissBtn) {
+    bannerDismissBtn.addEventListener('click', () => {
+      aiState.bannerDismissed = true;
+      localStorage.setItem(AI_STORAGE_KEYS.BANNER_DISMISSED, 'true');
+      apiKeyPromptBanner?.classList.add('hidden');
+    });
+  }
+
+  if (closeApiKeyModalBtn) closeApiKeyModalBtn.addEventListener('click', closeAiApiKeyModal);
+  if (modalCancelApiKeyBtn) modalCancelApiKeyBtn.addEventListener('click', closeAiApiKeyModal);
+
+  // Close modal when clicking outside
+  aiApiKeyModal?.addEventListener('click', (e) => {
+    if (e.target === aiApiKeyModal) closeAiApiKeyModal();
+  });
+
+  // Provider dropdown change in modal
+  if (modalLlmProvider) {
+    modalLlmProvider.addEventListener('change', (e) => {
+      syncModalProviderUi(e.target.value);
+    });
+  }
+
+  // Password visibility toggle in modal
+  if (toggleApiKeyVisBtn && modalApiKeyInput) {
+    toggleApiKeyVisBtn.addEventListener('click', () => {
+      const isPwd = modalApiKeyInput.type === 'password';
+      modalApiKeyInput.type = isPwd ? 'text' : 'password';
+      toggleApiKeyVisBtn.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+    });
+  }
+
+  // Test Connection Button in Modal
+  if (modalTestApiKeyBtn) {
+    modalTestApiKeyBtn.addEventListener('click', async () => {
+      const provider = modalLlmProvider ? modalLlmProvider.value : 'gemini';
+      const key = modalApiKeyInput ? modalApiKeyInput.value.trim() : '';
+      const model = modalApiModelInput ? modalApiModelInput.value.trim() : '';
+      const baseUrl = modalApiBaseUrlInput ? modalApiBaseUrlInput.value.trim() : '';
+      const host = modalOllamaHost ? modalOllamaHost.value.trim() : 'http://localhost:11434';
+
+      if (modalTestStatusBox) {
+        modalTestStatusBox.style.display = 'block';
+        modalTestStatusBox.className = 'test-status-badge loading';
+        modalTestStatusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing connection to ' + (LLM_PROVIDERS[provider]?.name || provider) + '...';
+      }
+
+      const res = await testLlmConnection(provider, key, model, baseUrl, host);
+      if (modalTestStatusBox) {
+        if (res.success) {
+          modalTestStatusBox.className = 'test-status-badge success';
+          modalTestStatusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>Connected!</strong> ${res.message}`;
+          showToast(`LLM Connection Verified (${res.latency || ''})!`, 'success');
+        } else {
+          modalTestStatusBox.className = 'test-status-badge error';
+          modalTestStatusBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <strong>Failed:</strong> ${res.error}`;
+        }
+      }
+    });
+  }
+
+  // Save & Activate LLM in Modal
+  if (modalSaveApiKeyBtn) {
+    modalSaveApiKeyBtn.addEventListener('click', () => {
+      const provider = modalLlmProvider ? modalLlmProvider.value : 'gemini';
+      const key = modalApiKeyInput ? modalApiKeyInput.value.trim() : '';
+      const model = modalApiModelInput ? modalApiModelInput.value.trim() : (LLM_PROVIDERS[provider]?.defaultModel || 'gemini-1.5-flash');
+      const baseUrl = modalApiBaseUrlInput ? modalApiBaseUrlInput.value.trim() : (LLM_PROVIDERS[provider]?.defaultBaseUrl || '');
+      const host = modalOllamaHost ? modalOllamaHost.value.trim() : 'http://localhost:11434';
+      const oModel = modalOllamaModel ? modalOllamaModel.value.trim() : 'llama3.2';
+
+      if ((provider === 'gemini' || provider === 'openai' || provider === 'groq' || provider === 'openrouter') && !key) {
+        showToast(`Please enter an API Key for ${LLM_PROVIDERS[provider]?.name}.`, 'warning');
+        if (modalApiKeyInput) modalApiKeyInput.focus();
+        return;
+      }
+
+      // Update state
+      aiState.provider = provider;
+      aiState.engine = provider;
+      aiState.apiKey = key;
+      aiState.model = model;
+      aiState.baseUrl = baseUrl;
+      aiState.ollamaHost = host;
+      aiState.ollamaModel = oModel;
+
+      // Save to localStorage
+      localStorage.setItem(AI_STORAGE_KEYS.PROVIDER, provider);
+      localStorage.setItem(AI_STORAGE_KEYS.ENGINE, provider);
+      localStorage.setItem(AI_STORAGE_KEYS.API_KEY, key);
+      localStorage.setItem(AI_STORAGE_KEYS.CLOUD_KEY, key);
+      localStorage.setItem(AI_STORAGE_KEYS.MODEL, model);
+      localStorage.setItem(AI_STORAGE_KEYS.BASE_URL, baseUrl);
+      localStorage.setItem(AI_STORAGE_KEYS.OLLAMA_HOST, host);
+      localStorage.setItem(AI_STORAGE_KEYS.OLLAMA_MODEL, oModel);
+
+      // Sync drawer fields
+      if (engineSelect) engineSelect.value = provider;
+      if (cloudKeyInput) cloudKeyInput.value = key;
+      if (ollamaHostInput) ollamaHostInput.value = host;
+      if (ollamaModelInput) ollamaModelInput.value = oModel;
+
+      updateEngineDisplayPill();
+      updateApiKeyBanner();
+      closeAiApiKeyModal();
+
+      const provName = LLM_PROVIDERS[provider]?.name || provider;
+      showToast(`JurisAI now powered by ${provName} (${model})!`, 'success');
+
+      // Append confirmation bubble in chat
+      appendChatBubble('bot', `🟢 **JurisAI Engine Activated:** Connected to **${provName}** (\`${model}\`).\n\nYou can now ask me complex legal research queries, generate court pleadings, or analyze active client briefs with live LLM reasoning.`);
+    });
+  }
+
+  function updateApiKeyBanner() {
+    if (!apiKeyPromptBanner) return;
+    const hasKey = !!aiState.apiKey;
+    const isLocalOrMock = aiState.provider === 'local_ollama' || aiState.provider === 'smart_mock';
+    if (hasKey || isLocalOrMock || aiState.bannerDismissed) {
+      apiKeyPromptBanner.classList.add('hidden');
+    } else {
+      apiKeyPromptBanner.classList.remove('hidden');
+    }
   }
 
   // Clear Chat History
@@ -5307,17 +5666,135 @@ function speakTextAloud(text) {
 
 function updateEngineDisplayPill() {
   const pill = document.getElementById('enginePill');
+  const headerKeyBtn = document.getElementById('openApiKeyModalBtn');
   if (!pill) return;
 
-  if (aiState.engine === 'local_ollama') {
+  const prov = aiState.provider || aiState.engine || 'gemini';
+  const hasKey = !!aiState.apiKey;
+
+  if (headerKeyBtn) {
+    if (hasKey || prov === 'local_ollama' || prov === 'smart_mock') {
+      headerKeyBtn.classList.add('configured');
+      headerKeyBtn.innerHTML = '<i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <span>API Key Active</span>';
+    } else {
+      headerKeyBtn.classList.remove('configured');
+      headerKeyBtn.innerHTML = '<i class="fa-solid fa-key gold-text"></i> <span>Add API Key</span>';
+    }
+  }
+
+  if (prov === 'local_ollama') {
     pill.className = 'engine-pill local';
     pill.textContent = `Local: ${aiState.ollamaModel}`;
-  } else if (aiState.engine === 'gemini_api') {
+  } else if (prov === 'gemini') {
+    pill.className = 'engine-pill gemini';
+    pill.textContent = `Gemini: ${aiState.model || '1.5-flash'}`;
+  } else if (prov === 'openai') {
+    pill.className = 'engine-pill openai';
+    pill.textContent = `OpenAI: ${aiState.model || 'gpt-4o-mini'}`;
+  } else if (prov === 'groq') {
+    pill.className = 'engine-pill groq';
+    pill.textContent = `Groq: ${aiState.model || 'llama-3.3'}`;
+  } else if (prov === 'openrouter') {
+    pill.className = 'engine-pill openrouter';
+    pill.textContent = `OpenRouter: ${aiState.model || 'deepseek'}`;
+  } else if (prov === 'custom') {
     pill.className = 'engine-pill cloud';
-    pill.textContent = `Cloud: Gemini API`;
+    pill.textContent = `Custom: ${aiState.model || 'LLM'}`;
   } else {
     pill.className = 'engine-pill local';
     pill.textContent = `Smart Legal Brain`;
+  }
+}
+
+// Live Connection Testing for LLMs
+async function testLlmConnection(provider, apiKey, model, baseUrl, ollamaHost) {
+  const startTime = Date.now();
+
+  try {
+    if (provider === 'local_ollama') {
+      const host = ollamaHost || 'http://localhost:11434';
+      const res = await fetch(`${host}/api/tags`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const count = data.models ? data.models.length : 0;
+      return { success: true, message: `Ollama is running with ${count} local model(s).`, latency: `${Date.now() - startTime}ms` };
+    }
+
+    if (provider === 'smart_mock') {
+      return { success: true, message: 'Built-in offline legal brain is ready.', latency: '0ms' };
+    }
+
+    if (!apiKey) {
+      return { success: false, error: 'API key is required for cloud providers.' };
+    }
+
+    if (provider === 'gemini') {
+      const targetModel = model || 'gemini-1.5-flash';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ role: 'user', parts: [{ text: 'Reply with the single word "READY".' }] }],
+        generationConfig: { maxOutputTokens: 10 }
+      };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const errMsg = errJson.error?.message || `HTTP ${res.status} ${res.statusText}`;
+        return { success: false, error: errMsg };
+      }
+
+      const json = await res.json();
+      const latency = `${Date.now() - startTime}ms`;
+      return { success: true, message: `Successfully validated Google Gemini API key! Latency: ${latency}`, latency };
+    }
+
+    // OpenAI, Groq, OpenRouter, or Custom Endpoint
+    let endpoint = (baseUrl || '').replace(/\/+$/, '');
+    if (!endpoint) {
+      if (provider === 'openai') endpoint = 'https://api.openai.com/v1';
+      else if (provider === 'groq') endpoint = 'https://api.groq.com/openai/v1';
+      else if (provider === 'openrouter') endpoint = 'https://openrouter.ai/api/v1';
+      else endpoint = 'https://api.openai.com/v1';
+    }
+
+    const targetModel = model || (LLM_PROVIDERS[provider]?.defaultModel || 'gpt-4o-mini');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    };
+    if (provider === 'openrouter') {
+      headers['HTTP-Referer'] = window.location.origin || 'http://localhost:3000';
+      headers['X-Title'] = 'LexJuris AI Lawyer';
+    }
+
+    const payload = {
+      model: targetModel,
+      messages: [{ role: 'user', content: 'Reply with "READY".' }],
+      max_tokens: 5
+    };
+
+    const res = await fetch(`${endpoint}/chat/completions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      const errMsg = errJson.error?.message || `HTTP ${res.status} ${res.statusText}`;
+      return { success: false, error: errMsg };
+    }
+
+    const latency = `${Date.now() - startTime}ms`;
+    return { success: true, message: `Successfully validated ${LLM_PROVIDERS[provider]?.name || provider} API key! Latency: ${latency}`, latency };
+
+  } catch (err) {
+    return { success: false, error: err.message || 'Network request failed' };
   }
 }
 
@@ -5347,31 +5824,38 @@ async function submitUserChatMessage(userText) {
     return;
   }
 
-  if (aiState.engine === 'local_ollama') {
-    typingLabel.textContent = `Querying local model (${aiState.ollamaModel})...`;
-    try {
-      const responseText = await queryLocalOllama(userText);
-      hideTypingAndRespond(responseText);
-    } catch (err) {
-      console.warn('Ollama connection issue:', err);
-      const fallbackResponse = generateSmartLegalResponse(userText, true);
-      hideTypingAndRespond(fallbackResponse);
-    }
-  } else if (aiState.engine === 'gemini_api' && aiState.cloudKey) {
-    typingLabel.textContent = `Connecting to Gemini Cloud...`;
-    try {
-      const responseText = await queryGeminiApi(userText);
-      hideTypingAndRespond(responseText);
-    } catch (err) {
-      const fallbackResponse = generateSmartLegalResponse(userText, false);
-      hideTypingAndRespond(fallbackResponse);
-    }
-  } else {
-    typingLabel.textContent = `Analyzing chambers docket & legal knowledge...`;
+  const prov = aiState.provider || aiState.engine || 'gemini';
+  const provConfig = LLM_PROVIDERS[prov] || LLM_PROVIDERS.gemini;
+
+  // Check if provider requires an API key and user has not added one yet
+  const needsKey = prov === 'gemini' || prov === 'openai' || prov === 'groq' || prov === 'openrouter';
+  if (needsKey && !aiState.apiKey) {
+    typingLabel.textContent = `Analyzing with Smart Legal Brain...`;
     setTimeout(() => {
-      const responseText = generateSmartLegalResponse(userText, false);
-      hideTypingAndRespond(responseText);
-    }, 500);
+      const fallbackResponse = generateSmartLegalResponse(userText, false);
+      const promptNotice = `> 🔑 **LLM Notice:** You currently have **${provConfig.name}** selected as your AI engine, but haven't added your API key yet.\n> \n> <button type="button" class="btn btn-gold btn-xs" onclick="window.openAiApiKeyModal()"><i class="fa-solid fa-key"></i> Add API Key to Unlock Live LLM</button>\n\n---\n\n${fallbackResponse}`;
+      hideTypingAndRespond(promptNotice);
+    }, 450);
+    return;
+  }
+
+  // Update dynamic typing label
+  if (prov === 'local_ollama') {
+    typingLabel.textContent = `Querying local Ollama model (${aiState.ollamaModel})...`;
+  } else if (prov === 'smart_mock') {
+    typingLabel.textContent = `Analyzing chambers docket & legal knowledge...`;
+  } else {
+    typingLabel.textContent = `Consulting ${provConfig.name} (${aiState.model})...`;
+  }
+
+  try {
+    const responseText = await queryUnifiedLlm(userText);
+    hideTypingAndRespond(responseText);
+  } catch (err) {
+    console.warn('LLM query error:', err);
+    const fallbackResponse = generateSmartLegalResponse(userText, prov === 'local_ollama');
+    const notice = `> ⚠️ **Notice (${provConfig.name}):** ${err.message || 'Could not reach LLM endpoint.'}\n> *Falling back to JurisAI Chambers Intelligence:*\n\n` + fallbackResponse;
+    hideTypingAndRespond(notice);
   }
 }
 
@@ -5602,28 +6086,132 @@ async function queryLocalOllama(userPrompt) {
   throw lastError || new Error('Failed to connect to local Ollama server.');
 }
 
-// Query Gemini Cloud API
-async function queryGeminiApi(userPrompt) {
+// Unified Multi-Provider LLM Query Dispatcher
+async function queryUnifiedLlm(userPrompt) {
+  const prov = aiState.provider || aiState.engine || 'gemini';
   const context = buildLegalChambersContext();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiState.cloudKey}`;
-  
+
+  // Dynamic Persona Prompting
+  let personaInstruction = `You are JurisAI, the personal legal companion and AI co-counsel for ${aiState.nickname}. Address ${aiState.nickname} warmly and directly.`;
+  if (aiState.persona === 'friendly') {
+    personaInstruction = `You are JurisAI, a warm, friendly, and highly intelligent personal AI companion for ${aiState.nickname}. Chat naturally, be helpful, humorous when appropriate, and assist with work, general questions, and legal matters.`;
+  } else if (aiState.persona === 'opposing') {
+    personaInstruction = `You are ruthless Senior Opposing Counsel challenging ${aiState.nickname}'s arguments in court. Poke holes in their legal reasoning, cite statutory counter-arguments, and prepare them for tough judicial scrutiny.`;
+  } else if (aiState.persona === 'researcher') {
+    personaInstruction = `You are a meticulous Senior Legal Research Analyst for ${aiState.nickname}. Provide precise statutory citations (BNSS, BNS, BSA, CPC, CrPC, Constitution), ratio decidendi of landmark Supreme Court judgments, and structured legal analysis.`;
+  }
+
+  const systemPrompt = `${personaInstruction}\n\nChamber Context & Access:\n${context}`;
+
+  // 1. Local Ollama
+  if (prov === 'local_ollama') {
+    return await queryLocalOllama(userPrompt);
+  }
+
+  // 2. Smart Mock (Offline)
+  if (prov === 'smart_mock') {
+    return generateSmartLegalResponse(userPrompt, false);
+  }
+
+  // 3. Google Gemini Cloud API
+  if (prov === 'gemini') {
+    const key = aiState.apiKey || aiState.cloudKey;
+    if (!key) throw new Error('Gemini API key is missing. Please add your key in API Key settings.');
+
+    const targetModel = aiState.model || 'gemini-1.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${key}`;
+
+    // Convert recent chat messages to Gemini parts
+    const recentMessages = aiState.messages.slice(-6);
+    let convoContext = '';
+    if (recentMessages.length > 1) {
+      convoContext = 'Previous Conversation:\n' + recentMessages.map(m => `${m.role === 'user' ? aiState.nickname : 'JurisAI'}: ${m.content}`).join('\n') + '\n\n';
+    }
+
+    const payload = {
+      contents: [{
+        role: 'user',
+        parts: [{
+          text: `${systemPrompt}\n\n${convoContext}Current Request from ${aiState.nickname}: ${userPrompt}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 2048
+      }
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      const errMsg = errJson.error?.message || `HTTP ${res.status} ${res.statusText}`;
+      throw new Error(`Gemini API error: ${errMsg}`);
+    }
+
+    const json = await res.json();
+    return json.candidates?.[0]?.content?.parts?.[0]?.text || 'No response returned from Gemini.';
+  }
+
+  // 4. OpenAI, Groq, OpenRouter, or Custom Endpoint
+  const key = aiState.apiKey || '';
+  let endpoint = (aiState.baseUrl || '').replace(/\/+$/, '');
+  if (!endpoint) {
+    if (prov === 'openai') endpoint = 'https://api.openai.com/v1';
+    else if (prov === 'groq') endpoint = 'https://api.groq.com/openai/v1';
+    else if (prov === 'openrouter') endpoint = 'https://openrouter.ai/api/v1';
+    else endpoint = 'https://api.openai.com/v1';
+  }
+
+  const targetModel = aiState.model || (LLM_PROVIDERS[prov]?.defaultModel || 'gpt-4o-mini');
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (key) {
+    headers['Authorization'] = `Bearer ${key}`;
+  }
+  if (prov === 'openrouter') {
+    headers['HTTP-Referer'] = window.location.origin || 'http://localhost:3000';
+    headers['X-Title'] = 'LexJuris AI Lawyer';
+  }
+
+  const formattedMessages = [
+    { role: 'system', content: systemPrompt }
+  ];
+
+  // Append recent turns
+  const history = aiState.messages.slice(-6);
+  history.forEach(m => {
+    if (m.content && m.content !== userPrompt) {
+      formattedMessages.push({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content });
+    }
+  });
+  formattedMessages.push({ role: 'user', content: userPrompt });
+
   const payload = {
-    contents: [{
-      parts: [{
-        text: `You are JurisAI, an elite legal assistant for an advocate. Chamber Context:\n${context}\n\nUser Request: ${userPrompt}`
-      }]
-    }]
+    model: targetModel,
+    messages: formattedMessages,
+    temperature: 0.3
   };
 
-  const res = await fetch(url, {
+  const res = await fetch(`${endpoint}/chat/completions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload)
   });
 
-  if (!res.ok) throw new Error(`Gemini API error: ${res.status}`);
+  if (!res.ok) {
+    const errJson = await res.json().catch(() => ({}));
+    const errMsg = errJson.error?.message || `HTTP ${res.status} ${res.statusText}`;
+    throw new Error(`${LLM_PROVIDERS[prov]?.name || prov} API error: ${errMsg}`);
+  }
+
   const json = await res.json();
-  return json.candidates[0].content.parts[0].text;
+  return json.choices?.[0]?.message?.content || 'No response returned from model.';
 }
 
 // Built-in Smart Legal Brain (Works instantly offline or as intelligent fallback)

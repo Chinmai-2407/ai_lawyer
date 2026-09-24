@@ -2163,6 +2163,9 @@ textarea:focus {
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-pill);
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .engine-pill.local {
@@ -2177,10 +2180,74 @@ textarea:focus {
   border: 1px solid var(--status-active-border);
 }
 
+.engine-pill.gemini {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.engine-pill.openai {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.engine-pill.groq {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.engine-pill.openrouter {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
 .chat-header-actions {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+/* Dedicated Prominent API Key Button in Chat Header */
+.btn-api-key-header {
+  background: #ffffff;
+  border: 1px solid var(--gold-primary);
+  color: var(--gold-dark);
+  border-radius: 20px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(184, 134, 11, 0.15);
+}
+
+.btn-api-key-header:hover {
+  background: var(--gold-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(184, 134, 11, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-api-key-header:hover i {
+  color: #ffffff !important;
+}
+
+.btn-api-key-header.configured {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.btn-api-key-header.configured:hover {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
 }
 
 .btn-icon-chat {
@@ -2201,6 +2268,120 @@ textarea:focus {
 .btn-icon-chat:hover {
   color: var(--gold-primary);
   background: rgba(0, 0, 0, 0.04);
+}
+
+/* Prompt Banner inside Chat Messages */
+.ai-api-key-banner {
+  background: linear-gradient(135deg, #fdfbf7 0%, #fef3c7 100%);
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  box-shadow: 0 2px 5px rgba(217, 119, 6, 0.08);
+  animation: fadeIn 0.3s ease;
+}
+
+.ai-api-key-banner.hidden {
+  display: none !important;
+}
+
+.api-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.api-banner-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fef08a;
+  color: #b45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.api-banner-text {
+  font-size: 0.76rem;
+  color: #92400e;
+  line-height: 1.35;
+}
+
+.api-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.banner-close-btn {
+  background: transparent;
+  border: none;
+  color: #b45309;
+  cursor: pointer;
+  padding: 0.2rem;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.banner-close-btn:hover {
+  opacity: 1;
+}
+
+/* Quick Model Identifier Chips in Modal */
+.btn-chip-model {
+  background: #f4f2ee;
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  border-radius: 12px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.7rem;
+  font-family: monospace;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-chip-model:hover, .btn-chip-model.active {
+  background: var(--gold-bg);
+  border-color: var(--gold-primary);
+  color: var(--gold-dark);
+  font-weight: 600;
+}
+
+.test-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.test-status-badge.success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.test-status-badge.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.test-status-badge.loading {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
 }
 
 /* AI Settings Drawer */
