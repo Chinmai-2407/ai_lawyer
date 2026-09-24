@@ -394,9 +394,14 @@ let state = {
   activeView: 'workspace', // 'workspace' | 'admin'
   currentFilter: 'all',
   searchQuery: '',
+  searchMode: 'all', // 'all' | 'caseTitle' | 'clientName' | 'caseNumber'
   adminSearchQuery: '',
   adminRoleFilter: 'all',
   currentAttachedDoc: null,
+  stagedDocs: [], // staged documents for new case intake
+  activeDocsCaseId: null,
+  currentModalAttachedDoc: null,
+  previewDoc: null,
   targetEditUserId: null,
   targetResetUserId: null
 };
@@ -470,9 +475,24 @@ const dom = {
   countCritical: document.getElementById('countCritical'),
   countClosed: document.getElementById('countClosed'),
 
-  // Left Form (Intake)
+  // Left Form (Intake) & Parts Navigation
   newCaseForm: document.getElementById('newCaseForm'),
   resetFormBtn: document.getElementById('resetFormBtn'),
+  partDetailsBtn: document.getElementById('partDetailsBtn'),
+  partDocsBtn: document.getElementById('partDocsBtn'),
+  partDetailsPane: document.getElementById('partDetailsPane'),
+  partDocsPane: document.getElementById('partDocsPane'),
+  gotoDocsPartBtn: document.getElementById('gotoDocsPartBtn'),
+  backToDetailsPartBtn: document.getElementById('backToDetailsPartBtn'),
+  submitCaseWithDocsBtn: document.getElementById('submitCaseWithDocsBtn'),
+  stagedDocsCountBadge: document.getElementById('stagedDocsCountBadge'),
+  stagedDocsSummaryBadge: document.getElementById('stagedDocsSummaryBadge'),
+  stagedDocsListCount: document.getElementById('stagedDocsListCount'),
+  stagedDocsList: document.getElementById('stagedDocsList'),
+  stagedDocsEmpty: document.getElementById('stagedDocsEmpty'),
+  stageCurrentDocBtn: document.getElementById('stageCurrentDocBtn'),
+  intakeDocCategory: document.getElementById('intakeDocCategory'),
+
   clientName: document.getElementById('clientName'),
   clientPhone: document.getElementById('clientPhone'),
   opposingParty: document.getElementById('opposingParty'),
@@ -504,6 +524,7 @@ const dom = {
   accessScopeBanner: document.getElementById('accessScopeBanner'),
   clientSearchInput: document.getElementById('clientSearchInput'),
   clearSearchBtn: document.getElementById('clearSearchBtn'),
+  searchModePills: document.querySelectorAll('.search-mode-pill'),
   filterPills: document.querySelectorAll('.filter-pill'),
   casesList: document.getElementById('casesList'),
   emptyState: document.getElementById('emptyState'),
@@ -564,6 +585,37 @@ const dom = {
   updateNotes: document.getElementById('updateNotes'),
   caseUpdatesTimeline: document.getElementById('caseUpdatesTimeline'),
   updatesCountBadge: document.getElementById('updatesCountBadge'),
+
+  // Case Documents & Vault Modal Elements
+  caseDocsModal: document.getElementById('caseDocsModal'),
+  caseDocsModalTitle: document.getElementById('caseDocsModalTitle'),
+  caseDocsModalSubtitle: document.getElementById('caseDocsModalSubtitle'),
+  closeCaseDocsModalBtn: document.getElementById('closeCaseDocsModalBtn'),
+  closeCaseDocsModalBottomBtn: document.getElementById('closeCaseDocsModalBottomBtn'),
+  docsTargetCaseId: document.getElementById('docsTargetCaseId'),
+  docsCaseMeta: document.getElementById('docsCaseMeta'),
+  addCaseDocForm: document.getElementById('addCaseDocForm'),
+  modalDocDropzone: document.getElementById('modalDocDropzone'),
+  modalCaseDocInput: document.getElementById('modalCaseDocInput'),
+  modalDropzoneDefault: document.getElementById('modalDropzoneDefault'),
+  modalDropzoneAttached: document.getElementById('modalDropzoneAttached'),
+  modalAttachedFileName: document.getElementById('modalAttachedFileName'),
+  modalAttachedFileSize: document.getElementById('modalAttachedFileSize'),
+  removeModalDocBtn: document.getElementById('removeModalDocBtn'),
+  modalDocCategory: document.getElementById('modalDocCategory'),
+  modalDocTitle: document.getElementById('modalDocTitle'),
+  submitModalDocBtn: document.getElementById('submitModalDocBtn'),
+  modalDocsCountBadge: document.getElementById('modalDocsCountBadge'),
+  modalDocsList: document.getElementById('modalDocsList'),
+
+  // Document Preview Modal
+  docPreviewModal: document.getElementById('docPreviewModal'),
+  docPreviewTitle: document.getElementById('docPreviewTitle'),
+  docPreviewSubtitle: document.getElementById('docPreviewSubtitle'),
+  closeDocPreviewModalBtn: document.getElementById('closeDocPreviewModalBtn'),
+  closeDocPreviewBottomBtn: document.getElementById('closeDocPreviewBottomBtn'),
+  downloadPreviewDocBtn: document.getElementById('downloadPreviewDocBtn'),
+  docPreviewBody: document.getElementById('docPreviewBody'),
 
   // User Add/Edit Modal
   userModal: document.getElementById('userModal'),
@@ -926,6 +978,32 @@ function loadStoredCases() {
             ];
             updated = true;
           }
+          if (!c.documents || !Array.isArray(c.documents) || c.documents.length === 0) {
+            c.documents = c.attachedDoc ? [
+              {
+                id: 'doc_' + (c.id || idx) + '_1',
+                name: c.attachedDoc.name,
+                size: c.attachedDoc.size || '1.4 MB',
+                type: 'application/pdf',
+                category: 'Petition / Plaint',
+                title: c.attachedDoc.name.replace(/\.[^/.]+$/, ''),
+                uploadedAt: c.createdAt || new Date().toISOString(),
+                uploadedBy: c.assignedToName || 'Advocate'
+              }
+            ] : [
+              {
+                id: 'doc_' + (c.id || idx) + '_1',
+                name: `${(c.caseTitle || 'Docket').substring(0, 22).replace(/[^a-zA-Z0-9]/g, '_')}_Brief.pdf`,
+                size: '1.8 MB',
+                type: 'application/pdf',
+                category: 'Petition / Plaint',
+                title: `${c.caseTitle || 'Case'} - Initial Docket Brief`,
+                uploadedAt: c.createdAt || new Date().toISOString(),
+                uploadedBy: c.assignedToName || 'Advocate'
+              }
+            ];
+            updated = true;
+          }
         });
         if (updated) saveCasesToStorage();
       }
@@ -1045,10 +1123,30 @@ function setupEventListeners() {
   if (dom.resetFormBtn) {
     dom.resetFormBtn.addEventListener('click', () => {
       dom.newCaseForm.reset();
+      state.stagedDocs = [];
+      renderStagedDocs();
+      switchIntakePart('details');
       setDefaultFormDates();
       clearValidationErrors();
       showToast('Intake form cleared', 'info');
     });
+  }
+
+  // Intake Parts Tab Navigation (Part 1: Details vs Part 2: Documents)
+  if (dom.partDetailsBtn) {
+    dom.partDetailsBtn.addEventListener('click', () => switchIntakePart('details'));
+  }
+  if (dom.partDocsBtn) {
+    dom.partDocsBtn.addEventListener('click', () => switchIntakePart('docs'));
+  }
+  if (dom.gotoDocsPartBtn) {
+    dom.gotoDocsPartBtn.addEventListener('click', () => switchIntakePart('docs'));
+  }
+  if (dom.backToDetailsPartBtn) {
+    dom.backToDetailsPartBtn.addEventListener('click', () => switchIntakePart('details'));
+  }
+  if (dom.stageCurrentDocBtn) {
+    dom.stageCurrentDocBtn.addEventListener('click', stageCurrentIntakeDoc);
   }
 
   // Client Search Live Filter
@@ -1071,6 +1169,16 @@ function setupEventListeners() {
       state.searchQuery = '';
       dom.clearSearchBtn.classList.add('hidden');
       renderCasesList();
+    });
+  }
+
+  // Search Mode Selector Pills (All, Case Name, Client Name, Case No)
+  if (dom.searchModePills) {
+    dom.searchModePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const mode = pill.getAttribute('data-mode');
+        switchSearchMode(mode);
+      });
     });
   }
 
@@ -1144,6 +1252,41 @@ function setupEventListeners() {
   }
   if (dom.addCaseUpdateForm) {
     dom.addCaseUpdateForm.addEventListener('submit', handleAddCaseUpdateSubmit);
+  }
+
+  // Case Documents & Vault Modal Event Handlers
+  if (dom.closeCaseDocsModalBtn) {
+    dom.closeCaseDocsModalBtn.addEventListener('click', closeCaseDocsModal);
+  }
+  if (dom.closeCaseDocsModalBottomBtn) {
+    dom.closeCaseDocsModalBottomBtn.addEventListener('click', closeCaseDocsModal);
+  }
+  if (dom.caseDocsModal) {
+    dom.caseDocsModal.addEventListener('click', (e) => {
+      if (e.target === dom.caseDocsModal) closeCaseDocsModal();
+    });
+  }
+  if (dom.addCaseDocForm) {
+    dom.addCaseDocForm.addEventListener('submit', handleAddCaseDocSubmit);
+  }
+  if (dom.modalCaseDocInput) {
+    dom.modalCaseDocInput.addEventListener('change', handleModalDocSelect);
+  }
+  if (dom.removeModalDocBtn) {
+    dom.removeModalDocBtn.addEventListener('click', resetModalDocDropzone);
+  }
+
+  // Document Preview Modal Event Handlers
+  if (dom.closeDocPreviewModalBtn) {
+    dom.closeDocPreviewModalBtn.addEventListener('click', closeDocPreviewModal);
+  }
+  if (dom.closeDocPreviewBottomBtn) {
+    dom.closeDocPreviewBottomBtn.addEventListener('click', closeDocPreviewModal);
+  }
+  if (dom.docPreviewModal) {
+    dom.docPreviewModal.addEventListener('click', (e) => {
+      if (e.target === dom.docPreviewModal) closeDocPreviewModal();
+    });
   }
 
   // Admin Portal: Open Add User Modal
@@ -1394,7 +1537,8 @@ function finishExtraction(fileName, fileSize, extractedData) {
   };
 
   populateIntakeFormWithExtractedData(extractedData);
-  showToast(`⚡ Extracted all details from "${fileName}"!`, 'success');
+  stageCurrentIntakeDoc();
+  showToast(`⚡ Extracted details & staged "${fileName}" for filing!`, 'success');
 }
 
 function resetDocumentUploadZone() {
@@ -2682,6 +2826,21 @@ function handleNewCaseSubmit(e) {
 
   if (hasError) return;
 
+  const docsToAttach = (state.stagedDocs && state.stagedDocs.length > 0)
+    ? [...state.stagedDocs]
+    : (state.currentAttachedDoc ? [
+        {
+          id: 'doc_' + Date.now(),
+          name: state.currentAttachedDoc.name,
+          size: state.currentAttachedDoc.size || '1.2 MB',
+          type: getFileTypeFromName(state.currentAttachedDoc.name),
+          category: dom.intakeDocCategory ? dom.intakeDocCategory.value : 'Petition / Plaint',
+          title: state.currentAttachedDoc.name.replace(/\.[^/.]+$/, ''),
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: state.currentUser ? state.currentUser.name : 'Counsel'
+        }
+      ] : []);
+
   const newCase = {
     id: 'case_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
     clientName,
@@ -2709,10 +2868,11 @@ function handleNewCaseSubmit(e) {
         authorRole: state.currentUser ? state.currentUser.role : 'Counsel',
         type: 'filing',
         title: 'Initial Case Intake & Filing',
-        notes: `Docket formally instituted in "${caseGroup}" practice group and assigned to ${assignedUser.name}.`
+        notes: `Docket formally instituted in "${caseGroup}" practice group and assigned to ${assignedUser.name}. ${docsToAttach.length > 0 ? `Attached ${docsToAttach.length} initial document(s).` : ''}`
       }
     ],
-    attachedDoc: state.currentAttachedDoc ? { ...state.currentAttachedDoc } : null,
+    documents: docsToAttach,
+    attachedDoc: docsToAttach.length > 0 ? { name: docsToAttach[0].name, size: docsToAttach[0].size } : null,
     status: 'Active',
     createdAt: new Date().toISOString()
   };
@@ -2721,14 +2881,17 @@ function handleNewCaseSubmit(e) {
   state.cases.unshift(newCase);
   saveCasesToStorage();
 
-  // Reset form, dropzone, and reset default date
+  // Reset form, dropzone, staged docs and reset to Part 1
   dom.newCaseForm.reset();
+  state.stagedDocs = [];
+  renderStagedDocs();
+  switchIntakePart('details');
   resetDocumentUploadZone();
   setDefaultFormDates();
   populateAssigneeDropdowns();
 
   renderDashboard();
-  showToast(`Case for "${clientName}" filed & assigned to ${assignedUser.name}!`, 'success');
+  showToast(`Case for "${clientName}" filed with ${docsToAttach.length} document(s) & assigned to ${assignedUser.name}!`, 'success');
 
   // Highlight card on right side
   setTimeout(() => {
@@ -2791,16 +2954,29 @@ function renderCasesList() {
     return true; // 'all'
   });
 
-  // 2. Filter by search query (Client name, case title, case number, court, assignee)
+  // 2. Filter by search query based on selected search mode (All, Case Name, Client Name, Case Number)
   if (state.searchQuery) {
-    filtered = filtered.filter(c => 
-      c.clientName.toLowerCase().includes(state.searchQuery) ||
-      c.caseTitle.toLowerCase().includes(state.searchQuery) ||
-      c.caseNumber.toLowerCase().includes(state.searchQuery) ||
-      c.courtName.toLowerCase().includes(state.searchQuery) ||
-      (c.assignedToName && c.assignedToName.toLowerCase().includes(state.searchQuery)) ||
-      (c.group && c.group.toLowerCase().includes(state.searchQuery))
-    );
+    const q = state.searchQuery;
+    filtered = filtered.filter(c => {
+      if (state.searchMode === 'caseTitle') {
+        return (c.caseTitle || '').toLowerCase().includes(q);
+      }
+      if (state.searchMode === 'clientName') {
+        return (c.clientName || '').toLowerCase().includes(q);
+      }
+      if (state.searchMode === 'caseNumber') {
+        return (c.caseNumber || '').toLowerCase().includes(q);
+      }
+      // 'all'
+      return (
+        (c.clientName || '').toLowerCase().includes(q) ||
+        (c.caseTitle || '').toLowerCase().includes(q) ||
+        (c.caseNumber || '').toLowerCase().includes(q) ||
+        (c.courtName || '').toLowerCase().includes(q) ||
+        (c.assignedToName && c.assignedToName.toLowerCase().includes(q)) ||
+        (c.group && c.group.toLowerCase().includes(q))
+      );
+    });
   }
 
   // 3. Sort chronologically by hearing date & time, then client name
@@ -2818,7 +2994,15 @@ function renderCasesList() {
     dom.casesList.innerHTML = '';
     dom.emptyState.classList.remove('hidden');
     if (state.searchQuery) {
-      dom.emptyStateMsg.textContent = `No active legal dockets matched "${state.searchQuery}". Try a different client name or clear the search.`;
+      if (state.searchMode === 'caseTitle') {
+        dom.emptyStateMsg.innerHTML = `No cases found with Case Name matching "<strong>${escapeHTML(state.searchQuery)}</strong>".<br><button type="button" class="btn btn-outline-gold btn-xs" style="margin-top:0.5rem;" onclick="if(window.switchSearchMode) window.switchSearchMode('clientName')"><i class="fa-solid fa-user-tie"></i> Search by Client Name instead</button>`;
+      } else if (state.searchMode === 'clientName') {
+        dom.emptyStateMsg.innerHTML = `No cases found with Client Name matching "<strong>${escapeHTML(state.searchQuery)}</strong>".<br><button type="button" class="btn btn-outline-gold btn-xs" style="margin-top:0.5rem;" onclick="if(window.switchSearchMode) window.switchSearchMode('caseTitle')"><i class="fa-solid fa-scale-balanced"></i> Search by Case Name instead</button>`;
+      } else if (state.searchMode === 'caseNumber') {
+        dom.emptyStateMsg.innerHTML = `No cases found with Docket Number matching "<strong>${escapeHTML(state.searchQuery)}</strong>".<br><button type="button" class="btn btn-outline-gold btn-xs" style="margin-top:0.5rem;" onclick="if(window.switchSearchMode) window.switchSearchMode('all')">Search all fields</button>`;
+      } else {
+        dom.emptyStateMsg.textContent = `No active legal dockets matched "${state.searchQuery}". Try a different keyword or clear the search.`;
+      }
     } else {
       const isSub = state.currentUser && !isUserGroupHead(state.currentUser) && state.currentUser.role !== 'Chambers Administrator';
       dom.emptyStateMsg.textContent = isSub 
@@ -2870,6 +3054,14 @@ function createCaseCardHTML(item, todayStr) {
   const isMyCase = state.currentUser && (item.assignedTo === state.currentUser.id || (item.assignedToEmail && item.assignedToEmail.toLowerCase() === state.currentUser.email.toLowerCase()));
   const updatesCount = (item.updates && Array.isArray(item.updates)) ? item.updates.length : 0;
   
+  // Documents count & list
+  const docsList = (item.documents && Array.isArray(item.documents)) ? item.documents : (item.attachedDoc ? [{ id: 'init', name: item.attachedDoc.name, size: item.attachedDoc.size }] : []);
+  const docsCount = docsList.length;
+
+  // Highlight search matches
+  const clientNameDisplay = highlightSearchMatch(item.clientName, state.searchQuery, state.searchMode, 'clientName');
+  const caseTitleDisplay = highlightSearchMatch(item.caseTitle, state.searchQuery, state.searchMode, 'caseTitle');
+  
   return `
     <div class="case-card ${borderClass}" data-case-id="${item.id}">
       
@@ -2880,7 +3072,7 @@ function createCaseCardHTML(item, todayStr) {
             <i class="fa-solid fa-user-shield"></i>
           </div>
           <div>
-            <div class="client-name-title">${escapeHTML(item.clientName)}</div>
+            <div class="client-name-title">${clientNameDisplay}</div>
             <div class="client-phone-sub">
               <i class="fa-solid fa-phone"></i> ${escapeHTML(item.clientPhone)} 
               ${item.opposingParty ? `• <span title="Opposing Party">vs. ${escapeHTML(item.opposingParty)}</span>` : ''}
@@ -2889,11 +3081,15 @@ function createCaseCardHTML(item, todayStr) {
         </div>
 
         <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-          ${item.attachedDoc ? `
-            <span class="card-doc-attachment" title="Legal brief attached: ${escapeHTML(item.attachedDoc.name)}">
-              <i class="fa-solid fa-paperclip"></i> ${escapeHTML(item.attachedDoc.name.substring(0, 18))}...
+          ${docsCount > 0 ? `
+            <span class="card-doc-attachment btn-manage-docs" data-id="${item.id}" title="Manage ${docsCount} case document(s) in Vault">
+              <i class="fa-solid fa-folder-open gold-text"></i> ${docsCount} Doc${docsCount !== 1 ? 's' : ''}
             </span>
-          ` : ''}
+          ` : `
+            <span class="card-doc-attachment add-doc-pill btn-manage-docs" data-id="${item.id}" title="Attach document to this docket">
+              <i class="fa-solid fa-plus"></i> Add Docs
+            </span>
+          `}
           <span class="badge-group" title="Practice Group"><i class="fa-solid fa-users"></i> ${escapeHTML(item.group || item.caseCategory)}</span>
           <span class="badge-assignee ${isMyCase ? 'my-assignment' : ''}" title="Assigned Subordinate Counsel">
             <i class="fa-solid fa-user-check"></i> ${escapeHTML(item.assignedToName || 'Unassigned')}
@@ -2908,7 +3104,7 @@ function createCaseCardHTML(item, todayStr) {
         
         <!-- Left: Case Matter & ID -->
         <div>
-          <div class="case-matter-title">${escapeHTML(item.caseTitle)}</div>
+          <div class="case-matter-title">${caseTitleDisplay}</div>
           <div class="case-meta-item">
             <i class="fa-solid fa-hashtag"></i> <strong>Docket:</strong> ${escapeHTML(item.caseNumber)}
           </div>
@@ -2946,6 +3142,9 @@ function createCaseCardHTML(item, todayStr) {
           <a href="tel:${escapeHTML(item.clientPhone)}" class="btn-card-action" title="Call Client">
             <i class="fa-solid fa-phone"></i> Call
           </a>
+          <button type="button" class="btn-card-action btn-manage-docs" data-id="${item.id}" title="View, Add & Manage Documents (${docsCount})">
+            <i class="fa-solid fa-folder-open"></i> Docs <span class="updates-count-dot">${docsCount}</span>
+          </button>
           <button type="button" class="btn-card-action btn-view-updates" data-id="${item.id}" title="View & Add Case Updates (${updatesCount})">
             <i class="fa-solid fa-clock-rotate-left"></i> Updates <span class="updates-count-dot">${updatesCount}</span>
           </button>
@@ -2966,6 +3165,15 @@ function createCaseCardHTML(item, todayStr) {
 }
 
 function attachCardActionListeners() {
+  // Manage Documents button
+  document.querySelectorAll('.btn-manage-docs').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const caseId = btn.getAttribute('data-id');
+      openCaseDocsModal(caseId);
+    });
+  });
+
   // View Updates button
   document.querySelectorAll('.btn-view-updates').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3025,6 +3233,542 @@ function deleteCase(caseId) {
     renderDashboard();
     showToast('Docket removed from chambers registry.', 'info');
   }
+}
+
+// ==========================================================================
+// 7.1 INTAKE SEGMENTED PARTS & STAGED DOCUMENTS
+// ==========================================================================
+
+function switchIntakePart(part) {
+  if (part === 'docs') {
+    if (dom.partDetailsBtn) dom.partDetailsBtn.classList.remove('active');
+    if (dom.partDocsBtn) dom.partDocsBtn.classList.add('active');
+    if (dom.partDetailsPane) dom.partDetailsPane.classList.add('hidden');
+    if (dom.partDocsPane) dom.partDocsPane.classList.remove('hidden');
+  } else {
+    if (dom.partDetailsBtn) dom.partDetailsBtn.classList.add('active');
+    if (dom.partDocsBtn) dom.partDocsBtn.classList.remove('active');
+    if (dom.partDetailsPane) dom.partDetailsPane.classList.remove('hidden');
+    if (dom.partDocsPane) dom.partDocsPane.classList.add('hidden');
+  }
+}
+
+function stageCurrentIntakeDoc() {
+  if (!state.currentAttachedDoc) {
+    showToast('Please upload or select a document first to stage it.', 'error');
+    return;
+  }
+
+  const category = dom.intakeDocCategory ? dom.intakeDocCategory.value : 'Petition / Plaint';
+  const newStagedDoc = {
+    id: 'staged_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    name: state.currentAttachedDoc.name,
+    size: state.currentAttachedDoc.size,
+    type: getFileTypeFromName(state.currentAttachedDoc.name),
+    category: category,
+    title: state.currentAttachedDoc.name.replace(/\.[^/.]+$/, '').replace(/[_\-]+/g, ' '),
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: state.currentUser ? state.currentUser.name : 'Counsel'
+  };
+
+  state.stagedDocs.push(newStagedDoc);
+  renderStagedDocs();
+  resetDocumentUploadZone();
+  showToast(`Document "${newStagedDoc.name}" staged for filing!`, 'success');
+}
+
+function removeStagedDoc(docId) {
+  state.stagedDocs = state.stagedDocs.filter(d => d.id !== docId);
+  renderStagedDocs();
+  showToast('Staged document removed', 'info');
+}
+
+function renderStagedDocs() {
+  const count = state.stagedDocs.length;
+  if (dom.stagedDocsCountBadge) dom.stagedDocsCountBadge.textContent = count;
+  if (dom.stagedDocsSummaryBadge) dom.stagedDocsSummaryBadge.textContent = `${count} attached`;
+  if (dom.stagedDocsListCount) dom.stagedDocsListCount.textContent = count;
+
+  if (!dom.stagedDocsList) return;
+
+  if (count === 0) {
+    dom.stagedDocsList.innerHTML = `
+      <div class="staged-docs-empty" id="stagedDocsEmpty">
+        <i class="fa-regular fa-folder-open"></i>
+        <span>No documents staged yet. Upload above or proceed to file without documents.</span>
+      </div>
+    `;
+    return;
+  }
+
+  dom.stagedDocsList.innerHTML = state.stagedDocs.map(doc => `
+    <div class="staged-doc-card" data-doc-id="${doc.id}">
+      <div class="staged-doc-info">
+        <i class="fa-solid ${doc.name.endsWith('.pdf') ? 'fa-file-pdf' : 'fa-file-lines'} gold-text"></i>
+        <div style="min-width: 0; flex: 1;">
+          <div class="staged-doc-name" title="${escapeHTML(doc.name)}">${escapeHTML(doc.name)}</div>
+          <div class="staged-doc-meta">
+            <span class="staged-doc-cat-tag">${escapeHTML(doc.category)}</span> • ${escapeHTML(doc.size)}
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn-remove-staged-doc" data-id="${doc.id}" title="Remove staged document">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  `).join('');
+
+  dom.stagedDocsList.querySelectorAll('.btn-remove-staged-doc').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      removeStagedDoc(id);
+    });
+  });
+}
+
+// ==========================================================================
+// 7.2 SEARCH MODE SWITCHER & HIGHLIGHTING
+// ==========================================================================
+
+function switchSearchMode(mode) {
+  state.searchMode = mode;
+  if (dom.searchModePills) {
+    dom.searchModePills.forEach(pill => {
+      if (pill.getAttribute('data-mode') === mode) {
+        pill.classList.add('active');
+      } else {
+        pill.classList.remove('active');
+      }
+    });
+  }
+
+  // Update input placeholder based on mode
+  if (dom.clientSearchInput) {
+    if (mode === 'caseTitle') {
+      dom.clientSearchInput.placeholder = 'Search specifically by Case Name / Matter (e.g. Mehra vs. MCD)...';
+    } else if (mode === 'clientName') {
+      dom.clientSearchInput.placeholder = 'Search specifically by Client Name (e.g. Rajesh Mehra)...';
+    } else if (mode === 'caseNumber') {
+      dom.clientSearchInput.placeholder = 'Search specifically by Docket / Suit Number (e.g. WP(C) 4521)...';
+    } else {
+      dom.clientSearchInput.placeholder = 'Search legal dockets by Case Name, Client Name, Docket No...';
+    }
+  }
+
+  renderCasesList();
+}
+window.switchSearchMode = switchSearchMode;
+
+function highlightSearchMatch(text, query, mode, currentField) {
+  if (!text) return '';
+  const escaped = escapeHTML(text);
+  if (!query) return escaped;
+  if (mode !== 'all' && mode !== currentField) return escaped;
+
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return escaped.replace(regex, '<mark class="search-highlight">$1</mark>');
+}
+
+// ==========================================================================
+// 7.3 CASE DOCUMENTS VAULT (FOR EXISTING CASES)
+// ==========================================================================
+
+function openCaseDocsModal(caseId) {
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem) return;
+
+  state.activeDocsCaseId = caseId;
+  if (dom.docsTargetCaseId) dom.docsTargetCaseId.value = caseId;
+
+  if (dom.caseDocsModalTitle) {
+    dom.caseDocsModalTitle.textContent = `${caseItem.caseTitle}`;
+  }
+  if (dom.caseDocsModalSubtitle) {
+    dom.caseDocsModalSubtitle.textContent = `Docket: ${caseItem.caseNumber} • Client: ${caseItem.clientName} ${caseItem.opposingParty ? `vs. ${caseItem.opposingParty}` : ''}`;
+  }
+
+  // Populate Meta Bar
+  if (dom.docsCaseMeta) {
+    dom.docsCaseMeta.innerHTML = `
+      <span class="badge-group" title="Practice Group"><i class="fa-solid fa-users"></i> ${escapeHTML(caseItem.group || caseItem.caseCategory)}</span>
+      <span class="badge-assignee" title="Assigned Counsel"><i class="fa-solid fa-user-check"></i> ${escapeHTML(caseItem.assignedToName || 'Unassigned')}</span>
+      <span class="matter-badge" title="Court"><i class="fa-solid fa-building-columns gold-text"></i> ${escapeHTML(caseItem.courtName)}</span>
+      <span class="hearing-badge" style="font-weight:600;"><i class="fa-solid fa-circle-dot"></i> ${escapeHTML(caseItem.status || 'Active')}</span>
+      <span style="font-size:0.75rem; color:var(--text-muted); margin-left:auto;"><i class="fa-regular fa-calendar"></i> Next: ${formatDateDisplay(caseItem.hearingDate)}</span>
+    `;
+  }
+
+  // Reset modal dropzone & form inputs
+  resetModalDocDropzone();
+  if (dom.modalDocTitle) dom.modalDocTitle.value = '';
+  if (dom.modalDocCategory) dom.modalDocCategory.selectedIndex = 0;
+
+  // Render documents list
+  renderModalDocsList(caseItem);
+
+  // Open modal
+  if (dom.caseDocsModal) dom.caseDocsModal.classList.remove('hidden');
+}
+window.openCaseDocsModal = openCaseDocsModal;
+
+function closeCaseDocsModal() {
+  if (dom.caseDocsModal) dom.caseDocsModal.classList.add('hidden');
+  state.activeDocsCaseId = null;
+  resetModalDocDropzone();
+}
+
+function resetModalDocDropzone() {
+  state.currentModalAttachedDoc = null;
+  if (dom.modalCaseDocInput) dom.modalCaseDocInput.value = '';
+  if (dom.modalDropzoneDefault) dom.modalDropzoneDefault.classList.remove('hidden');
+  if (dom.modalDropzoneAttached) dom.modalDropzoneAttached.classList.add('hidden');
+}
+
+function handleModalDocSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+  state.currentModalAttachedDoc = {
+    name: file.name,
+    size: fileSize,
+    type: file.type || getFileTypeFromName(file.name)
+  };
+
+  if (dom.modalDropzoneDefault) dom.modalDropzoneDefault.classList.add('hidden');
+  if (dom.modalDropzoneAttached) dom.modalDropzoneAttached.classList.remove('hidden');
+  if (dom.modalAttachedFileName) dom.modalAttachedFileName.textContent = file.name;
+  if (dom.modalAttachedFileSize) dom.modalAttachedFileSize.textContent = fileSize;
+
+  if (dom.modalDocTitle && !dom.modalDocTitle.value.trim()) {
+    dom.modalDocTitle.value = file.name.replace(/\.[^/.]+$/, '').replace(/[_\-]+/g, ' ');
+  }
+}
+
+function handleAddCaseDocSubmit(e) {
+  e.preventDefault();
+  if (!state.activeDocsCaseId) return;
+
+  const caseItem = state.cases.find(c => c.id === state.activeDocsCaseId);
+  if (!caseItem) return;
+
+  const titleVal = dom.modalDocTitle ? dom.modalDocTitle.value.trim() : '';
+  const attached = state.currentModalAttachedDoc;
+
+  if (!attached && !titleVal) {
+    showToast('Please select a file or provide a document title.', 'error');
+    return;
+  }
+
+  const fileName = attached ? attached.name : `${titleVal.replace(/\s+/g, '_')}.pdf`;
+  const fileSize = attached ? attached.size : `${(Math.random() * 2 + 0.8).toFixed(1)} MB`;
+  const docTitle = titleVal || fileName;
+  const category = dom.modalDocCategory ? dom.modalDocCategory.value : 'Other Document';
+
+  const newDoc = {
+    id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    name: fileName,
+    size: fileSize,
+    type: getFileTypeFromName(fileName),
+    category: category,
+    title: docTitle,
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: state.currentUser ? state.currentUser.name : 'Advocate'
+  };
+
+  if (!caseItem.documents || !Array.isArray(caseItem.documents)) {
+    caseItem.documents = [];
+  }
+  caseItem.documents.unshift(newDoc);
+
+  // Keep attachedDoc in sync for backwards compatibility
+  caseItem.attachedDoc = { name: newDoc.name, size: newDoc.size };
+
+  // Log case update to docket timeline
+  if (!caseItem.updates || !Array.isArray(caseItem.updates)) {
+    caseItem.updates = [];
+  }
+  caseItem.updates.unshift({
+    id: 'upd_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+    author: state.currentUser ? state.currentUser.name : 'Counsel',
+    authorRole: state.currentUser ? state.currentUser.role : 'Advocate',
+    type: 'filing',
+    title: `Document Filed: ${newDoc.title}`,
+    notes: `Uploaded "${newDoc.name}" (${newDoc.category}, ${newDoc.size}) to chamber docket.`
+  });
+
+  saveCasesToStorage();
+  resetModalDocDropzone();
+  if (dom.modalDocTitle) dom.modalDocTitle.value = '';
+
+  renderModalDocsList(caseItem);
+  renderCasesList();
+  showToast(`Document "${newDoc.title}" successfully added to docket!`, 'success');
+}
+
+function renderModalDocsList(caseItem) {
+  const docs = caseItem.documents || [];
+  if (dom.modalDocsCountBadge) dom.modalDocsCountBadge.textContent = docs.length;
+
+  if (!dom.modalDocsList) return;
+
+  if (docs.length === 0) {
+    dom.modalDocsList.innerHTML = `
+      <div class="docs-empty-state">
+        <i class="fa-regular fa-folder-open"></i>
+        <strong>No documents attached to this case yet</strong>
+        <p>Use the form above to attach petitions, court orders, bail pleas, or exhibits.</p>
+      </div>
+    `;
+    return;
+  }
+
+  dom.modalDocsList.innerHTML = docs.map(doc => {
+    let iconClass = 'generic';
+    let iconFa = 'fa-file-lines';
+    const lower = doc.name.toLowerCase();
+    if (lower.endsWith('.pdf')) {
+      iconClass = 'pdf';
+      iconFa = 'fa-file-pdf';
+    } else if (lower.endsWith('.doc') || lower.endsWith('.docx')) {
+      iconClass = 'word';
+      iconFa = 'fa-file-word';
+    } else if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+      iconClass = 'image';
+      iconFa = 'fa-file-image';
+    }
+
+    const dateFormatted = doc.uploadedAt ? (new Date(doc.uploadedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })) : 'Recently';
+
+    return `
+      <div class="case-doc-card" data-doc-id="${doc.id}">
+        <div class="case-doc-left">
+          <div class="case-doc-icon-wrap ${iconClass}">
+            <i class="fa-solid ${iconFa}"></i>
+          </div>
+          <div class="case-doc-details">
+            <div class="case-doc-title-row">
+              <span class="case-doc-name" title="${escapeHTML(doc.title || doc.name)}">${escapeHTML(doc.title || doc.name)}</span>
+              <span class="case-doc-cat-badge">${escapeHTML(doc.category || 'Docket File')}</span>
+            </div>
+            <div class="case-doc-meta-row">
+              <span><i class="fa-solid fa-paperclip"></i> ${escapeHTML(doc.name)}</span>
+              <span>• ${escapeHTML(doc.size || '1 MB')}</span>
+              <span>• Added ${dateFormatted} by ${escapeHTML(doc.uploadedBy || 'Counsel')}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="case-doc-actions">
+          <button type="button" class="btn-doc-action btn-preview-doc" data-case-id="${caseItem.id}" data-doc-id="${doc.id}" title="Preview document details">
+            <i class="fa-regular fa-eye"></i> View
+          </button>
+          <button type="button" class="btn-doc-action btn-download-doc" data-case-id="${caseItem.id}" data-doc-id="${doc.id}" title="Download document file">
+            <i class="fa-solid fa-download"></i> Download
+          </button>
+          <button type="button" class="btn-doc-action danger btn-delete-doc" data-case-id="${caseItem.id}" data-doc-id="${doc.id}" title="Remove document from case">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach listeners for preview, download, and delete
+  dom.modalDocsList.querySelectorAll('.btn-preview-doc').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cId = btn.getAttribute('data-case-id');
+      const dId = btn.getAttribute('data-doc-id');
+      previewCaseDocument(cId, dId);
+    });
+  });
+
+  dom.modalDocsList.querySelectorAll('.btn-download-doc').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cId = btn.getAttribute('data-case-id');
+      const dId = btn.getAttribute('data-doc-id');
+      downloadCaseDocument(cId, dId);
+    });
+  });
+
+  dom.modalDocsList.querySelectorAll('.btn-delete-doc').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cId = btn.getAttribute('data-case-id');
+      const dId = btn.getAttribute('data-doc-id');
+      deleteCaseDocument(cId, dId);
+    });
+  });
+}
+
+function deleteCaseDocument(caseId, docId) {
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem || !caseItem.documents) return;
+
+  const doc = caseItem.documents.find(d => d.id === docId);
+  if (!doc) return;
+
+  if (confirm(`Remove document "${doc.title || doc.name}" from docket ${caseItem.caseNumber}?`)) {
+    caseItem.documents = caseItem.documents.filter(d => d.id !== docId);
+
+    // Keep attachedDoc updated
+    if (caseItem.documents.length > 0) {
+      caseItem.attachedDoc = { name: caseItem.documents[0].name, size: caseItem.documents[0].size };
+    } else {
+      caseItem.attachedDoc = null;
+    }
+
+    // Log update
+    if (!caseItem.updates) caseItem.updates = [];
+    caseItem.updates.unshift({
+      id: 'upd_' + Date.now(),
+      date: getOffsetDateString(0),
+      time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+      author: state.currentUser ? state.currentUser.name : 'Counsel',
+      authorRole: state.currentUser ? state.currentUser.role : 'Advocate',
+      type: 'status',
+      title: `Document Removed: ${doc.title || doc.name}`,
+      notes: `Removed document "${doc.name}" from docket repository.`
+    });
+
+    saveCasesToStorage();
+    renderModalDocsList(caseItem);
+    renderCasesList();
+    showToast(`Document "${doc.title || doc.name}" removed from docket.`, 'info');
+  }
+}
+
+function downloadCaseDocument(caseId, docId) {
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem || !caseItem.documents) return;
+
+  const doc = caseItem.documents.find(d => d.id === docId);
+  if (!doc) return;
+
+  const content = `=====================================================================
+LEXJURIS ADVOCATE & LEGAL CASE MANAGEMENT CHAMBERS
+HIGH COURT & SUPREME COURT REGISTRY DOCKET ARCHIVE
+=====================================================================
+
+CASE DOCKET DETAILS:
+Suit / Case No.:  ${caseItem.caseNumber}
+Matter Title:     ${caseItem.caseTitle}
+Client Name:      ${caseItem.clientName}
+Client Contact:   ${caseItem.clientPhone}
+Opposing Party:   ${caseItem.opposingParty || 'N/A'}
+Court / Bench:    ${caseItem.courtName}
+Practice Group:   ${caseItem.group || caseItem.caseCategory}
+Assigned Counsel: ${caseItem.assignedToName || 'Advocate'}
+Current Status:   ${caseItem.status || 'Active'}
+Next Hearing:     ${caseItem.hearingDate} at ${caseItem.hearingTime}
+
+---------------------------------------------------------------------
+DOCUMENT METADATA:
+Document Title:   ${doc.title || doc.name}
+File Name:        ${doc.name}
+Document Type:    ${doc.category || 'Court Brief'}
+File Size:        ${doc.size || '1.2 MB'}
+Upload Timestamp: ${doc.uploadedAt || 'N/A'}
+Filing Counsel:   ${doc.uploadedBy || 'Counsel'}
+---------------------------------------------------------------------
+
+OFFICIAL RECORD EXTRACT & SYNOPSIS:
+This document is a certified digital record filed and maintained within the LexJuris
+advocate docket management vault. All pleadings, verified affidavits, and submissions
+herein are governed by the Advocates Act, 1961 and applicable High Court Rules.
+
+Chamber Strategy Notes:
+${caseItem.notes || 'Arguments and statutory citations as per primary pleading docket.'}
+
+Certified on: ${new Date().toLocaleString('en-IN')}
+LexJuris Counsel & Partners - Chambers Automation
+`;
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const fileNameToDownload = doc.name.endsWith('.txt') ? doc.name : `${doc.name.replace(/\.[^/.]+$/, '')}_extract.txt`;
+  a.download = fileNameToDownload;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Downloaded "${fileNameToDownload}"!`, 'success');
+}
+
+function previewCaseDocument(caseId, docId) {
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem || !caseItem.documents) return;
+
+  const doc = caseItem.documents.find(d => d.id === docId);
+  if (!doc) return;
+
+  state.previewDoc = { caseId, docId };
+
+  if (dom.docPreviewTitle) dom.docPreviewTitle.textContent = doc.title || doc.name;
+  if (dom.docPreviewSubtitle) dom.docPreviewSubtitle.textContent = `${caseItem.caseNumber} • ${doc.category}`;
+
+  if (dom.docPreviewBody) {
+    dom.docPreviewBody.innerHTML = `
+      <table class="doc-preview-meta-table">
+        <tbody>
+          <tr><td class="label">Document Title</td><td><strong>${escapeHTML(doc.title || doc.name)}</strong></td></tr>
+          <tr><td class="label">File Name</td><td><code>${escapeHTML(doc.name)}</code></td></tr>
+          <tr><td class="label">Category</td><td><span class="case-doc-cat-badge">${escapeHTML(doc.category)}</span></td></tr>
+          <tr><td class="label">File Size</td><td>${escapeHTML(doc.size || '1.1 MB')}</td></tr>
+          <tr><td class="label">Case Docket</td><td>${escapeHTML(caseItem.caseNumber)} (${escapeHTML(caseItem.caseTitle)})</td></tr>
+          <tr><td class="label">Client</td><td>${escapeHTML(caseItem.clientName)} vs. ${escapeHTML(caseItem.opposingParty || 'Respondents')}</td></tr>
+          <tr><td class="label">Court</td><td>${escapeHTML(caseItem.courtName)}</td></tr>
+          <tr><td class="label">Uploaded By</td><td>${escapeHTML(doc.uploadedBy || 'Counsel')}</td></tr>
+        </tbody>
+      </table>
+
+      <div style="font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
+        <i class="fa-solid fa-file-contract gold-text"></i> Document Content Synopsis
+      </div>
+      <div class="doc-preview-text-box">IN THE COURT OF ${escapeHTML(caseItem.courtName.toUpperCase())}
+SUIT / PETITION: ${escapeHTML(caseItem.caseNumber)}
+
+${escapeHTML(caseItem.clientName)} ... Petitioner / Applicant
+VERSUS
+${escapeHTML(caseItem.opposingParty || 'Opposing Party')} ... Respondents
+
+DOCUMENT: ${escapeHTML(doc.title || doc.name)} (${escapeHTML(doc.category)})
+------------------------------------------------------------
+Summary of Record:
+This legal filing has been verified and registered in the LexJuris Docket Vault.
+Chamber Brief Notes: ${escapeHTML(caseItem.notes || 'Hearing scheduled for final arguments.')}
+
+Filed by: ${escapeHTML(doc.uploadedBy || 'Counsel')}
+Status: Active Court Record
+      </div>
+    `;
+  }
+
+  if (dom.downloadPreviewDocBtn) {
+    dom.downloadPreviewDocBtn.onclick = () => downloadCaseDocument(caseId, docId);
+  }
+
+  if (dom.docPreviewModal) dom.docPreviewModal.classList.remove('hidden');
+}
+
+function closeDocPreviewModal() {
+  if (dom.docPreviewModal) dom.docPreviewModal.classList.add('hidden');
+  state.previewDoc = null;
+}
+
+function getFileTypeFromName(name) {
+  if (!name) return 'application/pdf';
+  const lower = name.toLowerCase();
+  if (lower.endsWith('.pdf')) return 'application/pdf';
+  if (lower.endsWith('.docx') || lower.endsWith('.doc')) return 'application/msword';
+  if (lower.endsWith('.txt')) return 'text/plain';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  return 'application/octet-stream';
 }
 
 // ==========================================================================

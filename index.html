@@ -337,72 +337,25 @@
           </button>
         </div>
 
+        <!-- Intake Segmented Nav: Separate Parts for Case Details & Documents -->
+        <div class="intake-parts-nav" role="tablist">
+          <button type="button" class="intake-part-btn active" id="partDetailsBtn" role="tab" aria-selected="true">
+            <span class="part-number">1</span>
+            <span><i class="fa-solid fa-file-contract"></i> Case Details</span>
+          </button>
+          <button type="button" class="intake-part-btn" id="partDocsBtn" role="tab" aria-selected="false">
+            <span class="part-number">2</span>
+            <span><i class="fa-solid fa-folder-open"></i> Documents (<span id="stagedDocsCountBadge">0</span>)</span>
+          </button>
+        </div>
+
         <form id="newCaseForm" class="case-form" novalidate>
 
-          <!-- Smart Document Upload Auto-Fill Box -->
-          <div class="doc-upload-container">
-            <div class="doc-upload-header">
-              <span class="doc-upload-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Document Scanner</span>
-              <span class="doc-upload-hint">Upload petition, notice or order to auto-fill</span>
-            </div>
+          <!-- ================= PART 1: CASE & CLIENT DETAILS ================= -->
+          <div id="partDetailsPane" class="intake-part-pane">
 
-            <div class="doc-dropzone" id="docDropzone">
-              <input type="file" id="caseDocInput" class="doc-file-input"
-                accept=".pdf,.docx,.doc,.txt,.rtf,.png,.jpg,.jpeg">
-              <div class="dropzone-inner" id="dropzoneDefault">
-                <div class="dropzone-icon-wrap">
-                  <i class="fa-solid fa-cloud-arrow-up"></i>
-                </div>
-                <div class="dropzone-text">
-                  <strong>Drag & drop legal document</strong> or <span class="browse-link">browse files</span>
-                </div>
-                <div class="dropzone-sub">Supports PDF, DOCX, TXT, Court Notices, Petitions & Scans</div>
-              </div>
-
-              <!-- Scanning Progress Animation State (Hidden by default) -->
-              <div class="dropzone-scanning hidden" id="dropzoneScanning">
-                <div class="scanner-laser"></div>
-                <i class="fa-solid fa-file-contract scanning-file-icon"></i>
-                <div class="scanning-status-text" id="scanningStatusText">Analyzing legal docket structure...</div>
-                <div class="scanning-progress-bar">
-                  <div class="scanning-progress-fill" id="scanningProgressFill"></div>
-                </div>
-              </div>
-
-              <!-- File Attached State (Hidden by default) -->
-              <div class="dropzone-attached hidden" id="dropzoneAttached">
-                <div class="attached-file-info">
-                  <i class="fa-solid fa-file-lines attached-icon"></i>
-                  <div class="attached-details">
-                    <span class="attached-name" id="attachedFileName">petition.pdf</span>
-                    <span class="attached-size" id="attachedFileSize">1.2 MB • Extracted 100%</span>
-                  </div>
-                </div>
-                <button type="button" id="removeDocBtn" class="btn-remove-doc" title="Remove document and reset fields">
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- Sample Document Quick Tests -->
-            <div class="sample-docs-row">
-              <span class="sample-docs-label"><i class="fa-regular fa-lightbulb"></i> Try Sample Docs:</span>
-              <div class="sample-doc-chips">
-                <button type="button" class="sample-chip" data-sample="writ">
-                  <i class="fa-solid fa-file-pdf"></i> Writ Petition.pdf
-                </button>
-                <button type="button" class="sample-chip" data-sample="bail">
-                  <i class="fa-solid fa-file-shield"></i> Bail Application.pdf
-                </button>
-                <button type="button" class="sample-chip" data-sample="commercial">
-                  <i class="fa-solid fa-file-contract"></i> Arbitration Notice.docx
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Client Details Section -->
-          <div class="form-section-title">
+            <!-- Client Details Section -->
+            <div class="form-section-title">
             <i class="fa-solid fa-user-tie"></i> Client Information
           </div>
 
@@ -559,15 +512,144 @@
               placeholder="Key points: Anticipatory bail plea, cited precedent Kesavananda Bharati, request for ex-parte stay..."></textarea>
           </div>
 
-          <!-- Submit Button -->
-          <div class="form-action-row">
+          <!-- Actions for Part 1: Case Details -->
+          <div class="form-action-row intake-actions-part1" style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <button type="button" class="btn btn-outline-gold btn-block btn-lg" id="gotoDocsPartBtn">
+              <span>Next: Add Documents (Part 2)</span>
+              <span class="badge-count-pill" id="stagedDocsSummaryBadge">0 attached</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
             <button type="submit" class="btn btn-gold btn-block btn-lg" id="submitCaseBtn">
               <i class="fa-solid fa-gavel"></i>
-              <span>File & Schedule Hearing</span>
+              <span>File & Schedule Hearing Directly</span>
             </button>
           </div>
+        </div>
 
-        </form>
+        <!-- ================= PART 2: DOCUMENTS & CASE VAULT ================= -->
+        <div id="partDocsPane" class="intake-part-pane hidden">
+          
+          <div class="intake-docs-banner">
+            <div class="docs-banner-icon"><i class="fa-solid fa-folder-open gold-text"></i></div>
+            <div>
+              <strong>Case Documents & Filings Vault</strong>
+              <p>Attach petitions, affidavits, orders or notices to this docket.</p>
+            </div>
+          </div>
+
+          <!-- Smart Document Upload Auto-Fill Box -->
+          <div class="doc-upload-container">
+            <div class="doc-upload-header">
+              <span class="doc-upload-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Document Scanner & Vault</span>
+              <span class="doc-upload-hint">Upload petition, notice or order</span>
+            </div>
+
+            <div class="doc-dropzone" id="docDropzone">
+              <input type="file" id="caseDocInput" class="doc-file-input"
+                accept=".pdf,.docx,.doc,.txt,.rtf,.png,.jpg,.jpeg">
+              <div class="dropzone-inner" id="dropzoneDefault">
+                <div class="dropzone-icon-wrap">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div class="dropzone-text">
+                  <strong>Drag & drop legal document</strong> or <span class="browse-link">browse files</span>
+                </div>
+                <div class="dropzone-sub">Supports PDF, DOCX, TXT, Court Notices, Petitions & Scans</div>
+              </div>
+
+              <!-- Scanning Progress Animation State (Hidden by default) -->
+              <div class="dropzone-scanning hidden" id="dropzoneScanning">
+                <div class="scanner-laser"></div>
+                <i class="fa-solid fa-file-contract scanning-file-icon"></i>
+                <div class="scanning-status-text" id="scanningStatusText">Analyzing legal docket structure...</div>
+                <div class="scanning-progress-bar">
+                  <div class="scanning-progress-fill" id="scanningProgressFill"></div>
+                </div>
+              </div>
+
+              <!-- File Attached State (Hidden by default) -->
+              <div class="dropzone-attached hidden" id="dropzoneAttached">
+                <div class="attached-file-info">
+                  <i class="fa-solid fa-file-lines attached-icon"></i>
+                  <div class="attached-details">
+                    <span class="attached-name" id="attachedFileName">petition.pdf</span>
+                    <span class="attached-size" id="attachedFileSize">1.2 MB • Extracted 100%</span>
+                  </div>
+                </div>
+                <button type="button" id="removeDocBtn" class="btn-remove-doc" title="Remove document">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Document Category for Intake Attachment -->
+            <div class="form-grid-2" style="margin-top: 0.25rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="intakeDocCategory" style="font-size: 0.75rem;"><i class="fa-solid fa-tag"></i> Document Category</label>
+                <select id="intakeDocCategory" style="font-size: 0.8rem; padding: 0.4rem 0.6rem;">
+                  <option value="Petition / Plaint">Petition / Plaint / Writ</option>
+                  <option value="Court Order / Judgment">Court Order / Direction</option>
+                  <option value="Vakalatnama">Vakalatnama</option>
+                  <option value="Written Statement">Written Statement / Reply</option>
+                  <option value="Bail Application">Bail Application</option>
+                  <option value="Evidence / Exhibit">Evidence / Exhibit</option>
+                  <option value="Legal Notice">Legal Notice</option>
+                  <option value="Affidavit">Affidavit</option>
+                  <option value="Other Document">Other Document</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                <button type="button" id="stageCurrentDocBtn" class="btn btn-outline-gold btn-block btn-sm" style="height: 38px;">
+                  <i class="fa-solid fa-plus"></i> Stage Document
+                </button>
+              </div>
+            </div>
+
+            <!-- Sample Document Quick Tests -->
+            <div class="sample-docs-row">
+              <span class="sample-docs-label"><i class="fa-regular fa-lightbulb"></i> Try Sample Docs:</span>
+              <div class="sample-doc-chips">
+                <button type="button" class="sample-chip" data-sample="writ">
+                  <i class="fa-solid fa-file-pdf"></i> Writ Petition.pdf
+                </button>
+                <button type="button" class="sample-chip" data-sample="bail">
+                  <i class="fa-solid fa-file-shield"></i> Bail Application.pdf
+                </button>
+                <button type="button" class="sample-chip" data-sample="commercial">
+                  <i class="fa-solid fa-file-contract"></i> Arbitration Notice.docx
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- List of Staged Documents for this new case -->
+          <div class="staged-docs-container">
+            <div class="staged-docs-header">
+              <span><i class="fa-solid fa-paperclip gold-text"></i> Documents Ready to File (<span id="stagedDocsListCount">0</span>)</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Will be saved with this case</span>
+            </div>
+            <div id="stagedDocsList" class="staged-docs-list">
+              <div class="staged-docs-empty" id="stagedDocsEmpty">
+                <i class="fa-regular fa-folder-open"></i>
+                <span>No documents staged yet. Upload above or file case directly.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation & Submit Row for Part 2 -->
+          <div class="form-action-row" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+            <button type="button" class="btn btn-outline-subtle btn-block" id="backToDetailsPartBtn">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>Back to Case Details</span>
+            </button>
+            <button type="submit" class="btn btn-gold btn-block" id="submitCaseWithDocsBtn">
+              <i class="fa-solid fa-gavel"></i>
+              <span>Register Case with Documents</span>
+            </button>
+          </div>
+        </div>
+
+      </form>
       </section>
 
       <!-- ================= RIGHT COLUMN: ACTIVE CASES & COURT SCHEDULE ================= -->
@@ -602,12 +684,31 @@
 
         <!-- Search & Filter Ribbon -->
         <div class="search-filter-ribbon">
-          <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" id="clientSearchInput" placeholder="Search by Client Name, Case Number, or Court..."
-              aria-label="Search cases">
-            <button id="clearSearchBtn" class="btn-clear-search hidden" title="Clear search"><i
-                class="fa-solid fa-xmark"></i></button>
+          <div class="search-top-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="clientSearchInput" placeholder="Search legal dockets by Case Name, Client Name..."
+                aria-label="Search cases">
+              <button id="clearSearchBtn" class="btn-clear-search hidden" title="Clear search"><i
+                  class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Search Mode Filter: Case Name or Client Name -->
+            <div class="search-mode-selector" role="group" aria-label="Search filter field">
+              <span class="search-mode-label"><i class="fa-solid fa-sliders"></i> Search By:</span>
+              <div class="search-mode-pills" id="searchModePills">
+                <button type="button" class="search-mode-pill active" data-mode="all" title="Search across all fields">All</button>
+                <button type="button" class="search-mode-pill" data-mode="caseTitle" title="Search specifically by Case Name / Matter">
+                  <i class="fa-solid fa-scale-balanced"></i> Case Name
+                </button>
+                <button type="button" class="search-mode-pill" data-mode="clientName" title="Search specifically by Client Name">
+                  <i class="fa-solid fa-user-tie"></i> Client Name
+                </button>
+                <button type="button" class="search-mode-pill" data-mode="caseNumber" title="Search specifically by Case / Suit Number">
+                  <i class="fa-solid fa-hashtag"></i> Case No.
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Filter Pills -->
@@ -1185,6 +1286,130 @@
 
       <div class="modal-footer">
         <button type="button" id="closeCaseUpdatesModalBottomBtn" class="btn btn-outline-subtle">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CASE DOCUMENTS & VAULT MODAL ================= -->
+  <div id="caseDocsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="caseDocsModalTitle">
+    <div class="modal-card case-docs-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-folder-open gold-text"></i>
+          <div>
+            <h3 id="caseDocsModalTitle">Docket Documents & Vault</h3>
+            <p id="caseDocsModalSubtitle" class="modal-subtitle">WP(C) 4521/2024 • Rajesh Mehra</p>
+          </div>
+        </div>
+        <button id="closeCaseDocsModalBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body" style="padding-bottom: 0.5rem;">
+        <input type="hidden" id="docsTargetCaseId">
+
+        <!-- Case Overview Meta Bar -->
+        <div class="updates-case-meta" id="docsCaseMeta">
+          <!-- Dynamic meta summary: Group, Assignee, Court, Status -->
+        </div>
+
+        <!-- Add Document to Existing Case Box -->
+        <div class="add-doc-box">
+          <h4 class="add-update-title"><i class="fa-solid fa-file-circle-plus gold-text"></i> Add Document to this Case</h4>
+          <form id="addCaseDocForm" class="add-doc-form">
+            <div class="doc-upload-dropzone" id="modalDocDropzone">
+              <input type="file" id="modalCaseDocInput" class="doc-file-input" accept=".pdf,.docx,.doc,.txt,.rtf,.png,.jpg,.jpeg">
+              <div class="dropzone-inner" id="modalDropzoneDefault">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem; color: var(--gold-primary);"></i>
+                <div class="dropzone-text"><strong>Choose file</strong> or drag & drop here</div>
+                <div class="dropzone-sub">Supports PDF, DOCX, TXT, Court Notices, Petitions, Orders & Scans</div>
+              </div>
+              <div class="dropzone-attached hidden" id="modalDropzoneAttached">
+                <div class="attached-file-info">
+                  <i class="fa-solid fa-file-lines attached-icon"></i>
+                  <div class="attached-details">
+                    <span class="attached-name" id="modalAttachedFileName">document.pdf</span>
+                    <span class="attached-size" id="modalAttachedFileSize">0 KB</span>
+                  </div>
+                </div>
+                <button type="button" id="removeModalDocBtn" class="btn-remove-doc" title="Remove selected file">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-top: 0.75rem;">
+              <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label for="modalDocCategory"><i class="fa-solid fa-tag"></i> Document Category <span class="req">*</span></label>
+                <select id="modalDocCategory" required>
+                  <option value="Petition / Plaint">Petition / Plaint / Writ</option>
+                  <option value="Court Order / Judgment">Court Order / Direction</option>
+                  <option value="Vakalatnama">Vakalatnama / Appearance</option>
+                  <option value="Written Statement">Written Statement / Reply</option>
+                  <option value="Rejoinder">Rejoinder / Replication</option>
+                  <option value="Bail Application">Bail Application / Bond</option>
+                  <option value="Evidence / Exhibit">Evidence / Exhibit / Annexure</option>
+                  <option value="Legal Notice">Statutory Legal Notice</option>
+                  <option value="Affidavit">Affidavit / Verification</option>
+                  <option value="Other Document">Other Case Document</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label for="modalDocTitle"><i class="fa-solid fa-heading"></i> Document Title / Description</label>
+                <input type="text" id="modalDocTitle" placeholder="e.g. Certified Copy of Stay Order">
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+              <span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-shield-halved"></i> Stored in local chambers docket</span>
+              <button type="submit" class="btn btn-gold btn-sm" id="submitModalDocBtn">
+                <i class="fa-solid fa-plus"></i> Upload Document to Docket
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Attached Documents List -->
+        <div class="docs-list-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 class="timeline-heading" style="margin-bottom: 0;">
+              <i class="fa-solid fa-folder-tree gold-text"></i> Docket Documents (<span id="modalDocsCountBadge">0</span>)
+            </h4>
+          </div>
+          <div id="modalDocsList" class="case-docs-grid">
+            <!-- Dynamically populated document cards -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="closeCaseDocsModalBottomBtn" class="btn btn-outline-subtle">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DOCUMENT PREVIEW MODAL ================= -->
+  <div id="docPreviewModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="docPreviewTitle">
+    <div class="modal-card doc-preview-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-file-lines gold-text"></i>
+          <div>
+            <h3 id="docPreviewTitle">Document Preview</h3>
+            <p id="docPreviewSubtitle" class="modal-subtitle">File Details</p>
+          </div>
+        </div>
+        <button id="closeDocPreviewModalBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="docPreviewBody">
+        <!-- Dynamic preview content -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="downloadPreviewDocBtn" class="btn btn-outline-gold">
+          <i class="fa-solid fa-download"></i> Download File
+        </button>
+        <button type="button" id="closeDocPreviewBottomBtn" class="btn btn-gold">Close Preview</button>
       </div>
     </div>
   </div>
