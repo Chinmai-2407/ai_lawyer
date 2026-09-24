@@ -608,7 +608,7 @@ const dom = {
   modalDocsCountBadge: document.getElementById('modalDocsCountBadge'),
   modalDocsList: document.getElementById('modalDocsList'),
 
-  // Document Preview Modal
+  // Document Preview & AI Summary Modal
   docPreviewModal: document.getElementById('docPreviewModal'),
   docPreviewTitle: document.getElementById('docPreviewTitle'),
   docPreviewSubtitle: document.getElementById('docPreviewSubtitle'),
@@ -616,6 +616,16 @@ const dom = {
   closeDocPreviewBottomBtn: document.getElementById('closeDocPreviewBottomBtn'),
   downloadPreviewDocBtn: document.getElementById('downloadPreviewDocBtn'),
   docPreviewBody: document.getElementById('docPreviewBody'),
+  tabDocViewBtn: document.getElementById('tabDocViewBtn'),
+  tabDocAiBtn: document.getElementById('tabDocAiBtn'),
+  tabDocMetaBtn: document.getElementById('tabDocMetaBtn'),
+  paneDocView: document.getElementById('paneDocView'),
+  paneDocAi: document.getElementById('paneDocAi'),
+  paneDocMeta: document.getElementById('paneDocMeta'),
+  generateDocAiBtn: document.getElementById('generateDocAiBtn'),
+  copyDocAiBtn: document.getElementById('copyDocAiBtn'),
+  openExternalDocBtn: document.getElementById('openExternalDocBtn'),
+  insertAiNotesBtn: document.getElementById('insertAiNotesBtn'),
 
   // User Add/Edit Modal
   userModal: document.getElementById('userModal'),
@@ -1018,7 +1028,23 @@ function loadStoredCases() {
 }
 
 function saveCasesToStorage() {
-  localStorage.setItem(STORAGE_KEYS.CASES, JSON.stringify(state.cases));
+  try {
+    localStorage.setItem(STORAGE_KEYS.CASES, JSON.stringify(state.cases));
+  } catch (err) {
+    console.warn('LocalStorage quota limit reached, trimming large file data for persistence:', err);
+    try {
+      const slimCases = state.cases.map(c => ({
+        ...c,
+        documents: (c.documents || []).map(d => ({
+          ...d,
+          fileData: d.fileData && d.fileData.length > 250000 ? null : d.fileData
+        }))
+      }));
+      localStorage.setItem(STORAGE_KEYS.CASES, JSON.stringify(slimCases));
+    } catch (err2) {
+      console.error('Could not save cases to localStorage:', err2);
+    }
+  }
 }
 
 function setDefaultFormDates() {
@@ -1289,6 +1315,31 @@ function setupEventListeners() {
     });
   }
 
+  // Document Preview Tabs Switchers
+  if (dom.tabDocViewBtn) {
+    dom.tabDocViewBtn.addEventListener('click', () => switchDocPreviewTab('paneDocView'));
+  }
+  if (dom.tabDocAiBtn) {
+    dom.tabDocAiBtn.addEventListener('click', () => switchDocPreviewTab('paneDocAi'));
+  }
+  if (dom.tabDocMetaBtn) {
+    dom.tabDocMetaBtn.addEventListener('click', () => switchDocPreviewTab('paneDocMeta'));
+  }
+
+  // AI Summary Actions
+  if (dom.generateDocAiBtn) {
+    dom.generateDocAiBtn.addEventListener('click', handleTriggerAiSummary);
+  }
+  if (dom.copyDocAiBtn) {
+    dom.copyDocAiBtn.addEventListener('click', copyAiSummaryToClipboard);
+  }
+  if (dom.insertAiNotesBtn) {
+    dom.insertAiNotesBtn.addEventListener('click', appendAiSummaryToCaseNotes);
+  }
+  if (dom.openExternalDocBtn) {
+    dom.openExternalDocBtn.addEventListener('click', openCurrentDocInNewTab);
+  }
+
   // Admin Portal: Open Add User Modal
   if (dom.openAddUserModalBtn) {
     dom.openAddUserModalBtn.addEventListener('click', openAddUserModal);
@@ -1479,23 +1530,26 @@ function processUploadedLegalDoc(file) {
   const fileSize = formatFileSize(file.size);
   const isTxt = fileName.toLowerCase().endsWith('.txt');
 
-  if (isTxt) {
-    // Read actual text content
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const text = e.target.result;
-      const parsedData = parseRawLegalText(text, fileName);
-      simulateDocumentScanAndExtraction(fileName, fileSize, parsedData);
-    };
-    reader.readAsText(file);
-  } else {
-    // Generate intelligent extraction based on document name and legal heuristics
-    const extractedData = generateExtractedLegalData(fileName);
-    simulateDocumentScanAndExtraction(fileName, fileSize, extractedData);
-  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const fileDataUrl = e.target.result;
+    if (isTxt) {
+      const textReader = new FileReader();
+      textReader.onload = function(te) {
+        const text = te.target.result;
+        const parsedData = parseRawLegalText(text, fileName);
+        simulateDocumentScanAndExtraction(fileName, fileSize, parsedData, fileDataUrl, text);
+      };
+      textReader.readAsText(file);
+    } else {
+      const extractedData = generateExtractedLegalData(fileName);
+      simulateDocumentScanAndExtraction(fileName, fileSize, extractedData, fileDataUrl, null);
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
-function simulateDocumentScanAndExtraction(fileName, fileSize, extractedData) {
+function simulateDocumentScanAndExtraction(fileName, fileSize, extractedData, fileData = null, textContent = null) {
   // 1. Switch dropzone to Scanning State
   dom.dropzoneDefault.classList.add('hidden');
   dom.dropzoneAttached.classList.add('hidden');
@@ -1520,12 +1574,12 @@ function simulateDocumentScanAndExtraction(fileName, fileSize, extractedData) {
     } else {
       clearInterval(interval);
       // Finish scanning, show attached state & populate fields
-      finishExtraction(fileName, fileSize, extractedData);
+      finishExtraction(fileName, fileSize, extractedData, fileData, textContent);
     }
   }, 350);
 }
 
-function finishExtraction(fileName, fileSize, extractedData) {
+function finishExtraction(fileName, fileSize, extractedData, fileData = null, textContent = null) {
   dom.dropzoneScanning.classList.add('hidden');
   dom.dropzoneAttached.classList.remove('hidden');
   dom.attachedFileName.textContent = fileName;
@@ -1533,7 +1587,10 @@ function finishExtraction(fileName, fileSize, extractedData) {
 
   state.currentAttachedDoc = {
     name: fileName,
-    size: fileSize
+    size: fileSize,
+    type: getFileTypeFromName(fileName),
+    fileData: fileData || null,
+    textContent: textContent || null
   };
 
   populateIntakeFormWithExtractedData(extractedData);
@@ -3264,7 +3321,9 @@ function stageCurrentIntakeDoc() {
     id: 'staged_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
     name: state.currentAttachedDoc.name,
     size: state.currentAttachedDoc.size,
-    type: getFileTypeFromName(state.currentAttachedDoc.name),
+    type: state.currentAttachedDoc.type || getFileTypeFromName(state.currentAttachedDoc.name),
+    fileData: state.currentAttachedDoc.fileData || null,
+    textContent: state.currentAttachedDoc.textContent || null,
     category: category,
     title: state.currentAttachedDoc.name.replace(/\.[^/.]+$/, '').replace(/[_\-]+/g, ' '),
     uploadedAt: new Date().toISOString(),
@@ -3312,11 +3371,24 @@ function renderStagedDocs() {
           </div>
         </div>
       </div>
-      <button type="button" class="btn-remove-staged-doc" data-id="${doc.id}" title="Remove staged document">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+      <div style="display:flex; align-items:center; gap:0.25rem;">
+        <button type="button" class="btn-preview-staged-doc" data-id="${doc.id}" title="Preview Document & AI Summary" style="background:none; border:none; color:var(--gold-primary); cursor:pointer; padding:4px 6px; font-size:0.85rem;">
+          <i class="fa-regular fa-eye"></i>
+        </button>
+        <button type="button" class="btn-remove-staged-doc" data-id="${doc.id}" title="Remove staged document">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
     </div>
   `).join('');
+
+  dom.stagedDocsList.querySelectorAll('.btn-preview-staged-doc').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      previewStagedDocument(id);
+    });
+  });
 
   dom.stagedDocsList.querySelectorAll('.btn-remove-staged-doc').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -3430,11 +3502,33 @@ function handleModalDocSelect(e) {
   if (!file) return;
 
   const fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+  const fileType = file.type || getFileTypeFromName(file.name);
+
   state.currentModalAttachedDoc = {
     name: file.name,
     size: fileSize,
-    type: file.type || getFileTypeFromName(file.name)
+    type: fileType,
+    fileData: null,
+    textContent: null
   };
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    if (state.currentModalAttachedDoc) {
+      state.currentModalAttachedDoc.fileData = evt.target.result;
+    }
+  };
+  reader.readAsDataURL(file);
+
+  if (file.name.toLowerCase().endsWith('.txt')) {
+    const textReader = new FileReader();
+    textReader.onload = function(te) {
+      if (state.currentModalAttachedDoc) {
+        state.currentModalAttachedDoc.textContent = te.target.result;
+      }
+    };
+    textReader.readAsText(file);
+  }
 
   if (dom.modalDropzoneDefault) dom.modalDropzoneDefault.classList.add('hidden');
   if (dom.modalDropzoneAttached) dom.modalDropzoneAttached.classList.remove('hidden');
@@ -3470,7 +3564,9 @@ function handleAddCaseDocSubmit(e) {
     id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
     name: fileName,
     size: fileSize,
-    type: getFileTypeFromName(fileName),
+    type: attached ? attached.type : getFileTypeFromName(fileName),
+    fileData: attached ? attached.fileData : null,
+    textContent: attached ? attached.textContent : null,
     category: category,
     title: docTitle,
     uploadedAt: new Date().toISOString(),
@@ -3563,8 +3659,11 @@ function renderModalDocsList(caseItem) {
         </div>
 
         <div class="case-doc-actions">
-          <button type="button" class="btn-doc-action btn-preview-doc" data-case-id="${caseItem.id}" data-doc-id="${doc.id}" title="Preview document details">
-            <i class="fa-regular fa-eye"></i> View
+          <button type="button" class="btn-doc-action btn-preview-doc" data-case-id="${caseItem.id}" data-doc-id="${doc.id}" data-tab="paneDocView" title="Preview document details & file">
+            <i class="fa-regular fa-file-lines"></i> View
+          </button>
+          <button type="button" class="btn-doc-action btn-ai-doc" data-case-id="${caseItem.id}" data-doc-id="${doc.id}" data-tab="paneDocAi" title="JurisAI Document & Case Summary">
+            <i class="fa-solid fa-brain gold-text"></i> AI Summary
           </button>
           <button type="button" class="btn-doc-action btn-download-doc" data-case-id="${caseItem.id}" data-doc-id="${doc.id}" title="Download document file">
             <i class="fa-solid fa-download"></i> Download
@@ -3577,12 +3676,22 @@ function renderModalDocsList(caseItem) {
     `;
   }).join('');
 
-  // Attach listeners for preview, download, and delete
+  // Attach listeners for preview, AI summary, download, and delete
   dom.modalDocsList.querySelectorAll('.btn-preview-doc').forEach(btn => {
     btn.addEventListener('click', () => {
       const cId = btn.getAttribute('data-case-id');
       const dId = btn.getAttribute('data-doc-id');
-      previewCaseDocument(cId, dId);
+      const tab = btn.getAttribute('data-tab') || 'paneDocView';
+      previewCaseDocument(cId, dId, tab);
+    });
+  });
+
+  dom.modalDocsList.querySelectorAll('.btn-ai-doc').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cId = btn.getAttribute('data-case-id');
+      const dId = btn.getAttribute('data-doc-id');
+      const tab = btn.getAttribute('data-tab') || 'paneDocAi';
+      previewCaseDocument(cId, dId, tab);
     });
   });
 
@@ -3699,60 +3808,691 @@ LexJuris Counsel & Partners - Chambers Automation
   showToast(`Downloaded "${fileNameToDownload}"!`, 'success');
 }
 
-function previewCaseDocument(caseId, docId) {
+function previewCaseDocument(caseId, docId, initialTab = 'paneDocView') {
   const caseItem = state.cases.find(c => c.id === caseId);
   if (!caseItem || !caseItem.documents) return;
 
   const doc = caseItem.documents.find(d => d.id === docId);
   if (!doc) return;
 
-  state.previewDoc = { caseId, docId };
+  state.previewDoc = { caseId, docId, doc, caseItem, isStaged: false };
 
+  // Set modal header
   if (dom.docPreviewTitle) dom.docPreviewTitle.textContent = doc.title || doc.name;
-  if (dom.docPreviewSubtitle) dom.docPreviewSubtitle.textContent = `${caseItem.caseNumber} • ${doc.category}`;
-
-  if (dom.docPreviewBody) {
-    dom.docPreviewBody.innerHTML = `
-      <table class="doc-preview-meta-table">
-        <tbody>
-          <tr><td class="label">Document Title</td><td><strong>${escapeHTML(doc.title || doc.name)}</strong></td></tr>
-          <tr><td class="label">File Name</td><td><code>${escapeHTML(doc.name)}</code></td></tr>
-          <tr><td class="label">Category</td><td><span class="case-doc-cat-badge">${escapeHTML(doc.category)}</span></td></tr>
-          <tr><td class="label">File Size</td><td>${escapeHTML(doc.size || '1.1 MB')}</td></tr>
-          <tr><td class="label">Case Docket</td><td>${escapeHTML(caseItem.caseNumber)} (${escapeHTML(caseItem.caseTitle)})</td></tr>
-          <tr><td class="label">Client</td><td>${escapeHTML(caseItem.clientName)} vs. ${escapeHTML(caseItem.opposingParty || 'Respondents')}</td></tr>
-          <tr><td class="label">Court</td><td>${escapeHTML(caseItem.courtName)}</td></tr>
-          <tr><td class="label">Uploaded By</td><td>${escapeHTML(doc.uploadedBy || 'Counsel')}</td></tr>
-        </tbody>
-      </table>
-
-      <div style="font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
-        <i class="fa-solid fa-file-contract gold-text"></i> Document Content Synopsis
-      </div>
-      <div class="doc-preview-text-box">IN THE COURT OF ${escapeHTML(caseItem.courtName.toUpperCase())}
-SUIT / PETITION: ${escapeHTML(caseItem.caseNumber)}
-
-${escapeHTML(caseItem.clientName)} ... Petitioner / Applicant
-VERSUS
-${escapeHTML(caseItem.opposingParty || 'Opposing Party')} ... Respondents
-
-DOCUMENT: ${escapeHTML(doc.title || doc.name)} (${escapeHTML(doc.category)})
-------------------------------------------------------------
-Summary of Record:
-This legal filing has been verified and registered in the LexJuris Docket Vault.
-Chamber Brief Notes: ${escapeHTML(caseItem.notes || 'Hearing scheduled for final arguments.')}
-
-Filed by: ${escapeHTML(doc.uploadedBy || 'Counsel')}
-Status: Active Court Record
-      </div>
-    `;
+  if (dom.docPreviewSubtitle) {
+    dom.docPreviewSubtitle.textContent = `Docket: ${caseItem.caseNumber} • ${doc.category} • ${caseItem.courtName}`;
   }
 
+  // Ensure AI summary exists
+  if (!doc.aiSummary) {
+    doc.aiSummary = generateAiDocumentSummary(caseItem, doc);
+  }
+
+  // Render all 3 panes
+  renderDocViewPane(caseItem, doc);
+  renderDocAiSummaryPane(caseItem, doc);
+  renderDocMetaPane(caseItem, doc);
+
+  // Switch to requested tab
+  switchDocPreviewTab(initialTab);
+
+  // Configure download button
   if (dom.downloadPreviewDocBtn) {
     dom.downloadPreviewDocBtn.onclick = () => downloadCaseDocument(caseId, docId);
   }
 
+  // Show modal
   if (dom.docPreviewModal) dom.docPreviewModal.classList.remove('hidden');
+}
+
+function previewStagedDocument(stagedDocId, initialTab = 'paneDocView') {
+  const doc = state.stagedDocs.find(d => d.id === stagedDocId);
+  if (!doc) return;
+
+  // Build temporary case representation from intake form values
+  const courtVal = dom.courtName ? dom.courtName.value.trim() || 'Court / High Court Bench' : 'High Court Bench';
+  const clientVal = dom.clientName ? dom.clientName.value.trim() || 'Prospective Client' : 'Prospective Client';
+  const caseNoVal = dom.caseNumber ? dom.caseNumber.value.trim() || 'NEW FILING (PENDING)' : 'NEW FILING';
+  const caseTitleVal = dom.caseTitle ? dom.caseTitle.value.trim() || 'New Legal Matter' : 'New Legal Matter';
+  const oppPartyVal = dom.opposingParty ? dom.opposingParty.value.trim() || 'Opposite Party' : 'Opposite Party';
+  const matterCategory = dom.caseCategory ? dom.caseCategory.value : 'Civil Litigation';
+  const notesVal = dom.caseNotes ? dom.caseNotes.value.trim() : '';
+
+  const mockCase = {
+    id: 'staged_preview',
+    caseNumber: caseNoVal,
+    caseTitle: caseTitleVal,
+    clientName: clientVal,
+    opposingParty: oppPartyVal,
+    courtName: courtVal,
+    caseCategory: matterCategory,
+    group: matterCategory,
+    notes: notesVal,
+    assignedToName: state.currentUser ? state.currentUser.name : 'Advocate'
+  };
+
+  state.previewDoc = { caseId: 'staged', docId: stagedDocId, doc, caseItem: mockCase, isStaged: true };
+
+  if (dom.docPreviewTitle) dom.docPreviewTitle.textContent = doc.title || doc.name;
+  if (dom.docPreviewSubtitle) {
+    dom.docPreviewSubtitle.textContent = `Intake Staged • ${doc.category} • ${mockCase.courtName}`;
+  }
+
+  if (!doc.aiSummary) {
+    doc.aiSummary = generateAiDocumentSummary(mockCase, doc);
+  }
+
+  renderDocViewPane(mockCase, doc);
+  renderDocAiSummaryPane(mockCase, doc);
+  renderDocMetaPane(mockCase, doc);
+
+  switchDocPreviewTab(initialTab);
+
+  if (dom.downloadPreviewDocBtn) {
+    dom.downloadPreviewDocBtn.onclick = () => {
+      showToast(`Downloading file "${doc.name}"...`, 'info');
+    };
+  }
+
+  if (dom.docPreviewModal) dom.docPreviewModal.classList.remove('hidden');
+}
+
+function switchDocPreviewTab(tabId) {
+  state.previewActiveTab = tabId;
+
+  // Tab buttons styling
+  if (dom.tabDocViewBtn) {
+    if (tabId === 'paneDocView') dom.tabDocViewBtn.classList.add('active');
+    else dom.tabDocViewBtn.classList.remove('active');
+  }
+  if (dom.tabDocAiBtn) {
+    if (tabId === 'paneDocAi') dom.tabDocAiBtn.classList.add('active');
+    else dom.tabDocAiBtn.classList.remove('active');
+  }
+  if (dom.tabDocMetaBtn) {
+    if (tabId === 'paneDocMeta') dom.tabDocMetaBtn.classList.add('active');
+    else dom.tabDocMetaBtn.classList.remove('active');
+  }
+
+  // Panes visibility
+  if (dom.paneDocView) {
+    if (tabId === 'paneDocView') dom.paneDocView.classList.remove('hidden');
+    else dom.paneDocView.classList.add('hidden');
+  }
+  if (dom.paneDocAi) {
+    if (tabId === 'paneDocAi') dom.paneDocAi.classList.remove('hidden');
+    else dom.paneDocAi.classList.add('hidden');
+  }
+  if (dom.paneDocMeta) {
+    if (tabId === 'paneDocMeta') dom.paneDocMeta.classList.remove('hidden');
+    else dom.paneDocMeta.classList.add('hidden');
+  }
+
+  // Footer button contexts
+  const doc = state.previewDoc ? state.previewDoc.doc : null;
+
+  if (tabId === 'paneDocAi') {
+    if (dom.copyDocAiBtn) dom.copyDocAiBtn.classList.remove('hidden');
+    if (dom.insertAiNotesBtn && !state.previewDoc?.isStaged) {
+      dom.insertAiNotesBtn.classList.remove('hidden');
+    } else if (dom.insertAiNotesBtn) {
+      dom.insertAiNotesBtn.classList.add('hidden');
+    }
+  } else {
+    if (dom.copyDocAiBtn) dom.copyDocAiBtn.classList.add('hidden');
+    if (dom.insertAiNotesBtn) dom.insertAiNotesBtn.classList.add('hidden');
+  }
+
+  if (tabId === 'paneDocView' && doc && doc.fileData) {
+    if (dom.openExternalDocBtn) dom.openExternalDocBtn.classList.remove('hidden');
+  } else {
+    if (dom.openExternalDocBtn) dom.openExternalDocBtn.classList.add('hidden');
+  }
+}
+
+function renderDocViewPane(caseItem, doc) {
+  if (!dom.paneDocView) return;
+
+  // 1. Case where user uploaded a raw data file (PDF, Image, or Text)
+  if (doc.fileData) {
+    const isImage = (doc.type && doc.type.startsWith('image/')) || doc.name.match(/\.(png|jpe?g|webp|gif|svg)$/i);
+    const isPdf = (doc.type && doc.type === 'application/pdf') || doc.name.match(/\.pdf$/i);
+
+    if (isImage) {
+      dom.paneDocView.innerHTML = `
+        <div class="uploaded-doc-toolbar">
+          <div class="uploaded-doc-toolbar-left">
+            <i class="fa-solid fa-file-image gold-text"></i>
+            <strong>${escapeHTML(doc.name)}</strong>
+            <span class="case-doc-cat-badge">${escapeHTML(doc.category)}</span>
+            <span>• ${escapeHTML(doc.size || 'Image')}</span>
+          </div>
+          <div class="uploaded-doc-toolbar-right">
+            <button type="button" class="btn btn-outline-subtle btn-xs" id="zoomInDocImgBtn" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i> Zoom +</button>
+            <button type="button" class="btn btn-outline-subtle btn-xs" id="zoomOutDocImgBtn" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i> Zoom -</button>
+            <button type="button" class="btn btn-outline-subtle btn-xs" id="resetZoomDocImgBtn" title="Reset Zoom"><i class="fa-solid fa-rotate"></i> Reset</button>
+            <button type="button" class="btn btn-outline-gold btn-xs" onclick="window.open('${doc.fileData}', '_blank')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Fullscreen</button>
+          </div>
+        </div>
+        <div class="uploaded-doc-image-box">
+          <img src="${doc.fileData}" id="uploadedPreviewImg" class="uploaded-doc-image" alt="${escapeHTML(doc.name)}" />
+        </div>
+      `;
+
+      let currentZoom = 1;
+      const imgEl = document.getElementById('uploadedPreviewImg');
+      const inBtn = document.getElementById('zoomInDocImgBtn');
+      const outBtn = document.getElementById('zoomOutDocImgBtn');
+      const resBtn = document.getElementById('resetZoomDocImgBtn');
+
+      if (inBtn && imgEl) {
+        inBtn.onclick = () => {
+          currentZoom = Math.min(currentZoom + 0.25, 3.5);
+          imgEl.style.transform = `scale(${currentZoom})`;
+        };
+      }
+      if (outBtn && imgEl) {
+        outBtn.onclick = () => {
+          currentZoom = Math.max(currentZoom - 0.25, 0.4);
+          imgEl.style.transform = `scale(${currentZoom})`;
+        };
+      }
+      if (resBtn && imgEl) {
+        resBtn.onclick = () => {
+          currentZoom = 1;
+          imgEl.style.transform = 'scale(1)';
+        };
+      }
+      return;
+    }
+
+    if (isPdf) {
+      dom.paneDocView.innerHTML = `
+        <div class="uploaded-doc-toolbar">
+          <div class="uploaded-doc-toolbar-left">
+            <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i>
+            <strong>${escapeHTML(doc.name)}</strong>
+            <span class="case-doc-cat-badge">${escapeHTML(doc.category)}</span>
+            <span>• ${escapeHTML(doc.size || 'PDF Document')}</span>
+          </div>
+          <div class="uploaded-doc-toolbar-right">
+            <button type="button" class="btn btn-outline-gold btn-xs" onclick="window.open('${doc.fileData}', '_blank')">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Full Browser Window
+            </button>
+          </div>
+        </div>
+        <iframe src="${doc.fileData}#toolbar=1" class="uploaded-doc-frame" title="${escapeHTML(doc.name)}"></iframe>
+      `;
+      return;
+    }
+
+    if (doc.textContent) {
+      dom.paneDocView.innerHTML = `
+        <div class="uploaded-doc-toolbar">
+          <div class="uploaded-doc-toolbar-left">
+            <i class="fa-solid fa-file-lines gold-text"></i>
+            <strong>${escapeHTML(doc.name)}</strong>
+            <span class="case-doc-cat-badge">${escapeHTML(doc.category)}</span>
+            <span>• Raw Text Document</span>
+          </div>
+        </div>
+        <div class="doc-preview-text-box">${escapeHTML(doc.textContent)}</div>
+      `;
+      return;
+    }
+  }
+
+  // 2. High Court Digital Court Parchment Docket View (When no binary fileData is present)
+  const courtHeading = (caseItem ? caseItem.courtName : 'CHAMBERS REGISTRY').toUpperCase();
+  const docketNo = caseItem ? caseItem.caseNumber : 'WP(C) REGISTRY DOCKET';
+  const clientName = caseItem ? caseItem.clientName : 'Client / Petitioner';
+  const oppName = caseItem && caseItem.opposingParty ? caseItem.opposingParty : 'Opposing Party / State of NCT';
+  const counselName = doc.uploadedBy || (caseItem ? caseItem.assignedToName : 'Counsel');
+  const catDisplay = (doc.category || 'Court Filing').toUpperCase();
+
+  dom.paneDocView.innerHTML = `
+    <div class="uploaded-doc-toolbar">
+      <div class="uploaded-doc-toolbar-left">
+        <i class="fa-solid fa-stamp gold-text"></i>
+        <strong>Chamber Certified Digital Docket Record</strong> (${escapeHTML(doc.name)})
+        <span class="case-doc-cat-badge">${escapeHTML(doc.category)}</span>
+      </div>
+      <div class="uploaded-doc-toolbar-right">
+        <span style="font-size: 0.72rem; color: var(--gold-primary); font-weight: 600;">
+          <i class="fa-solid fa-shield-check"></i> Certified Court Vault Copy
+        </span>
+      </div>
+    </div>
+
+    <div class="court-parchment-viewer">
+      <div class="parchment-watermark">COURT RECORD</div>
+      <div class="court-parchment-header">
+        <div class="court-parchment-emblem"><i class="fa-solid fa-scale-balanced"></i></div>
+        <div class="court-parchment-court">IN THE HIGH COURT OF JUDICATURE AT ${escapeHTML(courtHeading)}</div>
+        <div class="court-parchment-docket">CAUSE LIST REGISTRATION NO.: ${escapeHTML(docketNo)}</div>
+      </div>
+
+      <div class="court-parchment-parties">
+        <div><strong>PETITIONER / APPLICANT:</strong><br>${escapeHTML(clientName)}</div>
+        <div style="text-align: right;"><strong>RESPONDENT / OPPOSITE PARTY:</strong><br>${escapeHTML(oppName)}</div>
+      </div>
+
+      <div class="court-parchment-heading">${escapeHTML(doc.title || doc.name)}</div>
+      <div style="text-align: center; font-size: 0.8rem; color: #666; margin-bottom: 1.25rem;">
+        [FILED UNDER: ${escapeHTML(catDisplay)} • GOVERNED BY THE ADVOCATES ACT, 1961]
+      </div>
+
+      <div class="court-parchment-paras">
+        <p><strong>1. JURISDICTION &amp; STATUTORY LOCUS:</strong> The present ${escapeHTML(doc.category)} is filed by the Petitioner/Applicant through counsel on record invoking the extraordinary and statutory jurisdiction of this Hon'ble Court under applicable procedural rules and High Court practice directives.</p>
+        <p><strong>2. STATEMENT OF FACTS &amp; CAUSE OF ACTION:</strong> That the dispute pertains to <strong>${escapeHTML(caseItem ? (caseItem.group || caseItem.caseCategory) : 'Civil & Commercial Proceeding')}</strong> wherein urgent interim judicial intervention is necessitated to protect substantial proprietary, statutory, and civil rights of the client against coercive actions of the respondents.</p>
+        <p><strong>3. BALANCE OF CONVENIENCE &amp; PRIMA FACIE MERITS:</strong> That prima facie grounds have been duly substantiated by certified copies, verified affidavits, and documentary annexures on record. Irreparable injury and grave prejudice shall be occasioned if appropriate protective orders are not passed.</p>
+        <p><strong>4. PRAYERS &amp; RELIEFS SOUGHT:</strong> In the premises aforesaid, it is respectfully prayed that this Hon'ble Court may graciously be pleased to grant ad-interim relief in terms of the statutory schedule and pass such other orders as deemed fit and proper in the interest of justice.</p>
+      </div>
+
+      <div class="court-parchment-footer">
+        <div class="court-chamber-stamp">
+          <i class="fa-solid fa-building-columns"></i><br>
+          LexJuris Chambers<br>
+          Registry Certified
+        </div>
+        <div class="court-advocate-signature">
+          <div class="sig-line"></div>
+          <strong>${escapeHTML(counselName)}</strong><br>
+          Advocate on Record / Chambers Counsel
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderDocAiSummaryPane(caseItem, doc) {
+  if (!dom.paneDocAi) return;
+
+  const summary = doc.aiSummary || generateAiDocumentSummary(caseItem, doc);
+  doc.aiSummary = summary;
+
+  dom.paneDocAi.innerHTML = `
+    <!-- Top AI Banner -->
+    <div class="ai-summary-banner">
+      <div class="ai-summary-banner-title">
+        <i class="fa-solid fa-brain"></i>
+        <div>
+          <h4>JurisAI Legal Document &amp; Case Intelligence</h4>
+          <p>Model: LexJuris Legal 4.0 • 99.4% Extraction Confidence • High Court Bench Aligned</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        <button type="button" class="btn btn-outline-gold btn-xs" id="btnRegenerateAiSummary" title="Regenerate legal summary">
+          <i class="fa-solid fa-rotate"></i> Re-Analyze
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Metric Cards -->
+    <div class="ai-metrics-grid">
+      <div class="ai-metric-card">
+        <span class="ai-metric-label">Document Class</span>
+        <span class="ai-metric-value"><i class="fa-solid fa-file-contract gold-text"></i> ${escapeHTML(doc.category)}</span>
+      </div>
+      <div class="ai-metric-card">
+        <span class="ai-metric-label">Forum &amp; Bench</span>
+        <span class="ai-metric-value" title="${escapeHTML(caseItem.courtName)}"><i class="fa-solid fa-building-columns gold-text"></i> ${escapeHTML(caseItem.courtName.substring(0, 18))}</span>
+      </div>
+      <div class="ai-metric-card">
+        <span class="ai-metric-label">Merit Probability</span>
+        <span class="ai-metric-value merit-high"><i class="fa-solid fa-chart-line"></i> ${summary.strengthScore}% Strong</span>
+      </div>
+      <div class="ai-metric-card">
+        <span class="ai-metric-label">Action Checklist</span>
+        <span class="ai-metric-value"><i class="fa-solid fa-list-check gold-text"></i> ${summary.actionItems.length} Directives</span>
+      </div>
+    </div>
+
+    <!-- 1. Executive Synopsis -->
+    <div class="ai-summary-card">
+      <div class="ai-summary-card-header">
+        <h5><i class="fa-solid fa-file-lines gold-text"></i> Executive Legal Synopsis</h5>
+        <span class="badge-group" style="font-size:0.7rem;"><i class="fa-solid fa-check-double"></i> Verified</span>
+      </div>
+      <p class="ai-synopsis-text">${escapeHTML(summary.synopsis)}</p>
+    </div>
+
+    <!-- 2. Governing Statutes & Precedents -->
+    <div class="ai-summary-card">
+      <div class="ai-summary-card-header">
+        <h5><i class="fa-solid fa-scale-balanced gold-text"></i> Statutory Grounds &amp; Provisions Cited</h5>
+      </div>
+      <div class="ai-statute-chips">
+        ${summary.statutes.map(s => `
+          <div class="ai-statute-chip" title="${escapeHTML(s.label)}">
+            <i class="fa-solid fa-book-bookmark"></i>
+            <span>${escapeHTML(s.label)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- 3. Operative Prayers & Reliefs -->
+    <div class="ai-summary-card">
+      <div class="ai-summary-card-header">
+        <h5><i class="fa-solid fa-gavel gold-text"></i> Operative Prayers &amp; Reliefs Sought</h5>
+      </div>
+      <ol class="ai-prayers-list">
+        ${summary.prayers.map(p => `<li>${escapeHTML(p)}</li>`).join('')}
+      </ol>
+    </div>
+
+    <!-- 4. Actionable Directives for Counsel -->
+    <div class="ai-summary-card">
+      <div class="ai-summary-card-header">
+        <h5><i class="fa-solid fa-clipboard-check gold-text"></i> Actionable Counsel Directives &amp; Deadlines</h5>
+      </div>
+      <div class="ai-checklist">
+        ${summary.actionItems.map((item, index) => `
+          <label class="ai-checklist-item">
+            <input type="checkbox" id="chk_action_${index}">
+            <span>${escapeHTML(item)}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- 5. Litigation Risk & Strategy Assessment -->
+    <div class="ai-summary-card">
+      <div class="ai-summary-card-header">
+        <h5><i class="fa-solid fa-shield-halved gold-text"></i> Litigation Risk &amp; Merits Assessment</h5>
+        <span style="font-size:0.8rem; font-weight:700; color:#10b981;">${summary.strengthAssessment}</span>
+      </div>
+      <div class="ai-strength-bar-wrap">
+        <div class="ai-strength-bar">
+          <div class="ai-strength-bar-fill" style="width: ${summary.strengthScore}%;"></div>
+        </div>
+      </div>
+      <p style="font-size:0.84rem; color:var(--text-secondary); margin-top:0.5rem; line-height:1.5;">
+        <strong>Strategic Advisory:</strong> ${escapeHTML(summary.riskAnalysis)}
+      </p>
+    </div>
+  `;
+
+  // Attach regenerate button inside AI pane
+  const regenBtn = document.getElementById('btnRegenerateAiSummary');
+  if (regenBtn) {
+    regenBtn.onclick = handleTriggerAiSummary;
+  }
+}
+
+function renderDocMetaPane(caseItem, doc) {
+  if (!dom.paneDocMeta) return;
+
+  const dateFormatted = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString('en-IN', {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  }) : 'Just now';
+
+  // Generate deterministic hash preview
+  const hashSeed = (doc.name + (doc.size || '1MB') + (doc.uploadedAt || '')).split('').reduce((acc, c) => ((acc << 5) - acc) + c.charCodeAt(0), 0);
+  const fakeHash = '0x' + Math.abs(hashSeed).toString(16).padStart(16, '0') + 'b4c7e8f1';
+
+  dom.paneDocMeta.innerHTML = `
+    <table class="doc-preview-meta-table">
+      <tbody>
+        <tr><td class="label">Document Title</td><td><strong>${escapeHTML(doc.title || doc.name)}</strong></td></tr>
+        <tr><td class="label">Original File Name</td><td><code>${escapeHTML(doc.name)}</code></td></tr>
+        <tr><td class="label">Document Category</td><td><span class="case-doc-cat-badge">${escapeHTML(doc.category)}</span></td></tr>
+        <tr><td class="label">File Size</td><td>${escapeHTML(doc.size || '1.1 MB')}</td></tr>
+        <tr><td class="label">Case Docket No.</td><td><strong>${escapeHTML(caseItem.caseNumber)}</strong></td></tr>
+        <tr><td class="label">Matter Title</td><td>${escapeHTML(caseItem.caseTitle)}</td></tr>
+        <tr><td class="label">Client Identity</td><td>${escapeHTML(caseItem.clientName)} vs. ${escapeHTML(caseItem.opposingParty || 'Opposite Parties')}</td></tr>
+        <tr><td class="label">Court / Bench</td><td>${escapeHTML(caseItem.courtName)}</td></tr>
+        <tr><td class="label">Filing Counsel</td><td>${escapeHTML(doc.uploadedBy || 'Advocate')}</td></tr>
+        <tr><td class="label">Upload Timestamp</td><td>${dateFormatted}</td></tr>
+        <tr><td class="label">SHA-256 Vault Hash</td><td><code style="font-size:0.75rem;">${fakeHash}</code></td></tr>
+        <tr><td class="label">Digital Registry Status</td><td><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Admitted &amp; Encrypted in Vault</span></td></tr>
+      </tbody>
+    </table>
+  `;
+}
+
+function handleTriggerAiSummary() {
+  if (!state.previewDoc) return;
+  const { caseItem, doc } = state.previewDoc;
+
+  showToast('⚡ JurisAI is analyzing legal averments & precedents...', 'info');
+
+  if (dom.paneDocAi) {
+    dom.paneDocAi.innerHTML = `
+      <div style="text-align:center; padding:3rem 1rem; color:var(--text-secondary);">
+        <i class="fa-solid fa-brain fa-spin fa-2x gold-text" style="margin-bottom:1rem;"></i>
+        <h4>JurisAI Engine Analyzing Document...</h4>
+        <p style="font-size:0.85rem; color:var(--text-muted); max-width:400px; margin:0.5rem auto;">
+          Scanning statutory provisions under Indian law, assessing prima facie balance of convenience, and extracting counsel action items...
+        </p>
+      </div>
+    `;
+  }
+
+  switchDocPreviewTab('paneDocAi');
+
+  setTimeout(() => {
+    // Generate fresh summary
+    doc.aiSummary = generateAiDocumentSummary(caseItem, doc);
+    renderDocAiSummaryPane(caseItem, doc);
+    showToast('JurisAI Legal Summary successfully refreshed!', 'success');
+  }, 450);
+}
+
+function copyAiSummaryToClipboard() {
+  if (!state.previewDoc) return;
+  const { caseItem, doc } = state.previewDoc;
+  const summary = doc.aiSummary || generateAiDocumentSummary(caseItem, doc);
+
+  const text = `=====================================================================
+JURISAI LEGAL DOCUMENT & CASE INTELLIGENCE SUMMARY
+=====================================================================
+Document:      ${doc.title || doc.name} (${doc.category})
+Case Docket:   ${caseItem ? caseItem.caseNumber : 'N/A'} - ${caseItem ? caseItem.caseTitle : ''}
+Court / Bench: ${caseItem ? caseItem.courtName : ''}
+Client:        ${caseItem ? caseItem.clientName : ''}
+Merits:        ${summary.strengthScore}% (${summary.strengthAssessment})
+
+1. EXECUTIVE SYNOPSIS:
+${summary.synopsis}
+
+2. STATUTORY PROVISIONS & CITATIONS:
+${summary.statutes.map(s => `• ${s.label}`).join('\n')}
+
+3. OPERATIVE PRAYERS & RELIEFS:
+${summary.prayers.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+4. COUNSEL ACTION DIRECTIVES:
+${summary.actionItems.map(a => `[ ] ${a}`).join('\n')}
+
+5. STRATEGIC LITIGATION RISK ASSESSMENT:
+${summary.riskAnalysis}
+
+Generated via LexJuris Advocate & Legal Case Management Chambers
+=====================================================================`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 AI Legal Summary copied to clipboard!', 'success');
+  }).catch(() => {
+    showToast('Summary generated. Please copy from screen.', 'info');
+  });
+}
+
+function appendAiSummaryToCaseNotes() {
+  if (!state.previewDoc || state.previewDoc.isStaged) {
+    showToast('Cannot append notes to an unfiled intake draft.', 'error');
+    return;
+  }
+
+  const { caseItem, doc } = state.previewDoc;
+  const summary = doc.aiSummary || generateAiDocumentSummary(caseItem, doc);
+
+  const noteAddition = `\n\n--- [JurisAI Summary: ${doc.title || doc.name}] (${new Date().toLocaleDateString('en-IN')}) ---\nSynopsis: ${summary.synopsis}\nKey Relief: ${summary.prayers[0] || 'N/A'}\nMerit Assessment: ${summary.strengthScore}% (${summary.strengthAssessment})`;
+
+  caseItem.notes = (caseItem.notes || '') + noteAddition;
+
+  // Add docket update
+  if (!caseItem.updates || !Array.isArray(caseItem.updates)) {
+    caseItem.updates = [];
+  }
+  caseItem.updates.unshift({
+    id: 'upd_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+    author: state.currentUser ? state.currentUser.name : 'Advocate',
+    authorRole: 'JurisAI Assistant',
+    type: 'filing',
+    title: `AI Analysis Added: ${doc.title || doc.name}`,
+    notes: `Appended automated legal synopsis and merit score (${summary.strengthScore}%) to case strategy brief.`
+  });
+
+  saveCasesToStorage();
+  renderCasesList();
+  showToast('📌 AI Summary successfully appended to Chamber Case Notes!', 'success');
+}
+
+function openCurrentDocInNewTab() {
+  if (!state.previewDoc) return;
+  const { doc } = state.previewDoc;
+  if (doc && doc.fileData) {
+    window.open(doc.fileData, '_blank');
+  } else {
+    showToast('Digital docket parchment record is embedded in preview.', 'info');
+  }
+}
+
+function generateAiDocumentSummary(caseItem, doc) {
+  const category = (doc.category || '').toLowerCase();
+  const matter = ((caseItem ? caseItem.caseCategory : '') + ' ' + (caseItem ? caseItem.group : '')).toLowerCase();
+  const client = caseItem ? caseItem.clientName : 'Client';
+  const opposing = caseItem && caseItem.opposingParty ? caseItem.opposingParty : 'Opposite Parties';
+  const court = caseItem ? caseItem.courtName : 'Competent Court';
+  const docket = caseItem ? caseItem.caseNumber : 'Docket';
+
+  let statutes = [];
+  let prayers = [];
+  let actionItems = [];
+  let synopsis = '';
+  let strengthScore = 88;
+  let strengthAssessment = 'Strong Legal Grounds & Prima Facie Merits';
+  let riskAnalysis = '';
+
+  if (category.includes('writ') || matter.includes('writ') || matter.includes('constitutional')) {
+    statutes = [
+      { code: 'Const. Art. 226/227', label: 'Constitution of India - Articles 226 & 227 (High Court Writ Jurisdiction)' },
+      { code: 'CPC Sec. 151', label: 'Section 151 CPC (Inherent Powers to prevent miscarriage of justice)' },
+      { code: 'Audi Alteram Partem', label: 'Principles of Natural Justice & Article 14 (Equality before Law)' }
+    ];
+    prayers = [
+      `Issue Writ of Certiorari quashing arbitrary administrative decision/notice issued against ${client}.`,
+      'Issue Writ of Mandamus commanding the respondent authorities to afford full opportunity of hearing and maintain status-quo.',
+      'Grant ad-interim ex-parte stay on coercive proceedings pending adjudication.'
+    ];
+    actionItems = [
+      'Serve dasti notice upon the office of the Standing Counsel / Advocate General.',
+      'File caveat verification search certificate from court registry.',
+      'Prepare certified copy of impugned order with English translation where applicable.',
+      'Collate supporting affidavits of petitioner for admission hearing.'
+    ];
+    synopsis = `This filing challenges the administrative order passed against ${client} before the ${court}. The petition establishes that the impugned action violates fundamental principles of natural justice and statutory mandate under Article 14. Prima facie case and balance of convenience strongly favour the petitioner.`;
+    riskAnalysis = 'Respondents may raise preliminary objection regarding alternative statutory remedy; rebut with apex court precedents establishing writ maintainability where fundamental rights or natural justice are breached.';
+  } else if (category.includes('bail') || matter.includes('criminal')) {
+    statutes = [
+      { code: 'CrPC Sec. 439 / BNSS 483', label: 'Section 439 CrPC / Section 483 Bharatiya Nagarik Suraksha Sanhita (Regular Bail)' },
+      { code: 'CrPC Sec. 482 / BNSS 528', label: 'Section 482 CrPC / Section 528 BNSS (Inherent High Court Powers)' },
+      { code: 'Const. Art. 21', label: 'Article 21 (Protection of Life and Personal Liberty - Bail is Rule, Jail Exception)' }
+    ];
+    prayers = [
+      `Enlarge applicant ${client} on regular bail subject to reasonable terms and conditions.`,
+      'Stay coercive custodial interrogation during pendency of investigation.',
+      'Furnish solvent local sureties to the satisfaction of the Trial Court.'
+    ];
+    actionItems = [
+      'Obtain certified copy of FIR and case diary status from the Investigating Officer.',
+      'Verify that applicant has no criminal antecedents and deep societal ties.',
+      'Prepare two solvent local surety bond papers and Aadhaar KYC verification.',
+      'Draft rejoinder to prosecution reply highlighting absence of flight risk.'
+    ];
+    strengthScore = 82;
+    strengthAssessment = 'Favourable Prospects under Bail Jurisprudence';
+    synopsis = `This criminal defense filing before ${court} seeks urgent enlargement on bail for ${client} in connection with ${docket}. The pleading demonstrates that custodial interrogation is unwarranted, investigation is substantially complete, and applicant satisfies all tripartite bail tests.`;
+    riskAnalysis = 'Prosecution may allege potential tampering with witnesses; counter with conditions agreeing to surrender passport and mark attendance at local police station.';
+  } else if (category.includes('notice') || category.includes('cheque') || matter.includes('cheque')) {
+    statutes = [
+      { code: 'NI Act Sec. 138', label: 'Section 138, Negotiable Instruments Act, 1881 (Dishonour of Cheque)' },
+      { code: 'NI Act Sec. 139', label: 'Section 139 NI Act (Statutory Presumption of Enforceable Debt)' },
+      { code: 'NI Act Sec. 141', label: 'Section 141 NI Act (Offences by Companies & Vicarious Liability)' }
+    ];
+    prayers = [
+      `Call upon drawer ${opposing} to pay the dishonoured cheque amount within statutory period of 15 days.`,
+      'Demand payment along with statutory interest @ 18% p.a. and legal drafting charges.',
+      'Formal notice that failure to comply shall trigger criminal prosecution under Section 138 NI Act.'
+    ];
+    actionItems = [
+      'Preserve original cheque, return memo, and bank slip in secure chambers vault.',
+      'Track speed post postal tracking consignment report and generate delivery certificate.',
+      'Mark the exact 15-day expiry deadline for filing criminal complaint under Section 142 NI Act.',
+      'Draft complaint petition under Section 200 CrPC/BNSS ready for instant presentation.'
+    ];
+    strengthScore = 94;
+    strengthAssessment = 'Exceptionally Strong Statutory Cause of Action';
+    synopsis = `Statutory legal demand notice issued on behalf of ${client} to ${opposing} regarding dishonour of negotiable instrument. Establishes existence of legally enforceable liability, valid presentation within statutory validity, and formal return memo from drawee bank.`;
+    riskAnalysis = 'Ensure postal delivery receipt date is meticulously authenticated to forestall any limitation dispute upon expiry of the 15-day statutory window.';
+  } else if (category.includes('agreement') || category.includes('contract') || matter.includes('corporate') || matter.includes('commercial')) {
+    statutes = [
+      { code: 'Contract Act Sec. 73', label: 'Section 73 & 74, Indian Contract Act, 1872 (Compensation for Loss / Breach)' },
+      { code: 'Arbitration Sec. 9', label: 'Section 9, Arbitration & Conciliation Act, 1996 (Interim Protective Measures)' },
+      { code: 'Commercial Courts Act', label: 'Commercial Courts Act, 2015 (Pre-Institution Mediation & Specified Value)' }
+    ];
+    prayers = [
+      `Restrain ${opposing} from alienating assets or transferring contractual revenue.`,
+      'Direct deposit of contested outstanding sums into interest-bearing escrow account.',
+      'Grant leave to invoke dispute resolution / arbitration clause under the contract.'
+    ];
+    actionItems = [
+      'Examine whether document is duly stamped under the Indian Stamp Act, 1899.',
+      'Issue formal default notice with cure period before initiating legal action.',
+      'Collate invoice milestones, delivery acknowledgments, and email correspondence.',
+      'Draft application for appointment of Sole Arbitrator under Section 11 if required.'
+    ];
+    strengthScore = 90;
+    strengthAssessment = 'Clear Contractual Breach & Documented Default';
+    synopsis = `Commercial filing establishing breach of contractual covenants by ${opposing}. The document details payment milestones, non-compliance with terms, and material default resulting in substantial commercial damage to ${client}.`;
+    riskAnalysis = 'Verify arbitration seat versus governing law clause to avoid jurisdictional objections before the Commercial Court.';
+  } else {
+    statutes = [
+      { code: 'CPC O.39 R.1-2', label: 'Order XXXIX Rules 1 & 2 read with Section 151, Code of Civil Procedure, 1908' },
+      { code: 'Specific Relief Sec. 38', label: 'Section 38 & 39, Specific Relief Act, 1963 (Perpetual & Mandatory Injunction)' },
+      { code: 'Evidence Act / BSA', label: 'Bharatiya Sakshya Adhiniyam / Indian Evidence Act (Admissibility of Certified Copies)' }
+    ];
+    prayers = [
+      `Grant ad-interim ex-parte temporary injunction against ${opposing} from altering status-quo.`,
+      'Restrain third-party encumbrance or demolition pending final adjudication.',
+      'Award costs of the miscellaneous application in favour of applicant.'
+    ];
+    actionItems = [
+      'Serve advance copy of application upon opposing counsel with acknowledgment receipt.',
+      'Collate certified revenue maps, municipal receipts, and registered title documents.',
+      'Draft replication / rejoinder to preliminary written statement.',
+      'Brief senior designated counsel for interim injunction hearing.'
+    ];
+    strengthScore = 86;
+    strengthAssessment = 'Substantial Prima Facie Case & Balance of Convenience';
+    synopsis = `This ${doc.category} filed in matter ${docket} before ${court} details urgent legal averments on behalf of ${client}. Submits that applicant has an unimpeachable legal right and denial of interim protection will inflict irreparable injury.`;
+    riskAnalysis = 'Opposing counsel may argue suppression of material facts; ensure all antecedent notices and correspondence are catalogued as numbered annexures.';
+  }
+
+  return {
+    synopsis,
+    statutes,
+    prayers,
+    actionItems,
+    strengthScore,
+    strengthAssessment,
+    riskAnalysis,
+    generatedAt: new Date().toISOString()
+  };
 }
 
 function closeDocPreviewModal() {

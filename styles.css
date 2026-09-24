@@ -4736,12 +4736,460 @@ textarea:focus {
   color: var(--border-subtle);
 }
 
-/* Document Preview Modal */
+/* ==========================================================================
+   DOCUMENT PREVIEW & AI LEGAL SUMMARY MODAL
+   ========================================================================== */
 .doc-preview-modal-card {
-  max-width: 600px;
+  max-width: 920px;
   width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
+.doc-preview-tabs-nav {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: #faf8f5;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+}
+
+.doc-preview-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.doc-preview-tab-btn:hover {
+  color: var(--navy-primary);
+  background: rgba(30, 58, 95, 0.05);
+}
+
+.doc-preview-tab-btn.active {
+  color: var(--gold-primary);
+  background: var(--navy-primary);
+  border-color: var(--navy-secondary);
+  box-shadow: 0 2px 6px rgba(10, 25, 47, 0.2);
+}
+
+.ai-sparkle-pill {
+  display: inline-block;
+  background: linear-gradient(135deg, #c5a059, #e0c58e);
+  color: #0a192f;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+}
+
+.doc-preview-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(90vh - 170px);
+}
+
+.doc-preview-pane {
+  display: block;
+}
+
+.doc-preview-pane.hidden {
+  display: none !important;
+}
+
+/* Uploaded Document Viewer Styles */
+.uploaded-doc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #faf8f5;
+  border: 1px solid var(--border-subtle);
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.uploaded-doc-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.uploaded-doc-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.uploaded-doc-frame {
+  width: 100%;
+  height: 520px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  background: #2f3542;
+  display: block;
+}
+
+.uploaded-doc-image-box {
+  background: #f4f2ee;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  padding: 1.5rem;
+  text-align: center;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.uploaded-doc-image {
+  max-width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease;
+}
+
+/* Official Court Parchment View (Simulated/Fallback) */
+.court-parchment-viewer {
+  background: #fdfcf9;
+  border: 1px solid #d9d3c7;
+  border-radius: var(--radius-sm);
+  padding: 2.2rem 2.5rem;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.02), 0 3px 12px rgba(0,0,0,0.05);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  color: #1a1a1a;
+  position: relative;
+  overflow: hidden;
+  line-height: 1.6;
+}
+
+.parchment-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  font-size: 4.5rem;
+  color: rgba(197, 160, 89, 0.06);
+  font-weight: 900;
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 6px;
+  user-select: none;
+}
+
+.court-parchment-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px double #c5a059;
+  padding-bottom: 1.25rem;
+}
+
+.court-parchment-emblem {
+  font-size: 2rem;
+  color: var(--gold-primary);
+  margin-bottom: 0.35rem;
+}
+
+.court-parchment-court {
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #0d1b2a;
+}
+
+.court-parchment-docket {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #555;
+  margin-top: 0.25rem;
+}
+
+.court-parchment-parties {
+  display: flex;
+  justify-content: space-between;
+  margin: 1.25rem 0;
+  background: #f7f5ef;
+  border-left: 3px solid var(--gold-primary);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.court-parchment-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 1.25rem 0 1rem;
+  color: #0d1b2a;
+  text-decoration: underline;
+}
+
+.court-parchment-paras {
+  font-size: 0.9rem;
+  color: #2b2b2b;
+}
+
+.court-parchment-paras p {
+  margin-bottom: 0.85rem;
+  text-align: justify;
+}
+
+.court-parchment-paras p strong {
+  color: #0d1b2a;
+}
+
+.court-parchment-footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid #d9d3c7;
+  padding-top: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.court-chamber-stamp {
+  border: 2px dashed #c5a059;
+  padding: 0.5rem 0.85rem;
+  border-radius: 4px;
+  color: #8c6b2d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.court-advocate-signature {
+  text-align: right;
+  color: #333;
+}
+
+.court-advocate-signature .sig-line {
+  width: 180px;
+  border-bottom: 1px solid #333;
+  margin-bottom: 0.25rem;
+}
+
+/* AI Summary Panel Styles */
+.ai-summary-banner {
+  background: linear-gradient(135deg, #0d1b2a, #1b263b);
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  color: #fff;
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(10, 25, 47, 0.25);
+}
+
+.ai-summary-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ai-summary-banner-title i {
+  font-size: 1.8rem;
+  color: var(--gold-primary);
+}
+
+.ai-summary-banner-title h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.ai-summary-banner-title p {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  margin: 0.15rem 0 0;
+}
+
+.ai-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.ai-metric-card {
+  background: #faf8f5;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ai-metric-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ai-metric-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ai-metric-value.merit-high {
+  color: #10b981;
+}
+
+.ai-summary-card {
+  background: #fff;
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--gold-primary);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.15rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.ai-summary-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+.ai-summary-card-header h5 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--navy-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ai-synopsis-text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.ai-statute-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ai-statute-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(197, 160, 89, 0.12);
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  color: #8c6b2d;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.ai-prayers-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.ai-prayers-list li {
+  margin-bottom: 0.35rem;
+}
+
+.ai-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+}
+
+.ai-checklist-item input[type="checkbox"] {
+  margin-top: 0.2rem;
+  accent-color: var(--gold-primary);
+  cursor: pointer;
+}
+
+.ai-strength-bar-wrap {
+  margin-top: 0.5rem;
+}
+
+.ai-strength-bar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.35rem;
+}
+
+.ai-strength-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c5a059, #10b981);
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+/* Footer layout */
+.doc-preview-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+  background: #faf8f5;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.doc-preview-footer-left,
+.doc-preview-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Meta table */
 .doc-preview-meta-table {
   width: 100%;
   border-collapse: collapse;
@@ -4770,9 +5218,14 @@ textarea:focus {
   font-size: 0.8rem;
   line-height: 1.5;
   color: var(--text-primary);
-  max-height: 200px;
+  max-height: 250px;
   overflow-y: auto;
   white-space: pre-wrap;
+}
+
+.card-doc-attachment {
+  cursor: pointer;
+  transition: var(--transition);
 }
 
 .card-doc-attachment {

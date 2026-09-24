@@ -1389,27 +1389,73 @@
     </div>
   </div>
 
-  <!-- ================= DOCUMENT PREVIEW MODAL ================= -->
+  <!-- ================= DOCUMENT PREVIEW & AI SUMMARY MODAL ================= -->
   <div id="docPreviewModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="docPreviewTitle">
     <div class="modal-card doc-preview-modal-card">
       <div class="modal-header">
         <div class="modal-title-group">
-          <i class="fa-solid fa-file-lines gold-text"></i>
+          <i class="fa-solid fa-file-contract gold-text"></i>
           <div>
-            <h3 id="docPreviewTitle">Document Preview</h3>
-            <p id="docPreviewSubtitle" class="modal-subtitle">File Details</p>
+            <h3 id="docPreviewTitle">Document Preview &amp; Analysis</h3>
+            <p id="docPreviewSubtitle" class="modal-subtitle">Docket File Details</p>
           </div>
         </div>
-        <button id="closeDocPreviewModalBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-header-actions">
+          <button id="closeDocPreviewModalBtn" class="btn-close-modal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+        </div>
       </div>
-      <div class="modal-body" id="docPreviewBody">
-        <!-- Dynamic preview content -->
-      </div>
-      <div class="modal-footer">
-        <button type="button" id="downloadPreviewDocBtn" class="btn btn-outline-gold">
-          <i class="fa-solid fa-download"></i> Download File
+
+      <!-- Preview Tabs Nav -->
+      <div class="doc-preview-tabs-nav">
+        <button type="button" class="doc-preview-tab-btn active" id="tabDocViewBtn" data-target="paneDocView">
+          <i class="fa-regular fa-file-lines"></i> Uploaded Document
         </button>
-        <button type="button" id="closeDocPreviewBottomBtn" class="btn btn-gold">Close Preview</button>
+        <button type="button" class="doc-preview-tab-btn" id="tabDocAiBtn" data-target="paneDocAi">
+          <i class="fa-solid fa-brain gold-text"></i> AI Summary &amp; Key Insights <span class="ai-sparkle-pill">AI</span>
+        </button>
+        <button type="button" class="doc-preview-tab-btn" id="tabDocMetaBtn" data-target="paneDocMeta">
+          <i class="fa-solid fa-circle-info"></i> Docket Metadata
+        </button>
+      </div>
+
+      <div class="modal-body doc-preview-body" id="docPreviewBody">
+        <!-- Pane 1: Uploaded Document Viewer -->
+        <div id="paneDocView" class="doc-preview-pane active">
+          <!-- Dynamic document viewer rendered here -->
+        </div>
+
+        <!-- Pane 2: AI Document Summary -->
+        <div id="paneDocAi" class="doc-preview-pane hidden">
+          <!-- Dynamic AI summary rendered here -->
+        </div>
+
+        <!-- Pane 3: Metadata Table -->
+        <div id="paneDocMeta" class="doc-preview-pane hidden">
+          <!-- Dynamic metadata rendered here -->
+        </div>
+      </div>
+
+      <div class="modal-footer doc-preview-footer">
+        <div class="doc-preview-footer-left">
+          <button type="button" id="openExternalDocBtn" class="btn btn-outline-subtle btn-sm hidden">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab
+          </button>
+          <button type="button" id="insertAiNotesBtn" class="btn btn-outline-gold btn-sm hidden">
+            <i class="fa-solid fa-thumbtack"></i> Append AI Summary to Case Notes
+          </button>
+        </div>
+        <div class="doc-preview-footer-right">
+          <button type="button" id="generateDocAiBtn" class="btn btn-outline-gold btn-sm">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Summary
+          </button>
+          <button type="button" id="copyDocAiBtn" class="btn btn-outline-subtle btn-sm hidden">
+            <i class="fa-regular fa-copy"></i> Copy Summary
+          </button>
+          <button type="button" id="downloadPreviewDocBtn" class="btn btn-outline-gold btn-sm">
+            <i class="fa-solid fa-download"></i> Download File
+          </button>
+          <button type="button" id="closeDocPreviewBottomBtn" class="btn btn-gold btn-sm">Close</button>
+        </div>
       </div>
     </div>
   </div>
