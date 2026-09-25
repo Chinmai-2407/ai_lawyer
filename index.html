@@ -659,8 +659,13 @@
       <!-- ================= RIGHT COLUMN: ACTIVE CASES & COURT SCHEDULE ================= -->
       <section class="workspace-panel panel-right" aria-labelledby="activeCasesTitle">
 
-      <!-- ================= COMPACT QUICK-ADD CASE BOX ================= -->
-      <div class="quick-add-box" id="quickAddCaseBox">
+        <!-- Group-Based Access Scope Banner (Chambers Master Oversight) -->
+        <div id="accessScopeBanner" class="access-scope-banner" role="status" aria-live="polite">
+          <!-- Populated dynamically via updateAccessScopeBanner() -->
+        </div>
+
+        <!-- ================= COMPACT QUICK-ADD CASE BOX ================= -->
+        <div class="quick-add-box" id="quickAddCaseBox">
         <div class="quick-add-header" id="quickAddToggleHeader">
           <div class="quick-add-header-left">
             <div class="panel-icon gold-bg">
@@ -751,11 +756,6 @@
               <i class="fa-solid fa-wand-magic-sparkles"></i> Load Samples
             </button>
           </div>
-        </div>
-
-        <!-- Group-Based Access Scope Banner -->
-        <div id="accessScopeBanner" class="access-scope-banner" role="status" aria-live="polite">
-          <!-- Populated dynamically via updateAccessScopeBanner() -->
         </div>
 
         <!-- Search & Filter Ribbon -->
