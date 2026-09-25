@@ -726,7 +726,60 @@ const dom = {
   closeBarHelpModalBtn: document.getElementById('closeBarHelpModalBtn'),
 
   // Toast
-  toastContainer: document.getElementById('toastContainer')
+  toastContainer: document.getElementById('toastContainer'),
+
+  // Sliding Search Drawer (From Left) Elements
+  searchDrawerOverlay: document.getElementById('searchDrawerOverlay'),
+  searchDrawer: document.getElementById('searchDrawer'),
+  btnToggleDrawerFullscreen: document.getElementById('btnToggleDrawerFullscreen'),
+  drawerFullscreenIcon: document.getElementById('drawerFullscreenIcon'),
+  btnCloseSearchDrawer: document.getElementById('btnCloseSearchDrawer'),
+  drawerSearchInput: document.getElementById('drawerSearchInput'),
+  clearDrawerSearchBtn: document.getElementById('clearDrawerSearchBtn'),
+  drawerModePills: document.querySelectorAll('#drawerModePills .drawer-mode-pill'),
+  drawerFilterPills: document.querySelectorAll('#drawerFilterPills .drawer-filter-pill'),
+  drawerResultCountText: document.getElementById('drawerResultCountText'),
+  drawerCasesList: document.getElementById('drawerCasesList'),
+  drawerEmptyState: document.getElementById('drawerEmptyState'),
+  floatingSearchDrawerBtn: document.getElementById('floatingSearchDrawerBtn'),
+  floatingTabCountBadge: document.getElementById('floatingTabCountBadge'),
+  openSearchDrawerNavBtn: document.getElementById('openSearchDrawerNavBtn'),
+  btnOpenSearchDrawer: document.getElementById('btnOpenSearchDrawer'),
+
+  // Full Screen Case Dossier Modal Elements
+  fullScreenCaseModal: document.getElementById('fullScreenCaseModal'),
+  closeFullScreenModalBtn: document.getElementById('closeFullScreenModalBtn'),
+  fsCloseXBtn: document.getElementById('fsCloseXBtn'),
+  fsCaseTitle: document.getElementById('fsCaseTitle'),
+  fsStatusBadge: document.getElementById('fsStatusBadge'),
+  fsPriorityBadge: document.getElementById('fsPriorityBadge'),
+  fsCaseNumber: document.getElementById('fsCaseNumber'),
+  fsCourtName: document.getElementById('fsCourtName'),
+  fsCategory: document.getElementById('fsCategory'),
+  fsPrintDocketBtn: document.getElementById('fsPrintDocketBtn'),
+  fsAddDocBtn: document.getElementById('fsAddDocBtn'),
+  fsRescheduleBtn: document.getElementById('fsRescheduleBtn'),
+  fsHearingDateDisplay: document.getElementById('fsHearingDateDisplay'),
+  fsHearingCountdown: document.getElementById('fsHearingCountdown'),
+  fsClientNameDisplay: document.getElementById('fsClientNameDisplay'),
+  fsClientPhoneDisplay: document.getElementById('fsClientPhoneDisplay'),
+  fsPracticeGroup: document.getElementById('fsPracticeGroup'),
+  fsAssignedCounsel: document.getElementById('fsAssignedCounsel'),
+  fsDocsCount: document.getElementById('fsDocsCount'),
+  fsUpdatesCount: document.getElementById('fsUpdatesCount'),
+  fsDetailClientName: document.getElementById('fsDetailClientName'),
+  fsDetailPhone: document.getElementById('fsDetailPhone'),
+  fsDetailOpposing: document.getElementById('fsDetailOpposing'),
+  fsDetailCourt: document.getElementById('fsDetailCourt'),
+  fsDetailCategory: document.getElementById('fsDetailCategory'),
+  fsDetailCaseId: document.getElementById('fsDetailCaseId'),
+  fsDetailNotes: document.getElementById('fsDetailNotes'),
+  fsEditNotesBtn: document.getElementById('fsEditNotesBtn'),
+  fsLogUpdateBtn: document.getElementById('fsLogUpdateBtn'),
+  fsTimelineList: document.getElementById('fsTimelineList'),
+  fsVaultCountBadge: document.getElementById('fsVaultCountBadge'),
+  fsUploadDocVaultBtn: document.getElementById('fsUploadDocVaultBtn'),
+  fsDocsGrid: document.getElementById('fsDocsGrid')
 };
 
 // ==========================================================================
@@ -1241,6 +1294,13 @@ function setupEventListeners() {
       }
       renderCasesList();
     });
+
+    dom.clientSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        openSearchDrawer(dom.clientSearchInput.value);
+      }
+    });
   }
 
   // Clear Search Button
@@ -1271,6 +1331,140 @@ function setupEventListeners() {
       state.currentFilter = pill.getAttribute('data-filter');
       renderCasesList();
     });
+  });
+
+  // Sliding Case Search & Directory Drawer Event Handlers
+  if (dom.floatingSearchDrawerBtn) {
+    dom.floatingSearchDrawerBtn.addEventListener('click', () => openSearchDrawer());
+  }
+  if (dom.openSearchDrawerNavBtn) {
+    dom.openSearchDrawerNavBtn.addEventListener('click', () => openSearchDrawer());
+  }
+  if (dom.btnOpenSearchDrawer) {
+    dom.btnOpenSearchDrawer.addEventListener('click', () => openSearchDrawer());
+  }
+  if (dom.btnCloseSearchDrawer) {
+    dom.btnCloseSearchDrawer.addEventListener('click', closeSearchDrawer);
+  }
+  if (dom.btnToggleDrawerFullscreen) {
+    dom.btnToggleDrawerFullscreen.addEventListener('click', () => toggleDrawerFullscreen());
+  }
+  if (dom.searchDrawerOverlay) {
+    dom.searchDrawerOverlay.addEventListener('click', (e) => {
+      if (e.target === dom.searchDrawerOverlay) closeSearchDrawer();
+    });
+  }
+
+  // Drawer Search Input
+  if (dom.drawerSearchInput) {
+    dom.drawerSearchInput.addEventListener('input', (e) => {
+      drawerState.searchQuery = e.target.value.trim().toLowerCase();
+      if (drawerState.searchQuery) {
+        if (dom.clearDrawerSearchBtn) dom.clearDrawerSearchBtn.classList.remove('hidden');
+      } else {
+        if (dom.clearDrawerSearchBtn) dom.clearDrawerSearchBtn.classList.add('hidden');
+      }
+      renderDrawerCasesList();
+    });
+  }
+
+  // Clear Drawer Search Button
+  if (dom.clearDrawerSearchBtn) {
+    dom.clearDrawerSearchBtn.addEventListener('click', () => {
+      if (dom.drawerSearchInput) dom.drawerSearchInput.value = '';
+      drawerState.searchQuery = '';
+      dom.clearDrawerSearchBtn.classList.add('hidden');
+      renderDrawerCasesList();
+      if (dom.drawerSearchInput) dom.drawerSearchInput.focus();
+    });
+  }
+
+  // Drawer Search Mode Pills
+  if (dom.drawerModePills) {
+    dom.drawerModePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        dom.drawerModePills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        drawerState.searchMode = pill.getAttribute('data-mode') || 'all';
+        renderDrawerCasesList();
+      });
+    });
+  }
+
+  // Drawer Filter Pills
+  if (dom.drawerFilterPills) {
+    dom.drawerFilterPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        dom.drawerFilterPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        drawerState.currentFilter = pill.getAttribute('data-filter') || 'all';
+        renderDrawerCasesList();
+      });
+    });
+  }
+
+  // Full Screen Case Dossier Modal Close Handlers
+  if (dom.closeFullScreenModalBtn) {
+    dom.closeFullScreenModalBtn.addEventListener('click', closeFullScreenCase);
+  }
+  if (dom.fsCloseXBtn) {
+    dom.fsCloseXBtn.addEventListener('click', closeFullScreenCase);
+  }
+  if (dom.fullScreenCaseModal) {
+    dom.fullScreenCaseModal.addEventListener('click', (e) => {
+      if (e.target === dom.fullScreenCaseModal) closeFullScreenCase();
+    });
+  }
+
+  // Full Screen Case Actions
+  if (dom.fsPrintDocketBtn) {
+    dom.fsPrintDocketBtn.addEventListener('click', () => {
+      if (!state.activeFullScreenCaseId) return;
+      window.print();
+    });
+  }
+  if (dom.fsAddDocBtn) {
+    dom.fsAddDocBtn.addEventListener('click', () => {
+      if (state.activeFullScreenCaseId) openAddNewDocModal(state.activeFullScreenCaseId);
+    });
+  }
+  if (dom.fsUploadDocVaultBtn) {
+    dom.fsUploadDocVaultBtn.addEventListener('click', () => {
+      if (state.activeFullScreenCaseId) openAddNewDocModal(state.activeFullScreenCaseId);
+    });
+  }
+  if (dom.fsRescheduleBtn) {
+    dom.fsRescheduleBtn.addEventListener('click', () => {
+      if (state.activeFullScreenCaseId) openRescheduleModal(state.activeFullScreenCaseId);
+    });
+  }
+  if (dom.fsEditNotesBtn) {
+    dom.fsEditNotesBtn.addEventListener('click', () => {
+      if (state.activeFullScreenCaseId) openRescheduleModal(state.activeFullScreenCaseId);
+    });
+  }
+  if (dom.fsLogUpdateBtn) {
+    dom.fsLogUpdateBtn.addEventListener('click', () => {
+      if (state.activeFullScreenCaseId) openCaseUpdatesModal(state.activeFullScreenCaseId);
+    });
+  }
+
+  // Global Keyboard Shortcuts (Ctrl+K for search drawer, Escape to close)
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (dom.searchDrawerOverlay && dom.searchDrawerOverlay.classList.contains('active')) {
+        closeSearchDrawer();
+      } else {
+        openSearchDrawer();
+      }
+    } else if (e.key === 'Escape') {
+      if (dom.fullScreenCaseModal && dom.fullScreenCaseModal.classList.contains('active')) {
+        closeFullScreenCase();
+      } else if (dom.searchDrawerOverlay && dom.searchDrawerOverlay.classList.contains('active')) {
+        closeSearchDrawer();
+      }
+    }
   });
 
   // Add Sample Data Button
@@ -3056,6 +3250,15 @@ function renderDashboard() {
   updateAccessScopeBanner();
   updateMetrics();
   renderCasesList();
+  if (typeof updateDrawerCounts === 'function') {
+    updateDrawerCounts();
+  }
+  if (dom.searchDrawerOverlay && dom.searchDrawerOverlay.classList.contains('active')) {
+    renderDrawerCasesList();
+  }
+  if (state.activeFullScreenCaseId) {
+    openFullScreenCase(state.activeFullScreenCaseId);
+  }
 }
 
 function updateMetrics() {
@@ -3356,6 +3559,17 @@ function attachCardActionListeners() {
       deleteCase(caseId);
     });
   });
+
+  // Click on case card opens Full-Screen Dossier
+  document.querySelectorAll('.case-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.card-doc-attachment') || e.target.closest('.btn-doc-action')) {
+        return;
+      }
+      const caseId = card.getAttribute('data-case-id');
+      if (caseId) openFullScreenCase(caseId);
+    });
+  });
 }
 
 function toggleCaseStatus(caseId) {
@@ -3384,6 +3598,377 @@ function deleteCase(caseId) {
     renderDashboard();
     showToast('Docket removed from chambers registry.', 'info');
   }
+}
+
+// ==========================================================================
+// 7.05 SLIDING CASE SEARCH DRAWER (FROM LEFT) & FULL-SCREEN DOSSIER
+// ==========================================================================
+
+const drawerState = {
+  searchQuery: '',
+  searchMode: 'all',
+  currentFilter: 'all',
+  isFullscreen: false
+};
+
+function openSearchDrawer(prefillQuery) {
+  if (!dom.searchDrawerOverlay) return;
+  dom.searchDrawerOverlay.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    dom.searchDrawerOverlay.classList.add('active');
+  });
+
+  if (typeof prefillQuery === 'string') {
+    drawerState.searchQuery = prefillQuery.trim().toLowerCase();
+    if (dom.drawerSearchInput) dom.drawerSearchInput.value = prefillQuery;
+  } else if (dom.clientSearchInput && dom.clientSearchInput.value.trim() && (!dom.drawerSearchInput || !dom.drawerSearchInput.value)) {
+    drawerState.searchQuery = dom.clientSearchInput.value.trim().toLowerCase();
+    if (dom.drawerSearchInput) dom.drawerSearchInput.value = dom.clientSearchInput.value;
+  }
+
+  if (dom.clearDrawerSearchBtn) {
+    if (drawerState.searchQuery) {
+      dom.clearDrawerSearchBtn.classList.remove('hidden');
+    } else {
+      dom.clearDrawerSearchBtn.classList.add('hidden');
+    }
+  }
+
+  renderDrawerCasesList();
+  setTimeout(() => {
+    if (dom.drawerSearchInput) dom.drawerSearchInput.focus();
+  }, 120);
+}
+
+function closeSearchDrawer() {
+  if (!dom.searchDrawerOverlay) return;
+  dom.searchDrawerOverlay.classList.remove('active');
+  setTimeout(() => {
+    dom.searchDrawerOverlay.classList.add('hidden');
+    if (drawerState.isFullscreen) {
+      toggleDrawerFullscreen(false);
+    }
+  }, 280);
+}
+
+function toggleDrawerFullscreen(forceState) {
+  if (!dom.searchDrawer) return;
+  const next = typeof forceState === 'boolean' ? forceState : !drawerState.isFullscreen;
+  drawerState.isFullscreen = next;
+  if (next) {
+    dom.searchDrawer.classList.add('fullscreen');
+    if (dom.drawerFullscreenIcon) {
+      dom.drawerFullscreenIcon.className = 'fa-solid fa-compress';
+    }
+  } else {
+    dom.searchDrawer.classList.remove('fullscreen');
+    if (dom.drawerFullscreenIcon) {
+      dom.drawerFullscreenIcon.className = 'fa-solid fa-expand';
+    }
+  }
+}
+
+function updateDrawerCounts() {
+  const accessible = getAccessibleCases(state.currentUser);
+  const todayStr = getOffsetDateString(0);
+  
+  const todayCases = accessible.filter(c => c.hearingDate === todayStr && c.status !== 'Disposed');
+  const upcomingCases = accessible.filter(c => c.hearingDate > todayStr && c.status !== 'Disposed');
+  const urgentCases = accessible.filter(c => (c.priority === 'Critical' || c.priority === 'High') && c.status !== 'Disposed');
+  const closedCases = accessible.filter(c => c.status === 'Disposed');
+
+  const elAll = document.getElementById('drawerCountAll');
+  const elToday = document.getElementById('drawerCountToday');
+  const elUp = document.getElementById('drawerCountUpcoming');
+  const elCrit = document.getElementById('drawerCountCritical');
+  const elClosed = document.getElementById('drawerCountClosed');
+
+  if (elAll) elAll.textContent = accessible.length;
+  if (elToday) elToday.textContent = todayCases.length;
+  if (elUp) elUp.textContent = upcomingCases.length;
+  if (elCrit) elCrit.textContent = urgentCases.length;
+  if (elClosed) elClosed.textContent = closedCases.length;
+
+  const floatBadge = document.getElementById('floatingTabCountBadge');
+  if (floatBadge) floatBadge.textContent = accessible.length;
+  const navBadge = document.getElementById('navDrawerCountBadge');
+  if (navBadge) navBadge.textContent = accessible.length;
+}
+
+function renderDrawerCasesList() {
+  if (!dom.drawerCasesList) return;
+  updateDrawerCounts();
+
+  const accessible = getAccessibleCases(state.currentUser);
+  const todayStr = getOffsetDateString(0);
+
+  // 1. Filter by drawer tab filter
+  let filtered = accessible.filter(c => {
+    if (drawerState.currentFilter === 'today') return c.hearingDate === todayStr && c.status !== 'Disposed';
+    if (drawerState.currentFilter === 'upcoming') return c.hearingDate > todayStr && c.status !== 'Disposed';
+    if (drawerState.currentFilter === 'critical') return (c.priority === 'Critical' || c.priority === 'High') && c.status !== 'Disposed';
+    if (drawerState.currentFilter === 'closed') return c.status === 'Disposed';
+    return true; // 'all'
+  });
+
+  // 2. Filter by drawer search query
+  if (drawerState.searchQuery) {
+    const q = drawerState.searchQuery;
+    filtered = filtered.filter(c => {
+      if (drawerState.searchMode === 'caseTitle') {
+        return (c.caseTitle || '').toLowerCase().includes(q);
+      }
+      if (drawerState.searchMode === 'clientName') {
+        return (c.clientName || '').toLowerCase().includes(q);
+      }
+      if (drawerState.searchMode === 'caseNumber') {
+        return (c.caseNumber || '').toLowerCase().includes(q);
+      }
+      return (
+        (c.clientName || '').toLowerCase().includes(q) ||
+        (c.caseTitle || '').toLowerCase().includes(q) ||
+        (c.caseNumber || '').toLowerCase().includes(q) ||
+        (c.courtName || '').toLowerCase().includes(q) ||
+        (c.opposingParty || '').toLowerCase().includes(q)
+      );
+    });
+  }
+
+  // 3. Sort chronologically
+  filtered.sort((a, b) => {
+    if (a.status === 'Disposed' && b.status !== 'Disposed') return 1;
+    if (a.status !== 'Disposed' && b.status === 'Disposed') return -1;
+    const dateA = new Date(`${a.hearingDate}T${a.hearingTime || '00:00'}`);
+    const dateB = new Date(`${b.hearingDate}T${b.hearingTime || '00:00'}`);
+    return dateA - dateB;
+  });
+
+  // Update status bar
+  if (dom.drawerResultCountText) {
+    dom.drawerResultCountText.textContent = `Showing ${filtered.length} of ${accessible.length} cases`;
+  }
+
+  if (filtered.length === 0) {
+    dom.drawerCasesList.innerHTML = '';
+    if (dom.drawerEmptyState) dom.drawerEmptyState.classList.remove('hidden');
+    return;
+  }
+
+  if (dom.drawerEmptyState) dom.drawerEmptyState.classList.add('hidden');
+
+  dom.drawerCasesList.innerHTML = filtered.map(item => {
+    const titleMatch = highlightSearchMatch(item.caseTitle, drawerState.searchQuery, drawerState.searchMode, 'caseTitle');
+    const clientMatch = highlightSearchMatch(item.clientName, drawerState.searchQuery, drawerState.searchMode, 'clientName');
+    const numberMatch = highlightSearchMatch(item.caseNumber, drawerState.searchQuery, drawerState.searchMode, 'caseNumber');
+    const hearingDateBadge = getHearingScheduleBadge(item.hearingDate, item.hearingTime, item.status);
+    const docsCount = (item.documents && Array.isArray(item.documents)) ? item.documents.length : 0;
+
+    return `
+      <div class="drawer-case-item" data-case-id="${item.id}" role="button" tabindex="0" title="Click to view full screen dossier">
+        <div class="drawer-case-top">
+          <div class="drawer-case-title">${titleMatch}</div>
+          <span class="drawer-case-no-badge">${numberMatch}</span>
+        </div>
+        <div class="drawer-case-meta">
+          <span><i class="fa-regular fa-user gold-text"></i> ${clientMatch}</span>
+          ${item.courtName ? `<span><i class="fa-solid fa-building-columns"></i> ${escapeHTML(item.courtName)}</span>` : ''}
+          ${docsCount > 0 ? `<span><i class="fa-solid fa-paperclip"></i> ${docsCount} doc${docsCount !== 1 ? 's' : ''}</span>` : ''}
+        </div>
+        <div class="drawer-case-footer">
+          <div class="drawer-case-footer-left">
+            ${hearingDateBadge}
+            ${item.priority === 'Critical' ? '<span class="hearing-badge badge-urgent"><i class="fa-solid fa-bolt"></i> Urgent</span>' : ''}
+            <span class="badge-group">${escapeHTML(item.group || item.caseCategory)}</span>
+          </div>
+          <div class="drawer-fullscreen-hint">
+            <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Full Screen
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach click to open full screen
+  dom.drawerCasesList.querySelectorAll('.drawer-case-item').forEach(card => {
+    card.addEventListener('click', () => {
+      const caseId = card.getAttribute('data-case-id');
+      openFullScreenCase(caseId);
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const caseId = card.getAttribute('data-case-id');
+        openFullScreenCase(caseId);
+      }
+    });
+  });
+}
+
+function openFullScreenCase(caseId) {
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem) return;
+
+  state.activeFullScreenCaseId = caseId;
+
+  // Header Info
+  if (dom.fsCaseTitle) dom.fsCaseTitle.textContent = `${caseItem.caseNumber} — ${caseItem.caseTitle}`;
+  if (dom.fsCaseNumber) dom.fsCaseNumber.textContent = caseItem.caseNumber || 'N/A';
+  if (dom.fsCourtName) dom.fsCourtName.textContent = caseItem.courtName || 'Delhi High Court';
+  if (dom.fsCategory) dom.fsCategory.textContent = caseItem.caseCategory || 'General Litigation';
+  if (dom.fsStatusBadge) {
+    dom.fsStatusBadge.textContent = caseItem.status || 'Active';
+    dom.fsStatusBadge.className = `fs-status-pill ${caseItem.status === 'Disposed' ? 'disposed' : 'active'}`;
+  }
+  if (dom.fsPriorityBadge) {
+    dom.fsPriorityBadge.textContent = caseItem.priority || 'Normal';
+    dom.fsPriorityBadge.className = `fs-priority-pill ${caseItem.priority ? caseItem.priority.toLowerCase() : 'normal'}`;
+  }
+
+  // Hero Banner Info
+  const hearingTimeStr = caseItem.hearingTime ? formatTime12Hour(caseItem.hearingTime) : '';
+  const dateStr = formatDateDisplay(caseItem.hearingDate);
+  if (dom.fsHearingDateDisplay) {
+    dom.fsHearingDateDisplay.textContent = `${dateStr} ${hearingTimeStr ? '• ' + hearingTimeStr : ''}`;
+  }
+  if (dom.fsHearingCountdown) {
+    const today = getOffsetDateString(0);
+    let diffDays = 0;
+    if (caseItem.hearingDate) {
+      const d1 = new Date(today);
+      const d2 = new Date(caseItem.hearingDate);
+      diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+    }
+    let countdownText = 'Scheduled';
+    if (diffDays === 0) countdownText = '⚡ Today in Court';
+    else if (diffDays === 1) countdownText = '⏳ Tomorrow';
+    else if (diffDays > 1) countdownText = `⏳ In ${diffDays} days`;
+    else if (diffDays < 0) countdownText = `⚠️ Hearing passed (${Math.abs(diffDays)}d ago)`;
+    dom.fsHearingCountdown.textContent = `${countdownText} • ${caseItem.courtName || 'Courtroom'}`;
+  }
+
+  if (dom.fsClientNameDisplay) dom.fsClientNameDisplay.textContent = caseItem.clientName || 'N/A';
+  if (dom.fsClientPhoneDisplay) dom.fsClientPhoneDisplay.textContent = caseItem.clientPhone || 'No contact phone';
+  if (dom.fsPracticeGroup) dom.fsPracticeGroup.textContent = caseItem.group || caseItem.caseCategory || 'General';
+  if (dom.fsAssignedCounsel) dom.fsAssignedCounsel.textContent = caseItem.assignedToName || 'Senior Advocate';
+
+  const docs = (caseItem.documents && Array.isArray(caseItem.documents)) ? caseItem.documents : [];
+  const updates = (caseItem.updates && Array.isArray(caseItem.updates)) ? caseItem.updates : [];
+
+  if (dom.fsDocsCount) dom.fsDocsCount.textContent = `${docs.length} Exhibit${docs.length !== 1 ? 's' : ''}`;
+  if (dom.fsUpdatesCount) dom.fsUpdatesCount.textContent = `${updates.length} Proceeding${updates.length !== 1 ? 's' : ''}`;
+  if (dom.fsVaultCountBadge) dom.fsVaultCountBadge.textContent = docs.length;
+
+  // Detail Info Groups
+  if (dom.fsDetailClientName) dom.fsDetailClientName.textContent = caseItem.clientName || '—';
+  if (dom.fsDetailPhone) dom.fsDetailPhone.textContent = caseItem.clientPhone || '—';
+  if (dom.fsDetailOpposing) dom.fsDetailOpposing.textContent = caseItem.opposingParty || 'None specified';
+  if (dom.fsDetailCourt) dom.fsDetailCourt.textContent = caseItem.courtName || '—';
+  if (dom.fsDetailCategory) dom.fsDetailCategory.textContent = caseItem.caseCategory || '—';
+  if (dom.fsDetailCaseId) dom.fsDetailCaseId.textContent = caseItem.id || '—';
+
+  // Notes Box
+  if (dom.fsDetailNotes) {
+    dom.fsDetailNotes.textContent = caseItem.notes && caseItem.notes.trim() 
+      ? caseItem.notes 
+      : 'No confidential strategy or chamber orders have been drafted for this docket yet.';
+  }
+
+  // Timeline list
+  if (dom.fsTimelineList) {
+    if (updates.length === 0) {
+      dom.fsTimelineList.innerHTML = `<p style="font-size:0.78rem; color:var(--text-muted); padding:0.5rem 0;">No court proceedings or orders logged yet. Click "+" above to record court action.</p>`;
+    } else {
+      dom.fsTimelineList.innerHTML = updates.map(u => `
+        <div class="fs-timeline-item">
+          <div class="fs-timeline-title">${escapeHTML(u.title || 'Hearing Proceeding')}</div>
+          <div class="fs-timeline-desc">${escapeHTML(u.text || u.notes || '')}</div>
+          <div class="fs-timeline-time">${escapeHTML(u.date || '')} ${u.time ? '• ' + escapeHTML(u.time) : ''} ${u.author ? '• Logged by ' + escapeHTML(u.author) : ''}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Documents Vault Grid
+  if (dom.fsDocsGrid) {
+    if (docs.length === 0) {
+      dom.fsDocsGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.85rem;">
+          <i class="fa-solid fa-folder-open" style="font-size: 1.8rem; color: var(--gold-primary); opacity: 0.6; margin-bottom: 0.5rem; display: block;"></i>
+          No files attached to this case. Click "Upload Document" to attach pleadings, orders, or court affidavits.
+        </div>
+      `;
+    } else {
+      dom.fsDocsGrid.innerHTML = docs.map(d => {
+        const fileExt = (d.name || '').split('.').pop().toLowerCase();
+        let iconClass = 'fa-file-lines';
+        if (fileExt === 'pdf') iconClass = 'fa-file-pdf';
+        else if (['jpg', 'jpeg', 'png'].includes(fileExt)) iconClass = 'fa-file-image';
+        else if (['doc', 'docx'].includes(fileExt)) iconClass = 'fa-file-word';
+
+        return `
+          <div class="fs-doc-card">
+            <div class="fs-doc-card-top">
+              <div class="fs-doc-card-icon">
+                <i class="fa-solid ${iconClass}"></i>
+              </div>
+              <div class="fs-doc-card-info">
+                <div class="fs-doc-card-name" title="${escapeHTML(d.name)}">${escapeHTML(d.name)}</div>
+                <div class="fs-doc-card-meta">${d.category || 'Court Record'} • ${d.size ? (d.size > 1024 ? Math.round(d.size/1024) + ' KB' : d.size + ' B') : 'File'}</div>
+              </div>
+            </div>
+            <div class="fs-doc-card-actions">
+              <button type="button" class="fs-doc-btn btn-fs-preview-doc" data-doc-id="${d.id}" data-tab="paneDocView" title="Preview document">
+                <i class="fa-regular fa-eye"></i> View
+              </button>
+              <button type="button" class="fs-doc-btn btn-fs-ai-doc" data-doc-id="${d.id}" data-tab="paneDocAi" title="JurisAI analysis">
+                <i class="fa-solid fa-brain gold-text"></i> AI Summary
+              </button>
+              <button type="button" class="fs-doc-btn btn-fs-dl-doc" data-doc-id="${d.id}" title="Download document">
+                <i class="fa-solid fa-download"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Wire up doc actions in dossier
+      dom.fsDocsGrid.querySelectorAll('.btn-fs-preview-doc').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const docId = btn.getAttribute('data-doc-id');
+          previewCaseDocument(caseId, docId, 'paneDocView');
+        });
+      });
+      dom.fsDocsGrid.querySelectorAll('.btn-fs-ai-doc').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const docId = btn.getAttribute('data-doc-id');
+          previewCaseDocument(caseId, docId, 'paneDocAi');
+        });
+      });
+      dom.fsDocsGrid.querySelectorAll('.btn-fs-dl-doc').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const docId = btn.getAttribute('data-doc-id');
+          downloadCaseDocument(caseId, docId);
+        });
+      });
+    }
+  }
+
+  // Show Fullscreen Modal
+  if (dom.fullScreenCaseModal) {
+    dom.fullScreenCaseModal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      dom.fullScreenCaseModal.classList.add('active');
+    });
+  }
+}
+
+function closeFullScreenCase() {
+  if (!dom.fullScreenCaseModal) return;
+  dom.fullScreenCaseModal.classList.remove('active');
+  setTimeout(() => {
+    dom.fullScreenCaseModal.classList.add('hidden');
+    state.activeFullScreenCaseId = null;
+  }, 250);
 }
 
 // ==========================================================================

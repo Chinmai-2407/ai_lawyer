@@ -241,6 +241,13 @@
   <!-- ================= MAIN APPLICATION DASHBOARD ================= -->
   <div id="appContainer" class="app-container hidden">
 
+    <!-- Floating Left Trigger for Case Search & Directory Drawer -->
+    <button type="button" id="floatingSearchDrawerBtn" class="floating-left-tab" title="Open Case Search & Directory (Ctrl + K)">
+      <i class="fa-solid fa-folder-tree"></i>
+      <span>Cases Index</span>
+      <span class="floating-tab-badge" id="floatingTabCountBadge">0</span>
+    </button>
+
     <!-- Top Navigation Bar -->
     <header class="top-nav">
       <div class="nav-left">
@@ -254,6 +261,9 @@
         <nav class="nav-views-switcher" aria-label="Workspace Views">
           <button type="button" id="workspaceNavBtn" class="nav-tab-btn active" title="Active Dockets & Case Intake">
             <i class="fa-solid fa-briefcase"></i> <span>Legal Dockets</span>
+          </button>
+          <button type="button" id="openSearchDrawerNavBtn" class="nav-tab-btn" title="Open Sliding Case Directory & Search (Ctrl + K)">
+            <i class="fa-solid fa-folder-tree gold-text"></i> <span>Search Directory</span>
           </button>
           <a href="notice-maker.html" id="noticeNavBtn" class="nav-tab-btn" title="Official Legal Notice Studio & Statutory Drafter">
             <i class="fa-solid fa-file-signature gold-text"></i> <span>Notice Maker</span>
@@ -768,6 +778,11 @@
               <button id="clearSearchBtn" class="btn-clear-search hidden" title="Clear search"><i
                   class="fa-solid fa-xmark"></i></button>
             </div>
+
+            <!-- Open Left Sliding Case Directory Button -->
+            <button type="button" class="btn btn-outline-gold btn-sm" id="btnOpenSearchDrawer" title="Slide out Case Directory & Search from left (Ctrl + K)">
+              <i class="fa-solid fa-folder-tree"></i> <span>Cases Index</span>
+            </button>
 
             <!-- Search Mode Filter: Case Name or Client Name -->
             <div class="search-mode-selector" role="group" aria-label="Search filter field">
@@ -1752,6 +1767,266 @@
           </button>
         </div>
       </div>
+    </div>
+  <!-- ================= SLIDING CASE SEARCH & DIRECTORY DRAWER (FROM LEFT) ================= -->
+  <div id="searchDrawerOverlay" class="search-drawer-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="searchDrawerTitle">
+    <div class="search-drawer" id="searchDrawer">
+      
+      <!-- Drawer Header -->
+      <div class="search-drawer-header">
+        <div class="search-drawer-title-group">
+          <div class="drawer-header-icon gold-bg">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <div>
+            <h3 id="searchDrawerTitle" class="search-drawer-title">Cases Directory &amp; Search</h3>
+            <p class="search-drawer-subtitle">Click any case to open full-screen dossier</p>
+          </div>
+        </div>
+
+        <div class="search-drawer-header-actions">
+          <button type="button" id="btnToggleDrawerFullscreen" class="btn-drawer-action" title="Toggle Fullscreen Width">
+            <i class="fa-solid fa-expand" id="drawerFullscreenIcon"></i>
+          </button>
+          <button type="button" id="btnCloseSearchDrawer" class="btn-drawer-action btn-close-drawer" title="Close Directory (Esc)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Drawer Search Input & Filters -->
+      <div class="search-drawer-controls">
+        <div class="drawer-search-box">
+          <i class="fa-solid fa-magnifying-glass drawer-search-icon"></i>
+          <input type="text" id="drawerSearchInput" placeholder="Search by Case Name, Client, Case Number..." aria-label="Search cases in directory">
+          <button type="button" id="clearDrawerSearchBtn" class="btn-clear-drawer-search hidden" title="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Search Mode Selector inside Drawer -->
+        <div class="drawer-mode-selector" role="group" aria-label="Search By Mode">
+          <span class="drawer-mode-label"><i class="fa-solid fa-sliders"></i> Mode:</span>
+          <div class="drawer-mode-pills" id="drawerModePills">
+            <button type="button" class="drawer-mode-pill active" data-mode="all">All</button>
+            <button type="button" class="drawer-mode-pill" data-mode="caseTitle"><i class="fa-solid fa-scale-balanced"></i> Case Name</button>
+            <button type="button" class="drawer-mode-pill" data-mode="clientName"><i class="fa-regular fa-user"></i> Client</button>
+            <button type="button" class="drawer-mode-pill" data-mode="caseNumber"><i class="fa-solid fa-hashtag"></i> Case No.</button>
+          </div>
+        </div>
+
+        <!-- Filter Status Pills inside Drawer -->
+        <div class="drawer-filter-pills" id="drawerFilterPills" role="tablist">
+          <button type="button" class="drawer-filter-pill active" data-filter="all">All (<span id="drawerCountAll">0</span>)</button>
+          <button type="button" class="drawer-filter-pill" data-filter="today"><i class="fa-solid fa-bolt"></i> Today (<span id="drawerCountToday">0</span>)</button>
+          <button type="button" class="drawer-filter-pill" data-filter="upcoming"><i class="fa-regular fa-clock"></i> Upcoming (<span id="drawerCountUpcoming">0</span>)</button>
+          <button type="button" class="drawer-filter-pill" data-filter="critical"><i class="fa-solid fa-fire"></i> Urgent (<span id="drawerCountCritical">0</span>)</button>
+          <button type="button" class="drawer-filter-pill" data-filter="closed"><i class="fa-solid fa-check"></i> Disposed (<span id="drawerCountClosed">0</span>)</button>
+        </div>
+      </div>
+
+      <!-- Live Count & Click Hint -->
+      <div class="drawer-status-bar">
+        <span id="drawerResultCountText">Showing all cases</span>
+        <span class="drawer-click-hint"><i class="fa-solid fa-arrow-up-right-from-square gold-text"></i> Click case for full screen</span>
+      </div>
+
+      <!-- Case Items Stream List -->
+      <div class="search-drawer-list" id="drawerCasesList">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Drawer Empty State -->
+      <div id="drawerEmptyState" class="drawer-empty-state hidden">
+        <i class="fa-solid fa-folder-open empty-drawer-icon"></i>
+        <p>No legal dockets match your search query.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FULL SCREEN CASE DOSSIER MODAL ================= -->
+  <div id="fullScreenCaseModal" class="modal-overlay full-screen-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="fsCaseTitle">
+    <div class="full-screen-case-container">
+      
+      <!-- Top Bar -->
+      <div class="fs-header">
+        <div class="fs-header-left">
+          <button type="button" id="closeFullScreenModalBtn" class="btn-fs-back" title="Back to Legal Workspace (Esc)">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back</span>
+          </button>
+          <div class="fs-header-icon gold-bg">
+            <i class="fa-solid fa-gavel"></i>
+          </div>
+          <div class="fs-title-wrap">
+            <div class="fs-title-row">
+              <h1 id="fsCaseTitle" class="fs-case-title">WP(C) 4521/2024 — Rajesh Mehra vs. MCD</h1>
+              <span id="fsStatusBadge" class="fs-status-pill">Listed for Hearing</span>
+              <span id="fsPriorityBadge" class="fs-priority-pill critical">Urgent</span>
+            </div>
+            <div class="fs-subtitle-row">
+              <span class="fs-meta-item"><i class="fa-solid fa-hashtag gold-text"></i> <span id="fsCaseNumber">WP(C) 4521/2024</span></span>
+              <span class="fs-meta-divider">•</span>
+              <span class="fs-meta-item"><i class="fa-solid fa-building-columns"></i> <span id="fsCourtName">Delhi High Court, Bench 2</span></span>
+              <span class="fs-meta-divider">•</span>
+              <span class="fs-meta-item"><i class="fa-solid fa-scale-balanced"></i> <span id="fsCategory">Constitutional &amp; Writ</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fs-header-actions">
+          <button type="button" id="fsPrintDocketBtn" class="btn btn-outline-gold btn-sm" title="Print or Save PDF Case Brief">
+            <i class="fa-solid fa-print"></i> <span>Print Dossier</span>
+          </button>
+          <button type="button" id="fsAddDocBtn" class="btn btn-outline-gold btn-sm" title="Add document to this case">
+            <i class="fa-solid fa-file-circle-plus"></i> <span>+ Add Document</span>
+          </button>
+          <button type="button" id="fsRescheduleBtn" class="btn btn-gold btn-sm" title="Reschedule next court hearing">
+            <i class="fa-solid fa-calendar-plus"></i> <span>Reschedule Hearing</span>
+          </button>
+          <button type="button" id="fsCloseXBtn" class="btn-close-fs" title="Close Fullscreen (Esc)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Full-Screen Scrollable Body -->
+      <div class="fs-body">
+        
+        <!-- Top Stats Banner: Countdown, Assigned Counsel, Court Info -->
+        <div class="fs-hero-banner">
+          <div class="fs-hero-card hearing-countdown-card">
+            <div class="fs-hero-icon gold"><i class="fa-solid fa-calendar-day"></i></div>
+            <div class="fs-hero-info">
+              <span class="fs-hero-lbl">Next Hearing Schedule</span>
+              <div class="fs-hero-val" id="fsHearingDateDisplay">Tomorrow • 10:30 AM</div>
+              <span class="fs-hero-sub" id="fsHearingCountdown">In 1 day • Courtroom 4</span>
+            </div>
+          </div>
+
+          <div class="fs-hero-card">
+            <div class="fs-hero-icon blue"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="fs-hero-info">
+              <span class="fs-hero-lbl">Client Brief</span>
+              <div class="fs-hero-val" id="fsClientNameDisplay">Rajesh Mehra</div>
+              <span class="fs-hero-sub" id="fsClientPhoneDisplay">+91 98765 43210</span>
+            </div>
+          </div>
+
+          <div class="fs-hero-card">
+            <div class="fs-hero-icon purple"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="fs-hero-info">
+              <span class="fs-hero-lbl">Assigned Practice Group</span>
+              <div class="fs-hero-val" id="fsPracticeGroup">Constitutional &amp; Writ</div>
+              <span class="fs-hero-sub" id="fsAssignedCounsel">Adv. Vikramaditya Sharma</span>
+            </div>
+          </div>
+
+          <div class="fs-hero-card">
+            <div class="fs-hero-icon green"><i class="fa-solid fa-folder-tree"></i></div>
+            <div class="fs-hero-info">
+              <span class="fs-hero-lbl">Docket Exhibits</span>
+              <div class="fs-hero-val" id="fsDocsCount">2 Attached</div>
+              <span class="fs-hero-sub" id="fsUpdatesCount">3 Proceedings Logged</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3-Column Detailed Workspace Grid -->
+        <div class="fs-grid-layout">
+          
+          <!-- Column 1: Client & Dispute Details -->
+          <div class="fs-card">
+            <div class="fs-card-header">
+              <i class="fa-solid fa-address-card gold-text"></i>
+              <h3>Client &amp; Litigation Parties</h3>
+            </div>
+            <div class="fs-card-body">
+              <div class="fs-info-group">
+                <span class="fs-info-lbl">Client Full Name</span>
+                <span class="fs-info-val" id="fsDetailClientName">—</span>
+              </div>
+              <div class="fs-info-group">
+                <span class="fs-info-lbl">Phone &amp; Contact</span>
+                <span class="fs-info-val" id="fsDetailPhone">—</span>
+              </div>
+              <div class="fs-info-group">
+                <span class="fs-info-lbl">Opposing Party</span>
+                <span class="fs-info-val" id="fsDetailOpposing">—</span>
+              </div>
+              <div class="fs-info-group">
+                <span class="fs-info-lbl">Court / Tribunal</span>
+                <span class="fs-info-val" id="fsDetailCourt">—</span>
+              </div>
+              <div class="fs-info-group">
+                <span class="fs-info-lbl">Litigation Category</span>
+                <span class="fs-info-val" id="fsDetailCategory">—</span>
+              </div>
+              <div class="fs-info-group">
+                <span class="fs-info-lbl">Case Registration ID</span>
+                <span class="fs-info-val font-mono" id="fsDetailCaseId">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Chamber Strategy, Notes & Orders Passed -->
+          <div class="fs-card">
+            <div class="fs-card-header">
+              <i class="fa-solid fa-file-signature gold-text"></i>
+              <h3>Chamber Notes &amp; Legal Orders</h3>
+            </div>
+            <div class="fs-card-body">
+              <div class="fs-notes-box" id="fsDetailNotes">
+                No chamber notes recorded for this matter.
+              </div>
+              
+              <div class="fs-action-note-row" style="margin-top: 1rem;">
+                <button type="button" id="fsEditNotesBtn" class="btn btn-outline-subtle btn-sm">
+                  <i class="fa-solid fa-pen"></i> Update Notes / Orders
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: Hearing Timeline & Court Proceedings -->
+          <div class="fs-card">
+            <div class="fs-card-header">
+              <i class="fa-solid fa-timeline gold-text"></i>
+              <h3>Court Proceedings &amp; Updates</h3>
+              <button type="button" id="fsLogUpdateBtn" class="btn-icon-subtle" title="Log New Proceeding">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+            <div class="fs-card-body">
+              <div class="fs-timeline-list" id="fsTimelineList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Full-Width Bottom Section: Attached Documents Vault -->
+        <div class="fs-card fs-docs-vault-card">
+          <div class="fs-card-header">
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <i class="fa-solid fa-vault gold-text"></i>
+              <h3>Docket Documents &amp; Court Exhibits (<span id="fsVaultCountBadge">0</span>)</h3>
+            </div>
+            <button type="button" class="btn btn-outline-gold btn-sm" id="fsUploadDocVaultBtn">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Document
+            </button>
+          </div>
+          <div class="fs-card-body">
+            <div class="fs-docs-grid" id="fsDocsGrid">
+              <!-- Dynamically populated with doc preview cards -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
