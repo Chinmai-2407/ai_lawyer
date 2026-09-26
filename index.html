@@ -1817,12 +1817,11 @@
             <i class="fa-solid fa-microchip gold-text"></i> Select LLM Engine / Provider
           </label>
           <select id="modalLlmProvider" class="form-control" style="width:100%; padding:0.6rem 0.8rem; border-radius:6px; border:1px solid var(--border-card); font-size:0.9rem; background:white;">
-            <option value="gemini">🌟 Google Gemini (Recommended • Free Tier API)</option>
-            <option value="openai">⚡ OpenAI (GPT-4o / GPT-4o-mini)</option>
-            <option value="groq">🚀 Groq Cloud (Ultra-Fast Llama 3.3 70B • Free Tier)</option>
-            <option value="openrouter">🌐 OpenRouter (DeepSeek R1 / V3, Claude, Any LLM)</option>
-            <option value="custom">💻 Custom OpenAI-Compatible (vLLM / LM Studio / LocalAI)</option>
-            <option value="ollama">🖥️ Local Ollama (Localhost:11434 • No API Key Needed)</option>
+            <option value="gemini_api">🌟 Google Gemini (Recommended • Free Tier API)</option>
+            <option value="openai_api">⚡ OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="groq_api">🚀 Groq Cloud (Ultra-Fast Llama 3.3 70B • Free Tier)</option>
+            <option value="openrouter_api">🌐 OpenRouter (DeepSeek R1 / V3, Claude, Any LLM)</option>
+            <option value="local_ollama">🖥️ Local Ollama (Localhost:11434 • No API Key Needed)</option>
             <option value="smart_mock">🧠 Built-in Smart Legal Brain (Offline Fallback)</option>
           </select>
         </div>
@@ -2193,7 +2192,10 @@
 
         <div class="chat-header-actions">
           <button type="button" id="openApiKeyModalBtn" class="btn-api-key-header" title="Configure LLM Provider &amp; API Key">
-            <i class="fa-solid fa-key gold-tex          <button type="button" id="fullscreenChatBtn" class="btn-icon-chat" title="Toggle Fullscreen AI Studio">
+            <i class="fa-solid fa-key gold-text"></i>
+            <span id="headerApiKeyBtnText">API Key</span>
+          </button>
+          <button type="button" id="fullscreenChatBtn" class="btn-icon-chat" title="Toggle Fullscreen AI Studio">
             <i class="fa-solid fa-expand"></i>
           </button>
           <button type="button" id="aiSettingsBtn" class="btn-icon-chat" title="AI Settings &amp; Model Config">
@@ -2291,7 +2293,6 @@
           <!-- Persona & Preference Settings -->
           <div class="form-group">
             <label for="aiPersonaSelect"><i class="fa-solid fa-masks-theater gold-text"></i> Chatbot Persona</label>
-            <select id="aiPersonaSelect">s-theater gold-text"></i> Chatbot Persona</label>
             <select id="aiPersonaSelect">
               <option value="co_counsel">Personal Chambers Co-Counsel (Balanced & Strategic)</option>
               <option value="friendly">Warm & Friendly Personal AI Companion</option>

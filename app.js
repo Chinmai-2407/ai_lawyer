@@ -7644,9 +7644,17 @@ function setupAiChatbot() {
     }
   }
 
-  // Top Nav Button to open AI Settings
+  // Top Nav Button to open/toggle JurisAI Chatbot
   if (openAiSettingsNavBtn) {
-    openAiSettingsNavBtn.addEventListener('click', () => openAiSettingsDrawer(true));
+    openAiSettingsNavBtn.addEventListener('click', () => {
+      aiState.isOpen = !aiState.isOpen;
+      if (aiState.isOpen) {
+        chatPanel.classList.remove('hidden');
+        if (chatInput) chatInput.focus();
+      } else {
+        chatPanel.classList.add('hidden');
+      }
+    });
   }
 
   // Quick API Key button in Chat Header
@@ -7956,6 +7964,36 @@ function setupAiChatbot() {
     chatInput.style.height = 'auto';
     chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
   });
+
+  // Handle bubble actions (Listen & Copy) via event delegation
+  const chatMessagesEl = document.getElementById('chatMessages');
+  if (chatMessagesEl) {
+    chatMessagesEl.addEventListener('click', (e) => {
+      const copyBtn = e.target.closest('.btn-bubble-copy');
+      if (copyBtn) {
+        const bubble = copyBtn.closest('.chat-bubble');
+        const textEl = bubble ? bubble.querySelector('.bubble-text') : null;
+        const copyText = textEl ? textEl.innerText : (bubble ? bubble.innerText : '');
+        if (copyText) {
+          navigator.clipboard.writeText(copyText.trim()).then(() => {
+            if (typeof showToast === 'function') showToast('Copied response to clipboard!', 'info');
+          }).catch(() => {});
+        }
+        return;
+      }
+
+      const speechBtn = e.target.closest('.btn-bubble-speech');
+      if (speechBtn) {
+        const bubble = speechBtn.closest('.chat-bubble');
+        const textEl = bubble ? bubble.querySelector('.bubble-text') : null;
+        const speechText = textEl ? textEl.innerText : (bubble ? bubble.innerText : '');
+        if (speechText) {
+          speakTextAloud(speechText.trim());
+        }
+        return;
+      }
+    });
+  }
 }
 
 // Speech Recognition (Voice Input)
@@ -8053,16 +8091,35 @@ function updateEngineDisplayPill() {
   if (navBadge) {
     if (isCloud && hasKey) {
       navBadge.className = 'ai-key-nav-badge active-key';
-      navBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${provider.name.split(' ')[0]}`;
+      navBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${provider.name.split(' ')[0]} Live`;
     } else if (isCloud && !hasKey) {
       navBadge.className = 'ai-key-nav-badge';
-      navBadge.innerHTML = `<i class="fa-solid fa-brain gold-text"></i> ${provider.name.split(' ')[0]}`;
+      navBadge.innerHTML = `<i class="fa-solid fa-key gold-text"></i> ${provider.name.split(' ')[0]}`;
     } else if (aiState.engine === 'local_ollama') {
       navBadge.className = 'ai-key-nav-badge active-key';
       navBadge.innerHTML = `<i class="fa-solid fa-laptop-code"></i> Ollama`;
     } else {
-      navBadge.className = 'ai-key-nav-badge';
-      navBadge.innerHTML = `<i class="fa-solid fa-brain"></i> Offline`;
+      navBadge.className = 'ai-key-nav-badge active-key';
+      navBadge.innerHTML = `<i class="fa-solid fa-brain gold-text"></i> Smart Brain`;
+    }
+  }
+
+  // Update prominent header API Key button
+  const headerKeyBtn = document.getElementById('openApiKeyModalBtn');
+  const headerKeyBtnText = document.getElementById('headerApiKeyBtnText');
+  if (headerKeyBtn) {
+    if (isCloud && hasKey) {
+      headerKeyBtn.classList.add('configured');
+      if (headerKeyBtnText) headerKeyBtnText.textContent = `${provider.name.split(' ')[0]} Ready`;
+      headerKeyBtn.title = `${provider.name} key configured • Click to edit`;
+    } else if (isCloud && !hasKey) {
+      headerKeyBtn.classList.remove('configured');
+      if (headerKeyBtnText) headerKeyBtnText.textContent = 'Set API Key';
+      headerKeyBtn.title = `Click to configure ${provider.name} API Key`;
+    } else {
+      headerKeyBtn.classList.add('configured');
+      if (headerKeyBtnText) headerKeyBtnText.textContent = provider.name.split(' ')[0];
+      headerKeyBtn.title = `${provider.name} active`;
     }
   }
 
@@ -8118,7 +8175,7 @@ async function submitUserChatMessage(userText) {
       const banner = document.getElementById('aiApiKeyAlertBanner');
       if (banner) banner.classList.add('hidden');
 
-      const warningMsg = `> ℹ️ **${provider.name} Code Configuration Required**\n> \n> You have selected **${provider.name} (${aiState.cloudModel})**, but no API key is configured in the code.\n> \n> 💡 **To add your API key in code:**\n> Open **\`app.js\`** and paste your API key inside **\`JURISAI_CONFIG.apiKeys.${aiState.engine}\`** at the top of the file:\n> \`\`\`javascript\n> JURISAI_CONFIG = {\n>   apiKeys: {\n>     ${aiState.engine}: 'YOUR_API_KEY_HERE'\n>   }\n> };\n> \`\`\`\n\n---\n\n${generateSmartLegalResponse(userText, false)}`;
+      const warningMsg = `> 💡 **Notice:** No API key is configured yet for **${provider.name} (${aiState.cloudModel})**.\n> \n> Click below to enter your API key (or paste into \`JURISAI_CONFIG\` in \`app.js\`), or use the built-in Chambers Intelligence:\n> <button type="button" class="btn btn-gold btn-xs" onclick="window.openAiApiKeyModal && window.openAiApiKeyModal()" style="margin: 0.4rem 0; padding: 0.35rem 0.85rem; font-size: 0.78rem; cursor: pointer;"><i class="fa-solid fa-key"></i> Set ${provider.name} API Key</button>\n\n---\n\n${generateSmartLegalResponse(userText, false)}`;
       
       setTimeout(() => {
         hideTypingAndRespond(warningMsg);
@@ -8175,13 +8232,13 @@ function appendChatBubble(sender, text) {
   bubble.innerHTML = `
     <div class="bubble-avatar">${avatar}</div>
     <div class="bubble-content">
-      ${formatAiMarkdown(text)}
+      <div class="bubble-text">${formatAiMarkdown(text)}</div>
       ${sender === 'bot' ? `
         <div class="bubble-actions-row">
-          <button type="button" class="btn-bubble-speech" title="Read message aloud" onclick="speakTextAloud(\`${escapeHTML(text).replace(/`/g, '')}\`)">
+          <button type="button" class="btn-bubble-speech" title="Read message aloud">
             <i class="fa-solid fa-volume-high"></i> Listen
           </button>
-          <button type="button" class="btn-bubble-copy" title="Copy to clipboard" onclick="navigator.clipboard.writeText(\`${escapeHTML(text).replace(/`/g, '')}\`); showToast('Copied to clipboard!', 'info');">
+          <button type="button" class="btn-bubble-copy" title="Copy to clipboard">
             <i class="fa-regular fa-copy"></i> Copy
           </button>
         </div>
@@ -8448,22 +8505,37 @@ async function queryGeminiApi(userPrompt) {
   const targetModel = aiState.cloudModel || 'gemini-2.0-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${aiState.cloudKey}`;
 
-  const recentHistory = aiState.messages.slice(-6).map(m => ({
-    role: m.role === 'bot' || m.role === 'assistant' ? 'model' : 'user',
+  // Prior history before the current user turn
+  const priorHistory = aiState.messages.slice(0, -1);
+  const rawHistory = priorHistory.slice(-6).map(m => ({
+    role: (m.role === 'bot' || m.role === 'assistant') ? 'model' : 'user',
     parts: [{ text: m.content }]
   }));
+
+  // Clean history for Gemini: must alternate and cannot end with 'user' because we append userPrompt
+  const cleanContents = [];
+  for (const item of rawHistory) {
+    if (cleanContents.length === 0) {
+      if (item.role === 'user') cleanContents.push(item);
+    } else if (cleanContents[cleanContents.length - 1].role !== item.role) {
+      cleanContents.push(item);
+    }
+  }
+  if (cleanContents.length > 0 && cleanContents[cleanContents.length - 1].role === 'user') {
+    cleanContents.pop();
+  }
+
+  // Append current user message
+  cleanContents.push({
+    role: 'user',
+    parts: [{ text: userPrompt }]
+  });
 
   const payload = {
     system_instruction: {
       parts: [{ text: systemPrompt }]
     },
-    contents: [
-      ...recentHistory,
-      {
-        role: 'user',
-        parts: [{ text: userPrompt }]
-      }
-    ],
+    contents: cleanContents,
     generationConfig: {
       temperature: 0.35,
       maxOutputTokens: 2048
@@ -8478,13 +8550,12 @@ async function queryGeminiApi(userPrompt) {
 
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
-    if (res.status === 400 && errData.error?.message?.includes('system_instruction')) {
+    if (res.status === 400 && (errData.error?.message?.includes('system_instruction') || errData.error?.message?.includes('not supported'))) {
       const fallbackPayload = {
         contents: [
-          ...recentHistory,
           {
             role: 'user',
-            parts: [{ text: `${systemPrompt}\n\nUser Question:\n${userPrompt}` }]
+            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
           }
         ],
         generationConfig: { temperature: 0.35, maxOutputTokens: 2048 }
@@ -8534,13 +8605,15 @@ async function queryOpenAiCompatibleApi(userPrompt, engine) {
   }
 
   const targetModel = aiState.cloudModel || defaultModel;
+  const priorHistory = aiState.messages.slice(0, -1);
+  const recentHistory = priorHistory.slice(-8).map(m => ({
+    role: (m.role === 'bot' || m.role === 'assistant') ? 'assistant' : 'user',
+    content: m.content
+  }));
 
   const messages = [
     { role: 'system', content: systemPrompt },
-    ...aiState.messages.slice(-8).map(m => ({
-      role: m.role === 'bot' ? 'assistant' : m.role,
-      content: m.content
-    })),
+    ...recentHistory,
     { role: 'user', content: userPrompt }
   ];
 
@@ -8697,12 +8770,51 @@ if (document.readyState === 'loading') {
     const modalApiModelInput = document.getElementById('modalApiModelInput');
     const modalTestStatusBox = document.getElementById('modalTestStatusBox');
 
+    function updateModalProviderUI(prov) {
+      const isOllama = prov === 'local_ollama';
+      const isMock = prov === 'smart_mock';
+
+      const apiKeySection = document.getElementById('modalApiKeySection');
+      const ollamaSection = document.getElementById('modalOllamaSection');
+      const keyLabel = document.getElementById('modalApiKeyLabel');
+      const helpLink = document.getElementById('modalApiKeyHelpLink');
+      const baseGroup = document.getElementById('modalApiBaseUrlGroup');
+      const modelInput = document.getElementById('modalApiModelInput');
+      const keyInput = document.getElementById('modalApiKeyInput');
+      const chipsContainer = document.getElementById('modalModelChipsContainer');
+
+      if (apiKeySection) apiKeySection.classList.toggle('hidden', isOllama || isMock);
+      if (ollamaSection) ollamaSection.classList.toggle('hidden', !isOllama);
+      if (baseGroup) baseGroup.classList.toggle('hidden', prov !== 'openrouter_api' && prov !== 'custom');
+
+      const provider = AI_PROVIDERS[prov] || AI_PROVIDERS.smart_mock;
+      if (keyLabel) {
+        keyLabel.innerHTML = `<i class="fa-solid fa-key"></i> ${provider.name} API Key <span class="req">*</span>`;
+      }
+      if (helpLink) {
+        helpLink.href = provider.helpUrl || 'https://aistudio.google.com/app/apikey';
+        helpLink.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> ${provider.helpText || 'Get API Key'}`;
+      }
+      if (keyInput) {
+        keyInput.placeholder = provider.keyPlaceholder || 'Paste your API key here...';
+        keyInput.value = getActiveApiKey(prov) || '';
+      }
+      if (modelInput) {
+        modelInput.value = aiState.cloudModel || provider.defaultModel || 'gemini-2.0-flash';
+      }
+
+      if (chipsContainer && provider.models) {
+        chipsContainer.innerHTML = `<span style="font-size:0.7rem; color:var(--text-muted); align-self:center;">Popular:</span> ` +
+          provider.models.map(m => `<button type="button" class="btn-chip-model" data-model="${m.id}">${m.id}</button>`).join(' ');
+      }
+    }
+
     function openModal() {
       if (aiApiKeyModal) {
         aiApiKeyModal.classList.remove('hidden');
-        if (modalLlmProvider) modalLlmProvider.value = aiState.engine || 'gemini_api';
-        if (modalApiKeyInput) modalApiKeyInput.value = aiState.cloudKey || '';
-        if (modalApiModelInput) modalApiModelInput.value = aiState.cloudModel || 'gemini-2.0-flash';
+        const activeEngine = aiState.engine || 'gemini_api';
+        if (modalLlmProvider) modalLlmProvider.value = activeEngine;
+        updateModalProviderUI(activeEngine);
         if (modalApiKeyInput) modalApiKeyInput.focus();
       }
     }
@@ -8710,6 +8822,34 @@ if (document.readyState === 'loading') {
 
     function closeModal() {
       if (aiApiKeyModal) aiApiKeyModal.classList.add('hidden');
+    }
+
+    if (modalLlmProvider) {
+      modalLlmProvider.addEventListener('change', () => {
+        updateModalProviderUI(modalLlmProvider.value);
+      });
+    }
+
+    // Toggle password visibility in modal
+    const toggleApiKeyVisBtn = document.getElementById('toggleApiKeyVisBtn');
+    if (toggleApiKeyVisBtn && modalApiKeyInput) {
+      toggleApiKeyVisBtn.addEventListener('click', () => {
+        const isPass = modalApiKeyInput.type === 'password';
+        modalApiKeyInput.type = isPass ? 'text' : 'password';
+        toggleApiKeyVisBtn.innerHTML = isPass ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+      });
+    }
+
+    // Model chips click delegation
+    const modalBody = aiApiKeyModal?.querySelector('.modal-body');
+    if (modalBody) {
+      modalBody.addEventListener('click', (e) => {
+        const chip = e.target.closest('.btn-chip-model');
+        if (chip && modalApiModelInput) {
+          const mod = chip.getAttribute('data-model');
+          if (mod) modalApiModelInput.value = mod;
+        }
+      });
     }
 
     if (openApiKeyModalBtn) openApiKeyModalBtn.addEventListener('click', openModal);
@@ -8726,19 +8866,34 @@ if (document.readyState === 'loading') {
 
         aiState.engine = prov;
         aiState.cloudModel = model;
-        if (key) {
+        aiState.cloudKey = key;
+
+        if (prov === 'local_ollama') {
+          const host = document.getElementById('modalOllamaHost')?.value?.trim();
+          const oModel = document.getElementById('modalOllamaModel')?.value?.trim();
+          if (host) aiState.ollamaHost = host;
+          if (oModel) aiState.ollamaModel = oModel;
+          localStorage.setItem(AI_STORAGE_KEYS.OLLAMA_HOST, aiState.ollamaHost);
+          localStorage.setItem(AI_STORAGE_KEYS.OLLAMA_MODEL, aiState.ollamaModel);
+        } else if (prov !== 'smart_mock') {
+          setStoredKeyForEngine(prov, key);
           if (typeof JURISAI_CONFIG !== 'undefined' && JURISAI_CONFIG.apiKeys) {
             JURISAI_CONFIG.apiKeys[prov] = key;
           }
-          localStorage.setItem('jurisai_cloud_key_' + prov, key);
-          localStorage.setItem('jurisai_cloud_key', key);
         }
+
         localStorage.setItem(AI_STORAGE_KEYS.ENGINE, prov);
         localStorage.setItem(AI_STORAGE_KEYS.CLOUD_MODEL, model);
 
+        // Sync drawer inputs if present
+        const drawerEngine = document.getElementById('aiEngineSelect');
+        if (drawerEngine) drawerEngine.value = prov;
+        const drawerKey = document.getElementById('cloudApiKey');
+        if (drawerKey) drawerKey.value = key;
+
         if (typeof updateEngineDisplayPill === 'function') updateEngineDisplayPill();
         closeModal();
-        if (typeof showToast === 'function') showToast(`JurisAI updated to ${prov} (${model})!`, 'success');
+        if (typeof showToast === 'function') showToast(`JurisAI updated to ${AI_PROVIDERS[prov]?.name || prov} (${model})!`, 'success');
       });
     }
 
@@ -8746,16 +8901,26 @@ if (document.readyState === 'loading') {
       modalTestApiKeyBtn.addEventListener('click', async () => {
         const prov = modalLlmProvider ? modalLlmProvider.value : 'gemini_api';
         const key = modalApiKeyInput ? modalApiKeyInput.value.trim() : '';
-        const model = modalApiModelInput ? modalApiModelInput.value.trim() : 'gemini-2.0-flash';
+        const model = modalApiModelInput ? modalApiModelInput.value.trim() : (AI_PROVIDERS[prov]?.defaultModel || 'gemini-2.0-flash');
+        const customEndpoint = document.getElementById('modalApiBaseUrlInput')?.value?.trim() || '';
+
+        if (!key && prov !== 'local_ollama' && prov !== 'smart_mock') {
+          if (modalTestStatusBox) {
+            modalTestStatusBox.style.display = 'block';
+            modalTestStatusBox.className = 'test-status-badge error';
+            modalTestStatusBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <strong>Please enter an API key to test.</strong>';
+          }
+          return;
+        }
 
         if (modalTestStatusBox) {
           modalTestStatusBox.style.display = 'block';
           modalTestStatusBox.className = 'test-status-badge loading';
-          modalTestStatusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing API key connection...';
+          modalTestStatusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing API connection...';
         }
 
         try {
-          const res = await testApiKeyConnection(prov, key, model);
+          const res = await testApiKeyConnection(prov, key, model, customEndpoint);
           if (modalTestStatusBox) {
             modalTestStatusBox.className = 'test-status-badge success';
             modalTestStatusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>Connected!</strong> ${escapeHTML(res)}`;
