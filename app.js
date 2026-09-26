@@ -2424,6 +2424,8 @@ function handleLogin(e) {
   saveUsersToStorage();
 
   state.currentUser = matchedUser;
+  state.activeDocketCaseId = null;
+  state.activeDocketTab = 'overview';
   localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(matchedUser));
 
   logAuditEvent('User Logged In', `Session initialized for ${matchedUser.name} (${matchedUser.role}).`, 'login', matchedUser.name);
@@ -2576,6 +2578,8 @@ function handleSignup(e) {
 
   // Authenticate session
   state.currentUser = newUser;
+  state.activeDocketCaseId = null;
+  state.activeDocketTab = 'overview';
   localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(newUser));
 
   showToast(`🎉 Registration complete! Welcome to Chambers, ${newUser.name}.`, 'success');
@@ -2599,6 +2603,8 @@ function handleLogout() {
   }
   localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
   state.currentUser = null;
+  state.activeDocketCaseId = null;
+  state.activeDocketTab = 'overview';
   showToast('Chambers session securely closed.', 'info');
   switchAuthTab('login');
   showAuthScreen();
@@ -3191,35 +3197,39 @@ function isUserGroupHead(user) {
 }
 
 // Core Access Control Filter:
-// - Chambers Administrator: all cases
-// - Group Head: all cases in their group & all updates regarding them
-// - Subordinates: ONLY cases assigned directly to them!
+// - Chambers Administrator: all firm cases
+// - Pre-configured demo group head (Adv. Sharma): Constitutional & Writ group demo cases
+// - All other advocates / newly registered practitioners: ONLY cases assigned to them or created by them!
 function getAccessibleCases(user) {
   if (!user) return [];
 
-  // 1. Chambers Administrator: Full firm-wide oversight
+  // 1. Chambers Administrator: Full firm-wide master oversight
   if (user.role === 'Chambers Administrator') {
     return state.cases;
   }
 
-  // 2. Head of Group: Full access to all cases in their group & all updates
-  if (isUserGroupHead(user)) {
+  // 2. Pre-configured demo group head (Adv. Sharma)
+  if (user.email === 'advocate.sharma@lexjuris.in') {
     const userGroup = (user.group || user.dept || 'Constitutional & Writ').toLowerCase().trim();
     return state.cases.filter(c => {
       const caseGrp = (c.group || c.caseCategory || '').toLowerCase().trim();
       return caseGrp === userGroup ||
              c.assignedTo === user.id ||
              (c.assignedToEmail && c.assignedToEmail.toLowerCase() === user.email.toLowerCase()) ||
-             (c.assignedToName && c.assignedToName.toLowerCase() === user.name.toLowerCase());
+             (c.assignedToName && c.assignedToName.toLowerCase() === user.name.toLowerCase()) ||
+             (c.createdBy && c.createdBy.toLowerCase() === user.email.toLowerCase()) ||
+             (c.createdById && c.createdById === user.id);
     });
   }
 
-  // 3. Subordinates (Associate Advocate, Paralegal, etc.):
-  // Strictly visible ONLY to them if assigned to them!
+  // 3. All other advocates, subordinates, and newly registered practitioners:
+  // Strictly visible ONLY cases assigned directly to them or created by them!
   return state.cases.filter(c => {
-    return c.assignedTo === user.id ||
+    return (c.assignedTo && c.assignedTo === user.id) ||
            (c.assignedToEmail && c.assignedToEmail.toLowerCase() === user.email.toLowerCase()) ||
-           (c.assignedToName && c.assignedToName.toLowerCase() === user.name.toLowerCase());
+           (c.assignedToName && user.name && c.assignedToName.toLowerCase() === user.name.toLowerCase()) ||
+           (c.createdBy && c.createdBy.toLowerCase() === user.email.toLowerCase()) ||
+           (c.createdById && c.createdById === user.id);
   });
 }
 
@@ -3233,7 +3243,7 @@ function updateAccessScopeBanner() {
   const user = state.currentUser;
   const accessibleCases = getAccessibleCases(user);
   const isAdmin = user.role === 'Chambers Administrator';
-  const isHead = isUserGroupHead(user);
+  const isHead = user.email === 'advocate.sharma@lexjuris.in';
   const userGroup = user.group || user.dept || 'Constitutional & Writ';
 
   dom.accessScopeBanner.className = 'access-scope-banner';
@@ -3275,14 +3285,34 @@ function updateAccessScopeBanner() {
         <div class="scope-icon-wrap"><i class="fa-solid fa-user-lock"></i></div>
         <div>
           <div class="scope-banner-title">
-            Subordinate Counsel Workspace: ${escapeHTML(user.name)}
-            <span class="scope-tag-pill">🔒 Confidential Access</span>
+            Advocate Workspace: ${escapeHTML(user.name)}
+            <span class="scope-tag-pill">🔒 Isolated Docket Access</span>
           </div>
-          <div class="scope-banner-desc">Restricted docket security active: You have access exclusively to the <strong>${accessibleCases.length}</strong> docket(s) assigned directly to you.</div>
+          <div class="scope-banner-desc">Confidential workspace active: You have access exclusively to your <strong>${accessibleCases.length}</strong> assigned or instituted docket(s). Unassigned and external matters remain strictly confidential.</div>
         </div>
       </div>
-      <div class="badge-assignee my-assignment"><i class="fa-solid fa-user-check"></i> Assigned Cases Only</div>
+      <div class="badge-assignee my-assignment"><i class="fa-solid fa-user-check"></i> Personal Matters Only</div>
     `;
+  }
+
+  // Update practice group banner card
+  const pgCard = document.getElementById('practiceGroupBannerCard');
+  const pgName = document.getElementById('pgGroupName');
+  if (pgCard && state.currentUser) {
+    const titleEl = pgCard.querySelector('.pg-title');
+    const subtitleEl = pgCard.querySelector('.pg-subtitle');
+    if (isAdmin) {
+      if (titleEl) titleEl.textContent = 'Chambers Master Oversight';
+      if (pgName) pgName.textContent = 'Firm-Wide Access Active';
+    } else if (isHead) {
+      if (titleEl) titleEl.textContent = 'Practice Group Head';
+      if (pgName) pgName.textContent = state.currentUser.group || 'Constitutional & Writ';
+    } else {
+      if (titleEl) titleEl.textContent = 'Assigned Counsel Workspace';
+      if (subtitleEl) {
+        subtitleEl.innerHTML = `Active Matters: <span id="pgGroupName">${accessibleCases.length} Assigned Docket(s)</span>`;
+      }
+    }
   }
 }
 
@@ -3541,6 +3571,8 @@ function handleNewCaseSubmit(e) {
     assignedToName: assignedUser.name,
     assignedToEmail: assignedUser.email,
     assignedBy: state.currentUser ? `${state.currentUser.name} (${state.currentUser.role})` : 'Chambers Administrator',
+    createdBy: state.currentUser ? state.currentUser.email : '',
+    createdById: state.currentUser ? state.currentUser.id : '',
     priority,
     courtName,
     hearingDate,
@@ -3611,6 +3643,9 @@ function renderDashboard() {
   }
   if (state.activeFullScreenCaseId) {
     openFullScreenCase(state.activeFullScreenCaseId);
+  }
+  if (typeof window.renderExtClientsList === 'function') {
+    window.renderExtClientsList();
   }
 }
 
@@ -3708,22 +3743,44 @@ function renderCasesList() {
   // Empty State Handling
   if (filtered.length === 0) {
     dom.casesList.innerHTML = '';
-    dom.emptyState.classList.remove('hidden');
-    if (state.searchQuery) {
-      if (state.searchMode === 'caseTitle') {
-        dom.emptyStateMsg.innerHTML = `No cases found with Case Name matching "<strong>${escapeHTML(state.searchQuery)}</strong>".<br><button type="button" class="btn btn-outline-gold btn-xs" style="margin-top:0.5rem;" onclick="if(window.switchSearchMode) window.switchSearchMode('clientName')"><i class="fa-solid fa-user-tie"></i> Search by Client Name instead</button>`;
-      } else if (state.searchMode === 'clientName') {
-        dom.emptyStateMsg.innerHTML = `No cases found with Client Name matching "<strong>${escapeHTML(state.searchQuery)}</strong>".<br><button type="button" class="btn btn-outline-gold btn-xs" style="margin-top:0.5rem;" onclick="if(window.switchSearchMode) window.switchSearchMode('caseTitle')"><i class="fa-solid fa-scale-balanced"></i> Search by Case Name instead</button>`;
-      } else if (state.searchMode === 'caseNumber') {
-        dom.emptyStateMsg.innerHTML = `No cases found with Docket Number matching "<strong>${escapeHTML(state.searchQuery)}</strong>".<br><button type="button" class="btn btn-outline-gold btn-xs" style="margin-top:0.5rem;" onclick="if(window.switchSearchMode) window.switchSearchMode('all')">Search all fields</button>`;
+    state.activeDocketCaseId = null;
+
+    const indexList = document.getElementById('docketIndexList');
+    if (indexList) {
+      indexList.innerHTML = `
+        <div style="padding: 2.5rem 1rem; text-align: center; color: rgba(255,255,255,0.6);">
+          <i class="fa-solid fa-folder-open" style="font-size: 1.8rem; opacity: 0.5; margin-bottom: 0.75rem; display:block; color: var(--gold-primary);"></i>
+          <strong style="color: #fff; display:block; font-size: 0.9rem; margin-bottom: 0.25rem;">No Dockets Found</strong>
+          <p style="margin: 0; font-size: 0.78rem; line-height: 1.4;">${accessible.length === 0 ? 'No cases are currently registered or allocated to your account.' : 'No cases match this category.'}</p>
+        </div>
+      `;
+    }
+
+    const placeholder = document.getElementById('docketDetailPlaceholder');
+    const content = document.getElementById('docketDetailContent');
+    if (content) content.classList.add('hidden');
+    if (placeholder) {
+      placeholder.classList.remove('hidden');
+      if (accessible.length === 0) {
+        placeholder.innerHTML = `
+          <div class="placeholder-icon-wrap">
+            <i class="fa-solid fa-briefcase"></i>
+          </div>
+          <h3>No Assigned Legal Dockets</h3>
+          <p>Your chambers account currently has no active cases assigned to you. When cases are allocated to you or you register a new intake, they will appear here.</p>
+          <button type="button" class="btn btn-gold btn-sm" style="margin-top: 1rem;" onclick="if(window.quickAddNewCase) window.quickAddNewCase();">
+            <i class="fa-solid fa-plus"></i> Register New Case Intake
+          </button>
+        `;
       } else {
-        dom.emptyStateMsg.textContent = `No active legal dockets matched "${state.searchQuery}". Try a different keyword or clear the search.`;
+        placeholder.innerHTML = `
+          <div class="placeholder-icon-wrap">
+            <i class="fa-solid fa-filter"></i>
+          </div>
+          <h3>No Cases in this Category</h3>
+          <p>There are no legal dockets matching the selected filter tab.</p>
+        `;
       }
-    } else {
-      const isSub = state.currentUser && !isUserGroupHead(state.currentUser) && state.currentUser.role !== 'Chambers Administrator';
-      dom.emptyStateMsg.textContent = isSub 
-        ? 'No cases currently assigned to you in this category. Any cases allocated by your Group Head will appear here.'
-        : 'No cases found in this category. Register a fresh docket using the intake form on the left.';
     }
     return;
   }
@@ -3746,7 +3803,18 @@ function renderDocketIndex(filteredCases, todayStr) {
   }
 
   if (!filteredCases || filteredCases.length === 0) {
-    indexList.innerHTML = '';
+    indexList.innerHTML = `
+      <div style="padding: 2.5rem 1rem; text-align: center; color: rgba(255,255,255,0.6);">
+        <i class="fa-solid fa-folder-open" style="font-size: 1.8rem; opacity: 0.5; margin-bottom: 0.75rem; display:block; color: var(--gold-primary);"></i>
+        <strong style="color: #fff; display:block; font-size: 0.9rem; margin-bottom: 0.25rem;">No Dockets Found</strong>
+        <p style="margin: 0; font-size: 0.78rem; line-height: 1.4;">No cases allocated.</p>
+      </div>
+    `;
+    state.activeDocketCaseId = null;
+    const placeholder = document.getElementById('docketDetailPlaceholder');
+    const content = document.getElementById('docketDetailContent');
+    if (placeholder) placeholder.classList.remove('hidden');
+    if (content) content.classList.add('hidden');
     return;
   }
 
@@ -3844,7 +3912,7 @@ window.toggleBlueRail = function(forceOpen) {
     // Also uncollapse workspace client sidebar so names are visible in both places
     if (workspaceSidebar) {
       workspaceSidebar.classList.remove('collapsed');
-      const allCases = (state.currentUser ? getAccessibleCases(state.currentUser) : null) || state.cases || [];
+      const allCases = getAccessibleCases(state.currentUser);
       renderDocketIndex(allCases, getOffsetDateString(0));
     }
 
@@ -3947,10 +4015,7 @@ window.renderExtClientsList = function() {
   const listEl = document.getElementById('extClientsList');
   if (!listEl) return;
 
-  let accessible = (state.currentUser ? getAccessibleCases(state.currentUser) : null) || state.cases || [];
-  if (!accessible || accessible.length === 0) {
-    accessible = state.cases || [];
-  }
+  const accessible = getAccessibleCases(state.currentUser);
   const todayStr = getOffsetDateString(0);
 
   // Update counts
@@ -4005,16 +4070,16 @@ window.renderExtClientsList = function() {
   });
 
   if (filtered.length === 0) {
-    let emptyMsg = 'No clients found';
+    let emptyMsg = accessible.length === 0 ? 'No dockets assigned to your account' : 'No clients found';
     if (extRailFilter === 'today') emptyMsg = 'No court hearings scheduled for today';
     else if (extRailFilter === 'critical') emptyMsg = 'No urgent or critical briefs found';
     else if (extRailFilter === 'upcoming') emptyMsg = 'No upcoming hearings scheduled';
 
     listEl.innerHTML = `
       <div style="text-align:center; padding: 2.5rem 1rem; color: rgba(255,255,255,0.7); font-size: 0.85rem;">
-        <i class="fa-solid fa-folder-open" style="font-size: 1.8rem; margin-bottom: 0.6rem; opacity: 0.6; display:block; color: var(--gold-primary);"></i>
+        <i class="fa-solid fa-briefcase" style="font-size: 1.8rem; margin-bottom: 0.6rem; opacity: 0.6; display:block; color: var(--gold-primary);"></i>
         <strong style="color:#fff; display:block; margin-bottom:0.25rem;">${emptyMsg}</strong>
-        <p style="margin:0; font-size:0.78rem; opacity:0.8;">Switch filter or register a new legal docket.</p>
+        <p style="margin:0; font-size:0.78rem; opacity:0.8;">${accessible.length === 0 ? 'Register a new case intake to add your first client docket.' : 'Switch filter or register a new legal docket.'}</p>
       </div>
     `;
     return;
@@ -4256,8 +4321,20 @@ function buildStatusPill(caseItem, todayStr) {
 
 // ---- Open docket detail with tabs ----
 window.openDocketDetail = function(caseId, activeTab) {
-  const caseItem = state.cases.find(c => c.id === caseId);
-  if (!caseItem) return;
+  const accessible = getAccessibleCases(state.currentUser);
+  const caseItem = accessible.find(c => c.id === caseId);
+
+  const placeholder = document.getElementById('docketDetailPlaceholder');
+  const content = document.getElementById('docketDetailContent');
+  const stickyHeader = document.getElementById('detailStickyHeader');
+  const tabBody = document.getElementById('detailTabBody');
+
+  if (!caseItem) {
+    state.activeDocketCaseId = null;
+    if (placeholder) placeholder.classList.remove('hidden');
+    if (content) content.classList.add('hidden');
+    return;
+  }
 
   state.activeDocketCaseId = caseId;
   if (!activeTab) activeTab = state.activeDocketTab || 'overview';
@@ -4268,10 +4345,6 @@ window.openDocketDetail = function(caseId, activeTab) {
     el.classList.toggle('active', el.getAttribute('data-case-id') === caseId);
   });
 
-  const placeholder = document.getElementById('docketDetailPlaceholder');
-  const content = document.getElementById('docketDetailContent');
-  const stickyHeader = document.getElementById('detailStickyHeader');
-  const tabBody = document.getElementById('detailTabBody');
   if (!content || !stickyHeader || !tabBody) return;
 
   if (placeholder) placeholder.classList.add('hidden');
@@ -8752,10 +8825,12 @@ if (document.readyState === 'loading') {
         caseNumber,
         caseCategory,
         group: (currentUser && currentUser.group) ? currentUser.group : 'Constitutional & Writ',
-        assignedTo: '',
+        assignedTo: currentUser ? currentUser.id : '',
         assignedToName: currentUser ? currentUser.name : '',
         assignedToEmail: currentUser ? currentUser.email : '',
         assignedBy: currentUser ? currentUser.name : '',
+        createdBy: currentUser ? currentUser.email : '',
+        createdById: currentUser ? currentUser.id : '',
         priority: 'Standard',
         courtName,
         hearingDate,
