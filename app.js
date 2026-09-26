@@ -42,7 +42,8 @@ const STORAGE_KEYS = {
   AUTH_USER: 'lexjuris_auth_user',
   CASES: 'lexjuris_cases_data',
   USERS: 'lexjuris_users_list',
-  AUDIT_LOGS: 'lexjuris_audit_logs'
+  AUDIT_LOGS: 'lexjuris_audit_logs',
+  ACCESS_REQUESTS: 'lexjuris_access_requests'
 };
 
 // Default pre-seeded Chambers Team Members & Login Credentials
@@ -697,6 +698,9 @@ let state = {
   cases: [],
   users: [],
   auditLogs: [],
+  accessRequests: [],
+  currentShareCaseId: null,
+  activeRequestsFilter: 'pending',
   activeView: 'workspace', // 'workspace' | 'admin'
   currentFilter: 'all',
   searchQuery: '',
@@ -1090,8 +1094,10 @@ const dom = {
 function initApp() {
   loadStoredUsers();
   loadStoredCases();
+  loadAccessRequests();
   loadAuditLogs();
   checkAuthSession();
+  checkUrlAccessCode();
   setupEventListeners();
   setDefaultFormDates();
   setupAiChatbot();
@@ -1261,6 +1267,20 @@ function showDashboard() {
         dom.adminNavBtn.style.display = 'none';
       }
     }
+
+    // Configure Senior vs Junior Lawyer permissions nav buttons
+    const isSenior = isSeniorLawyer(state.currentUser);
+    const isJunior = isJuniorLawyer(state.currentUser);
+
+    const btnEnterCode = document.getElementById('btnNavEnterAccessCode');
+    const btnReviewReq = document.getElementById('btnNavReviewRequests');
+    const btnSeekPerm = document.getElementById('btnNavSeekPermission');
+
+    if (btnEnterCode) btnEnterCode.style.display = 'inline-flex';
+    if (btnReviewReq) btnReviewReq.style.display = isSenior ? 'inline-flex' : 'none';
+    if (btnSeekPerm) btnSeekPerm.style.display = isJunior ? 'inline-flex' : 'none';
+
+    updatePendingRequestsBadge();
   }
   
   updateAdminBadge();
@@ -1423,15 +1443,26 @@ function loadStoredCases() {
             ];
             updated = true;
           }
+          if (!c.accessCode) {
+            const numMatch = (c.caseNumber || '').match(/\d{3,5}/);
+            c.accessCode = 'LEX-' + (numMatch ? numMatch[0] : (1000 + (idx || 1) * 317) % 9000 + 1000);
+            updated = true;
+          }
+          if (!Array.isArray(c.sharedWith)) {
+            c.sharedWith = [];
+            updated = true;
+          }
         });
         if (updated) saveCasesToStorage();
       }
     } catch (e) {
       state.cases = [...SAMPLE_CASES];
+      ensureAllCasesHaveAccessProps(state.cases);
       saveCasesToStorage();
     }
   } else {
     state.cases = [...SAMPLE_CASES];
+    ensureAllCasesHaveAccessProps(state.cases);
     saveCasesToStorage();
   }
 }
@@ -1534,6 +1565,20 @@ function setupEventListeners() {
   }
   if (dom.adminNavBtn) {
     dom.adminNavBtn.addEventListener('click', () => switchWorkspaceView('admin'));
+  }
+
+  // Permissions & Access Code Nav Controls
+  const navEnterCode = document.getElementById('btnNavEnterAccessCode');
+  if (navEnterCode) {
+    navEnterCode.addEventListener('click', () => window.openEnterAccessCodeModal());
+  }
+  const navReviewReq = document.getElementById('btnNavReviewRequests');
+  if (navReviewReq) {
+    navReviewReq.addEventListener('click', () => window.openReviewAccessRequestsModal());
+  }
+  const navSeekPerm = document.getElementById('btnNavSeekPermission');
+  if (navSeekPerm) {
+    navSeekPerm.addEventListener('click', () => window.openSeekPermissionModal());
   }
 
   // Fullscreen Workspace Toggle
@@ -3189,6 +3234,21 @@ window.closeCaseUpdatesModal = closeCaseUpdatesModal;
 // 6. ACCESS CONTROL & GROUP HIERARCHY RULES
 // ==========================================================================
 
+function isSeniorLawyer(user) {
+  if (!user) return false;
+  if (user.role === 'Chambers Administrator') return true;
+  if (user.isGroupHead === true || user.groupRole === 'head') return true;
+  const role = (user.role || '').toLowerCase();
+  if (role.includes('senior') || role.includes('head') || role.includes('partner') || role.includes('lead')) return true;
+  if (user.email === 'advocate.sharma@lexjuris.in' || user.email === 'admin@lexjuris.in') return true;
+  return false;
+}
+
+function isJuniorLawyer(user) {
+  if (!user) return false;
+  return !isSeniorLawyer(user);
+}
+
 function isUserGroupHead(user) {
   if (!user) return false;
   if (user.isGroupHead === true || user.groupRole === 'head') return true;
@@ -3198,10 +3258,23 @@ function isUserGroupHead(user) {
 
 // Core Access Control Filter:
 // - Chambers Administrator: all firm cases
-// - Pre-configured demo group head (Adv. Sharma): Constitutional & Writ group demo cases
-// - All other advocates / newly registered practitioners: ONLY cases assigned to them or created by them!
+// - Pre-configured demo group head (Adv. Sharma): Constitutional & Writ group demo cases + shared dockets
+// - All other Senior Lawyers, Junior Lawyers, and newly registered practitioners: ONLY cases assigned to them, created by them, or authorized via Access Code / Senior clearance!
 function getAccessibleCases(user) {
   if (!user) return [];
+
+  // Helper: Is case explicitly shared with this lawyer via Access Code, link, or senior authorization
+  const isExplicitlyShared = (c) => {
+    if (!c || !Array.isArray(c.sharedWith)) return false;
+    const uid = (user.id || '').toLowerCase();
+    const uemail = (user.email || '').toLowerCase();
+    const uname = (user.name || '').toLowerCase();
+    return c.sharedWith.some(entry => {
+      if (!entry) return false;
+      const str = String(entry).toLowerCase().trim();
+      return str === uid || str === uemail || str === uname;
+    });
+  };
 
   // 1. Chambers Administrator: Full firm-wide master oversight
   if (user.role === 'Chambers Administrator') {
@@ -3218,18 +3291,20 @@ function getAccessibleCases(user) {
              (c.assignedToEmail && c.assignedToEmail.toLowerCase() === user.email.toLowerCase()) ||
              (c.assignedToName && c.assignedToName.toLowerCase() === user.name.toLowerCase()) ||
              (c.createdBy && c.createdBy.toLowerCase() === user.email.toLowerCase()) ||
-             (c.createdById && c.createdById === user.id);
+             (c.createdById && c.createdById === user.id) ||
+             isExplicitlyShared(c);
     });
   }
 
-  // 3. All other advocates, subordinates, and newly registered practitioners:
-  // Strictly visible ONLY cases assigned directly to them or created by them!
+  // 3. All other Senior Lawyers, Junior Lawyers, and Practitioners:
+  // Strictly visible ONLY cases assigned directly to them, created by them, or authorized!
   return state.cases.filter(c => {
     return (c.assignedTo && c.assignedTo === user.id) ||
            (c.assignedToEmail && c.assignedToEmail.toLowerCase() === user.email.toLowerCase()) ||
            (c.assignedToName && user.name && c.assignedToName.toLowerCase() === user.name.toLowerCase()) ||
            (c.createdBy && c.createdBy.toLowerCase() === user.email.toLowerCase()) ||
-           (c.createdById && c.createdById === user.id);
+           (c.createdById && c.createdById === user.id) ||
+           isExplicitlyShared(c);
   });
 }
 
@@ -3278,6 +3353,21 @@ function updateAccessScopeBanner() {
       </div>
       <div class="badge-group"><i class="fa-solid fa-shield-halved"></i> Group Head Clearance</div>
     `;
+  } else if (isSeniorLawyer(user)) {
+    dom.accessScopeBanner.classList.add('scope-head');
+    dom.accessScopeBanner.innerHTML = `
+      <div class="scope-banner-content">
+        <div class="scope-icon-wrap"><i class="fa-solid fa-crown gold-text"></i></div>
+        <div>
+          <div class="scope-banner-title">
+            Senior Counsel Workspace: ${escapeHTML(user.name)}
+            <span class="scope-tag-pill">⚖️ Senior Advocate</span>
+          </div>
+          <div class="scope-banner-desc">Senior Counsel clearance active. You have access to <strong>${accessibleCases.length}</strong> active legal dockets, can authorize Junior Counsel permission requests, and share or unlock cases with Access Codes.</div>
+        </div>
+      </div>
+      <div class="badge-group"><i class="fa-solid fa-key"></i> Senior Clearance</div>
+    `;
   } else {
     dom.accessScopeBanner.classList.add('scope-subordinate');
     dom.accessScopeBanner.innerHTML = `
@@ -3285,13 +3375,13 @@ function updateAccessScopeBanner() {
         <div class="scope-icon-wrap"><i class="fa-solid fa-user-lock"></i></div>
         <div>
           <div class="scope-banner-title">
-            Advocate Workspace: ${escapeHTML(user.name)}
-            <span class="scope-tag-pill">🔒 Isolated Docket Access</span>
+            Junior Counsel Workspace: ${escapeHTML(user.name)}
+            <span class="scope-tag-pill">🔒 Junior Advocate</span>
           </div>
-          <div class="scope-banner-desc">Confidential workspace active: You have access exclusively to your <strong>${accessibleCases.length}</strong> assigned or instituted docket(s). Unassigned and external matters remain strictly confidential.</div>
+          <div class="scope-banner-desc">Confidential workspace active: You have access to <strong>${accessibleCases.length}</strong> assigned docket(s). To view other cases and evidence, seek permission from Senior Counsel or enter an Access Code.</div>
         </div>
       </div>
-      <div class="badge-assignee my-assignment"><i class="fa-solid fa-user-check"></i> Personal Matters Only</div>
+      <button type="button" class="btn btn-outline-gold btn-xs" onclick="window.openSeekPermissionModal()" style="margin-left:auto;"><i class="fa-solid fa-paper-plane"></i> Seek Permission</button>
     `;
   }
 
@@ -4330,6 +4420,41 @@ window.openDocketDetail = function(caseId, activeTab) {
   const tabBody = document.getElementById('detailTabBody');
 
   if (!caseItem) {
+    const hiddenCase = state.cases.find(c => c.id === caseId);
+    if (hiddenCase && placeholder && content && stickyHeader && tabBody) {
+      state.activeDocketCaseId = caseId;
+      placeholder.classList.add('hidden');
+      content.classList.remove('hidden');
+      stickyHeader.innerHTML = `
+        <div class="detail-sh-top">
+          <div class="detail-sh-client">
+            <div class="detail-sh-name"><i class="fa-solid fa-lock gold-text"></i> Confidential Legal Docket</div>
+            <div class="detail-sh-case-no">${escapeHTML(hiddenCase.caseNumber)} • Access Restricted</div>
+          </div>
+        </div>
+      `;
+      tabBody.innerHTML = `
+        <div style="padding: 3rem 2rem; text-align: center; max-width: 600px; margin: 0 auto;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(212, 160, 23, 0.12); border: 1px solid rgba(212, 160, 23, 0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 1.8rem; color: var(--gold-primary);">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Confidential Legal Docket</h3>
+          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.5rem;">
+            This case brief and its legal evidentiary files are protected under chambers confidentiality. Under firm protocol, Junior Lawyers must seek permission from a Senior Lawyer or Group Head to access this docket. Multiple Senior Lawyers can also access using the Docket Access Code.
+          </p>
+          <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-gold btn-md" onclick="window.openSeekPermissionModal('${hiddenCase.id}')">
+              <i class="fa-solid fa-paper-plane"></i> Seek Permission from Senior Lawyer
+            </button>
+            <button type="button" class="btn btn-outline-gold btn-md" onclick="window.openEnterAccessCodeModal()">
+              <i class="fa-solid fa-key"></i> Enter Access Code
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
     state.activeDocketCaseId = null;
     if (placeholder) placeholder.classList.remove('hidden');
     if (content) content.classList.add('hidden');
@@ -4410,6 +4535,9 @@ window.openDocketDetail = function(caseId, activeTab) {
         <a href="tel:${escapeHTML(caseItem.clientPhone)}" class="detail-action-btn" title="Call client">
           <i class="fa-solid fa-phone"></i> Call
         </a>
+        <button type="button" class="detail-action-btn" onclick="window.openShareDocketModal('${caseItem.id}')" title="Share Docket Access Code & Link with Co-Counsel">
+          <i class="fa-solid fa-key gold-text"></i> Access Code
+        </button>
         <button type="button" class="detail-action-btn primary" onclick="openDocketDetail('${caseItem.id}','updates')" title="Add update">
           <i class="fa-solid fa-plus"></i> Add Update
         </button>
@@ -9037,4 +9165,718 @@ if (document.readyState === 'loading') {
     init();
   }
 })();
+
+// ==========================================================================
+// 7. SENIOR & JUNIOR LAWYER PERMISSION REQUESTS & DOCKET ACCESS CODES
+// ==========================================================================
+
+const DEFAULT_ACCESS_REQUESTS = [
+  {
+    id: 'req_seed_1',
+    caseId: 'case_kunal_2',
+    caseTitle: 'Singhal vs. LAC (Interim Reference Petition)',
+    caseNumber: 'LA.APP. 4561/2024',
+    requesterId: 'user_associate_3',
+    requesterName: 'Adv. Ananya Singh',
+    requesterEmail: 'ananya.singh@lexjuris.in',
+    requesterRole: 'Associate Advocate',
+    approverId: 'user_advocate_2',
+    approverName: 'Adv. Vikramaditya Sharma',
+    approverEmail: 'advocate.sharma@lexjuris.in',
+    reason: 'Need access to case brief and valuation award records to prepare statutory Section 64 reference replication before High Court.',
+    urgency: 'Urgent',
+    status: 'Pending',
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString()
+  },
+  {
+    id: 'req_seed_2',
+    caseId: 'case_kunal_1',
+    caseTitle: 'Singhal vs. NHAI (Letters Appeal - Land Compensation Enhancement)',
+    caseNumber: 'LA.APP. 9442/2024',
+    requesterId: 'user_associate_5',
+    requesterName: 'Adv. Siddharth Rao',
+    requesterEmail: 'siddharth.rao@lexjuris.in',
+    requesterRole: 'Associate Advocate',
+    approverId: 'user_advocate_2',
+    approverName: 'Adv. Vikramaditya Sharma',
+    approverEmail: 'advocate.sharma@lexjuris.in',
+    reason: 'Assisting senior counsel on Section 30(1) solatium precedent research and list of dates.',
+    urgency: 'Standard',
+    status: 'Approved',
+    resolvedBy: 'Adv. Vikramaditya Sharma',
+    resolvedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+    createdAt: new Date(Date.now() - 86400000).toISOString()
+  }
+];
+
+function ensureAllCasesHaveAccessProps(cases) {
+  if (!Array.isArray(cases)) return;
+  cases.forEach((c, idx) => {
+    if (!c.accessCode) {
+      const numMatch = (c.caseNumber || '').match(/\d{3,5}/);
+      c.accessCode = 'LEX-' + (numMatch ? numMatch[0] : ((idx + 1) * 1102 + 1000) % 9000);
+    }
+    if (!Array.isArray(c.sharedWith)) {
+      c.sharedWith = [];
+    }
+  });
+}
+
+function loadAccessRequests() {
+  const stored = localStorage.getItem(STORAGE_KEYS.ACCESS_REQUESTS);
+  if (stored) {
+    try {
+      state.accessRequests = JSON.parse(stored);
+      if (!Array.isArray(state.accessRequests)) {
+        state.accessRequests = [...DEFAULT_ACCESS_REQUESTS];
+        saveAccessRequestsToStorage();
+      }
+    } catch (e) {
+      state.accessRequests = [...DEFAULT_ACCESS_REQUESTS];
+      saveAccessRequestsToStorage();
+    }
+  } else {
+    state.accessRequests = [...DEFAULT_ACCESS_REQUESTS];
+    saveAccessRequestsToStorage();
+  }
+}
+
+function saveAccessRequestsToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ACCESS_REQUESTS, JSON.stringify(state.accessRequests));
+  } catch (err) {
+    console.error('Error saving access requests:', err);
+  }
+  updatePendingRequestsBadge();
+}
+
+function updatePendingRequestsBadge() {
+  const badge = document.getElementById('badgePendingRequestsCount');
+  if (!badge) return;
+
+  if (!state.currentUser || !isSeniorLawyer(state.currentUser)) {
+    badge.textContent = '0';
+    badge.style.display = 'none';
+    return;
+  }
+
+  const user = state.currentUser;
+  const isAdm = user.role === 'Chambers Administrator';
+  const isHead = user.email === 'advocate.sharma@lexjuris.in';
+
+  const pending = (state.accessRequests || []).filter(r => {
+    if (r.status !== 'Pending') return false;
+    if (isAdm || isHead) return true;
+    return r.approverId === user.id || r.approverEmail === user.email;
+  });
+
+  badge.textContent = String(pending.length);
+  badge.style.display = pending.length > 0 ? 'inline-block' : 'none';
+}
+
+// -------------------------------------------------------------
+// JUNIOR LAWYER: SEEK PERMISSION MODAL
+// -------------------------------------------------------------
+
+window.openSeekPermissionModal = function(prefillCaseId) {
+  const modal = document.getElementById('seekPermissionModal');
+  const targetCaseSelect = document.getElementById('permTargetCase');
+  const targetSeniorSelect = document.getElementById('permTargetSenior');
+  const reasonInput = document.getElementById('permReason');
+  const urgencySelect = document.getElementById('permUrgency');
+
+  if (!modal || !targetCaseSelect || !targetSeniorSelect) return;
+
+  // Populate cases list
+  const allCases = state.cases || [];
+  targetCaseSelect.innerHTML = allCases.map(c => {
+    const isSelected = prefillCaseId && c.id === prefillCaseId;
+    return `<option value="${escapeHTML(c.id)}" ${isSelected ? 'selected' : ''}>${escapeHTML(c.caseNumber)} — ${escapeHTML(c.clientName)} (${escapeHTML(c.caseTitle)})</option>`;
+  }).join('');
+
+  if (allCases.length === 0) {
+    targetCaseSelect.innerHTML = `<option value="">No cases registered in chambers</option>`;
+  }
+
+  // Populate Senior Lawyers
+  const seniors = (state.users || []).filter(isSeniorLawyer);
+  targetSeniorSelect.innerHTML = seniors.map(s => {
+    const isDefaultHead = s.email === 'advocate.sharma@lexjuris.in';
+    return `<option value="${escapeHTML(s.id)}" ${isDefaultHead ? 'selected' : ''}>${escapeHTML(s.name)} — ${escapeHTML(s.role)} (${escapeHTML(s.group || s.dept || 'Chambers')})</option>`;
+  }).join('');
+
+  if (seniors.length === 0) {
+    targetSeniorSelect.innerHTML = `<option value="senior_head">Adv. Vikramaditya Sharma — Senior Advocate</option>`;
+  }
+
+  if (reasonInput) reasonInput.value = '';
+  if (urgencySelect) urgencySelect.value = 'Standard';
+
+  modal.classList.remove('hidden');
+};
+
+window.closeSeekPermissionModal = function() {
+  const modal = document.getElementById('seekPermissionModal');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.submitAccessRequest = function(e) {
+  if (e && e.preventDefault) e.preventDefault();
+
+  if (!state.currentUser) {
+    showToast('Please sign in as Counsel first.', 'error');
+    return;
+  }
+
+  const targetCaseSelect = document.getElementById('permTargetCase');
+  const targetSeniorSelect = document.getElementById('permTargetSenior');
+  const reasonInput = document.getElementById('permReason');
+  const urgencySelect = document.getElementById('permUrgency');
+
+  const caseId = targetCaseSelect ? targetCaseSelect.value : '';
+  const seniorId = targetSeniorSelect ? targetSeniorSelect.value : '';
+  const reason = reasonInput ? reasonInput.value.trim() : '';
+  const urgency = urgencySelect ? urgencySelect.value : 'Standard';
+
+  if (!caseId) {
+    showToast('Please select a Legal Docket.', 'error');
+    return;
+  }
+  if (!reason || reason.length < 5) {
+    showToast('Please specify the reason for requesting case and document access.', 'error');
+    return;
+  }
+
+  const targetCase = state.cases.find(c => c.id === caseId);
+  const targetSenior = state.users.find(u => u.id === seniorId);
+
+  const newReq = {
+    id: 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    caseId: caseId,
+    caseTitle: targetCase ? targetCase.caseTitle : 'Confidential Docket',
+    caseNumber: targetCase ? targetCase.caseNumber : 'N/A',
+    requesterId: state.currentUser.id,
+    requesterName: state.currentUser.name,
+    requesterEmail: state.currentUser.email,
+    requesterRole: state.currentUser.role || 'Junior Advocate',
+    approverId: targetSenior ? targetSenior.id : seniorId,
+    approverName: targetSenior ? targetSenior.name : 'Senior Counsel',
+    approverEmail: targetSenior ? targetSenior.email : '',
+    reason: reason,
+    urgency: urgency,
+    status: 'Pending',
+    createdAt: new Date().toISOString()
+  };
+
+  state.accessRequests.unshift(newReq);
+  saveAccessRequestsToStorage();
+
+  if (typeof logAuditEvent === 'function') {
+    logAuditEvent(
+      'Docket Authorization Requested',
+      `Junior Counsel ${state.currentUser.name} submitted access request for docket ${newReq.caseNumber} to ${newReq.approverName}.`,
+      'access',
+      state.currentUser.name
+    );
+  }
+
+  window.closeSeekPermissionModal();
+  showToast(`Permission request sent to ${newReq.approverName}! You will be authorized upon review.`, 'success');
+};
+
+// -------------------------------------------------------------
+// SENIOR LAWYER: REVIEW ACCESS REQUESTS MODAL
+// -------------------------------------------------------------
+
+window.switchRequestsTab = function(tab) {
+  state.activeRequestsFilter = tab;
+  const tabPending = document.getElementById('tabReqPendingBtn');
+  const tabHistory = document.getElementById('tabReqHistoryBtn');
+
+  if (tabPending) tabPending.classList.toggle('active', tab === 'pending');
+  if (tabHistory) tabHistory.classList.toggle('active', tab === 'history');
+
+  window.renderAccessRequests();
+};
+
+window.openReviewAccessRequestsModal = function() {
+  const modal = document.getElementById('reviewAccessRequestsModal');
+  if (!modal) return;
+
+  state.activeRequestsFilter = 'pending';
+  const tabPending = document.getElementById('tabReqPendingBtn');
+  const tabHistory = document.getElementById('tabReqHistoryBtn');
+  if (tabPending) tabPending.classList.add('active');
+  if (tabHistory) tabHistory.classList.remove('active');
+
+  modal.classList.remove('hidden');
+  window.renderAccessRequests();
+};
+
+window.closeReviewAccessRequestsModal = function() {
+  const modal = document.getElementById('reviewAccessRequestsModal');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.renderAccessRequests = function() {
+  const body = document.getElementById('requestsModalBody');
+  const countPending = document.getElementById('reqCountPending');
+  const countHistory = document.getElementById('reqCountHistory');
+  if (!body) return;
+
+  const user = state.currentUser;
+  const isAdm = user && user.role === 'Chambers Administrator';
+  const isHead = user && user.email === 'advocate.sharma@lexjuris.in';
+
+  // Filter requests relevant to this senior lawyer (or all if admin/head)
+  const relevantRequests = (state.accessRequests || []).filter(r => {
+    if (isAdm || isHead) return true;
+    return r.approverId === user.id || r.approverEmail === user.email;
+  });
+
+  const pendingList = relevantRequests.filter(r => r.status === 'Pending');
+  const historyList = relevantRequests.filter(r => r.status !== 'Pending');
+
+  if (countPending) countPending.textContent = String(pendingList.length);
+  if (countHistory) countHistory.textContent = String(historyList.length);
+
+  const displayList = state.activeRequestsFilter === 'pending' ? pendingList : historyList;
+
+  if (displayList.length === 0) {
+    body.innerHTML = `
+      <div style="padding: 3rem 1rem; text-align: center; color: rgba(255,255,255,0.6);">
+        <i class="fa-solid fa-folder-open" style="font-size: 2rem; color: var(--gold-primary); opacity: 0.6; margin-bottom: 0.75rem; display:block;"></i>
+        <h4 style="color:#fff; margin-bottom: 0.25rem;">No ${state.activeRequestsFilter === 'pending' ? 'Pending Requests' : 'Authorization History'}</h4>
+        <p style="font-size: 0.82rem; margin: 0; color: #94a3b8;">
+          ${state.activeRequestsFilter === 'pending' ? 'All Junior Counsel docket permission requests have been reviewed.' : 'No prior authorization records logged.'}
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  body.innerHTML = displayList.map(req => {
+    const isPending = req.status === 'Pending';
+    const isApproved = req.status === 'Approved';
+    const urgencyClass = (req.urgency || '').toLowerCase();
+    const createdDate = new Date(req.createdAt).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    return `
+      <div class="request-card ${isPending ? 'pending' : (isApproved ? 'approved' : 'declined')}">
+        <div class="request-card-header">
+          <div class="requester-profile">
+            <div class="requester-avatar">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div>
+              <div class="requester-name">${escapeHTML(req.requesterName)}</div>
+              <div class="requester-role-email">${escapeHTML(req.requesterRole || 'Junior Counsel')} • ${escapeHTML(req.requesterEmail || '')}</div>
+            </div>
+          </div>
+          <div class="request-badges">
+            <span class="request-urgency-badge ${urgencyClass}">
+              <i class="fa-solid fa-clock"></i> ${escapeHTML(req.urgency || 'Standard')}
+            </span>
+            <span class="request-status-badge ${req.status.toLowerCase()}">
+              ${isApproved ? '<i class="fa-solid fa-check-circle"></i> Approved' : (isPending ? '<i class="fa-solid fa-hourglass-half"></i> Pending Review' : '<i class="fa-solid fa-times-circle"></i> Declined')}
+            </span>
+          </div>
+        </div>
+
+        <div class="request-docket-info">
+          <div class="request-docket-title">
+            <i class="fa-solid fa-briefcase gold-text"></i>
+            <strong>${escapeHTML(req.caseNumber)}</strong> — ${escapeHTML(req.caseTitle)}
+          </div>
+          <div class="request-reason-box">
+            <div class="request-reason-lbl"><i class="fa-solid fa-quote-left"></i> Stated Purpose:</div>
+            <div class="request-reason-text">${escapeHTML(req.reason)}</div>
+          </div>
+        </div>
+
+        <div class="request-card-footer">
+          <div class="request-timestamp">
+            <i class="fa-regular fa-clock"></i> Requested on ${createdDate}
+            ${req.resolvedBy ? `<span style="margin-left:0.5rem;color:var(--gold-primary);">• Resolved by ${escapeHTML(req.resolvedBy)}</span>` : ''}
+          </div>
+
+          ${isPending ? `
+            <div class="request-actions">
+              <button type="button" class="btn btn-outline-subtle btn-xs" onclick="window.rejectAccessRequest('${req.id}')">
+                <i class="fa-solid fa-xmark"></i> Decline
+              </button>
+              <button type="button" class="btn btn-gold btn-xs" onclick="window.approveAccessRequest('${req.id}')">
+                <i class="fa-solid fa-check"></i> Grant Access (Approve)
+              </button>
+            </div>
+          ` : `
+            <button type="button" class="btn btn-outline-gold btn-xs" onclick="window.closeReviewAccessRequestsModal(); openDocketDetail('${req.caseId}');">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Docket
+            </button>
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+window.approveAccessRequest = function(reqId) {
+  const req = (state.accessRequests || []).find(r => r.id === reqId);
+  if (!req) return;
+
+  const targetCase = (state.cases || []).find(c => c.id === req.caseId);
+  if (!targetCase) {
+    showToast('Associated case could not be found.', 'error');
+    return;
+  }
+
+  // Add requester to case.sharedWith
+  if (!Array.isArray(targetCase.sharedWith)) targetCase.sharedWith = [];
+  if (!targetCase.sharedWith.includes(req.requesterId)) {
+    targetCase.sharedWith.push(req.requesterId);
+  }
+  if (req.requesterEmail && !targetCase.sharedWith.includes(req.requesterEmail)) {
+    targetCase.sharedWith.push(req.requesterEmail);
+  }
+
+  // Log update on case
+  if (!Array.isArray(targetCase.updates)) targetCase.updates = [];
+  targetCase.updates.unshift({
+    id: 'upd_auth_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    author: state.currentUser ? state.currentUser.name : 'Senior Counsel',
+    authorRole: state.currentUser ? state.currentUser.role : 'Senior Advocate',
+    type: 'instruction',
+    title: 'Docket Access Authorized for Junior Counsel',
+    notes: `Authorized clearance granted to ${req.requesterName} (${req.requesterRole}). Reason: "${req.reason}".`
+  });
+
+  // Update request state
+  req.status = 'Approved';
+  req.resolvedBy = state.currentUser ? state.currentUser.name : 'Senior Advocate';
+  req.resolvedAt = new Date().toISOString();
+
+  saveCasesToStorage();
+  saveAccessRequestsToStorage();
+
+  if (typeof logAuditEvent === 'function') {
+    logAuditEvent(
+      'Docket Access Clearance Approved',
+      `Senior Counsel ${state.currentUser ? state.currentUser.name : 'Admin'} approved access for ${req.requesterName} to docket ${targetCase.caseNumber}.`,
+      'access',
+      state.currentUser ? state.currentUser.name : 'Senior Advocate'
+    );
+  }
+
+  showToast(`Access Granted! ${req.requesterName} now has clearance to ${targetCase.caseNumber}.`, 'success');
+  window.renderAccessRequests();
+  if (typeof renderDashboard === 'function') renderDashboard();
+};
+
+window.rejectAccessRequest = function(reqId) {
+  const req = (state.accessRequests || []).find(r => r.id === reqId);
+  if (!req) return;
+
+  req.status = 'Declined';
+  req.resolvedBy = state.currentUser ? state.currentUser.name : 'Senior Advocate';
+  req.resolvedAt = new Date().toISOString();
+
+  saveAccessRequestsToStorage();
+
+  if (typeof logAuditEvent === 'function') {
+    logAuditEvent(
+      'Docket Access Clearance Declined',
+      `Senior Counsel declined access request for ${req.requesterName} to docket ${req.caseNumber}.`,
+      'access',
+      state.currentUser ? state.currentUser.name : 'Senior Advocate'
+    );
+  }
+
+  showToast(`Request for ${req.requesterName} declined.`, 'info');
+  window.renderAccessRequests();
+};
+
+// -------------------------------------------------------------
+// DOCKET ACCESS CODE & MULTI-LAWYER LINK SHARING
+// -------------------------------------------------------------
+
+window.openShareDocketModal = function(caseId) {
+  const targetId = caseId || state.activeDocketCaseId || state.activeFullScreenCaseId;
+  const caseItem = (state.cases || []).find(c => c.id === targetId);
+
+  if (!caseItem) {
+    showToast('Please select a case docket to share.', 'warning');
+    return;
+  }
+
+  state.currentShareCaseId = caseItem.id;
+
+  // Ensure case has accessCode
+  if (!caseItem.accessCode) {
+    const numMatch = (caseItem.caseNumber || '').match(/\d{3,5}/);
+    caseItem.accessCode = 'LEX-' + (numMatch ? numMatch[0] : Math.floor(1000 + Math.random() * 9000));
+    saveCasesToStorage();
+  }
+
+  if (!Array.isArray(caseItem.sharedWith)) {
+    caseItem.sharedWith = [];
+  }
+
+  const modal = document.getElementById('shareDocketModal');
+  const subTitle = document.getElementById('shareDocketModalSubtitle');
+  const codeVal = document.getElementById('shareDocketCodeVal');
+  const linkInput = document.getElementById('shareDocketLinkInput');
+  const seniorGrid = document.getElementById('seniorLawyersShareGrid');
+  const authList = document.getElementById('authorizedCounselList');
+
+  if (subTitle) subTitle.textContent = `${caseItem.caseNumber} • ${caseItem.caseTitle}`;
+  if (codeVal) codeVal.textContent = caseItem.accessCode;
+
+  // Build direct access link
+  const directLink = `${window.location.origin}${window.location.pathname}?accessCode=${encodeURIComponent(caseItem.accessCode)}`;
+  if (linkInput) linkInput.value = directLink;
+
+  // Render Senior Lawyers Quick Grant
+  if (seniorGrid) {
+    const seniorLawyers = (state.users || []).filter(u => isSeniorLawyer(u) && u.email !== state.currentUser?.email);
+    seniorGrid.innerHTML = seniorLawyers.map(sen => {
+      const isAlreadyShared = caseItem.sharedWith.includes(sen.id) || caseItem.sharedWith.includes(sen.email);
+      return `
+        <div class="senior-share-card">
+          <div class="senior-share-info">
+            <span class="senior-share-name"><i class="fa-solid fa-crown gold-text"></i> ${escapeHTML(sen.name)}</span>
+            <span class="senior-share-role">${escapeHTML(sen.role)}</span>
+          </div>
+          ${isAlreadyShared ? `
+            <span class="badge-shared"><i class="fa-solid fa-check"></i> Authorized</span>
+          ` : `
+            <button type="button" class="btn btn-outline-gold btn-xs" onclick="window.quickGrantSeniorAccess('${caseItem.id}', '${sen.id}')">
+              <i class="fa-solid fa-user-plus"></i> Share Docket
+            </button>
+          `}
+        </div>
+      `;
+    }).join('');
+
+    if (seniorLawyers.length === 0) {
+      seniorGrid.innerHTML = `<span style="font-size:0.75rem; color:#94a3b8;">All other Senior Lawyers already have master clearance.</span>`;
+    }
+  }
+
+  // Render Authorized Counsel List
+  if (authList) {
+    const assigneeName = caseItem.assignedToName || 'Assigned Counsel';
+    const assignedTag = `<span class="auth-counsel-chip lead"><i class="fa-solid fa-user-tie"></i> ${escapeHTML(assigneeName)} (Assigned Counsel)</span>`;
+
+    const sharedChips = caseItem.sharedWith.map(entry => {
+      const foundUser = (state.users || []).find(u => u.id === entry || u.email === entry);
+      const label = foundUser ? `${foundUser.name} (${foundUser.role})` : entry;
+      return `<span class="auth-counsel-chip"><i class="fa-solid fa-key gold-text"></i> ${escapeHTML(label)}</span>`;
+    }).join('');
+
+    authList.innerHTML = assignedTag + (sharedChips || '<span style="font-size:0.75rem; color:#94a3b8; margin-left:0.5rem;">No external co-counsel authorized yet.</span>');
+  }
+
+  if (modal) modal.classList.remove('hidden');
+};
+
+window.closeShareDocketModal = function() {
+  const modal = document.getElementById('shareDocketModal');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.copyCurrentDocketCode = function() {
+  const codeVal = document.getElementById('shareDocketCodeVal');
+  const code = codeVal ? codeVal.textContent.trim() : '';
+  if (!code) return;
+
+  navigator.clipboard.writeText(code).then(() => {
+    showToast(`Access Code ${code} copied to clipboard!`, 'success');
+  }).catch(() => {
+    showToast(`Access Code: ${code}`, 'info');
+  });
+};
+
+window.copyCurrentDocketLink = function() {
+  const linkInput = document.getElementById('shareDocketLinkInput');
+  const link = linkInput ? linkInput.value : '';
+  if (!link) return;
+
+  navigator.clipboard.writeText(link).then(() => {
+    showToast('Direct Access Link copied to clipboard! Share with Counsel.', 'success');
+  }).catch(() => {
+    showToast('Link copied.', 'info');
+  });
+};
+
+window.quickGrantSeniorAccess = function(caseId, seniorId) {
+  const caseItem = (state.cases || []).find(c => c.id === caseId);
+  const senior = (state.users || []).find(u => u.id === seniorId);
+
+  if (!caseItem || !senior) return;
+
+  if (!Array.isArray(caseItem.sharedWith)) caseItem.sharedWith = [];
+  if (!caseItem.sharedWith.includes(senior.id)) caseItem.sharedWith.push(senior.id);
+  if (senior.email && !caseItem.sharedWith.includes(senior.email)) caseItem.sharedWith.push(senior.email);
+
+  if (!Array.isArray(caseItem.updates)) caseItem.updates = [];
+  caseItem.updates.unshift({
+    id: 'upd_share_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    author: state.currentUser ? state.currentUser.name : 'Senior Counsel',
+    authorRole: state.currentUser ? state.currentUser.role : 'Senior Advocate',
+    type: 'instruction',
+    title: 'Docket Shared with Senior Counsel',
+    notes: `Full brief and document clearance granted to ${senior.name} (${senior.role}).`
+  });
+
+  saveCasesToStorage();
+
+  if (typeof logAuditEvent === 'function') {
+    logAuditEvent(
+      'Docket Shared via Counsel Link',
+      `Senior Counsel ${state.currentUser ? state.currentUser.name : 'Admin'} shared docket ${caseItem.caseNumber} with ${senior.name}.`,
+      'share',
+      state.currentUser ? state.currentUser.name : 'Senior Advocate'
+    );
+  }
+
+  showToast(`Access granted to ${senior.name}!`, 'success');
+  window.openShareDocketModal(caseId);
+};
+
+// -------------------------------------------------------------
+// UNLOCK VIA ACCESS CODE MODAL
+// -------------------------------------------------------------
+
+window.openEnterAccessCodeModal = function() {
+  const modal = document.getElementById('enterAccessCodeModal');
+  const input = document.getElementById('inputAccessCode');
+  const err = document.getElementById('accessCodeErrorMsg');
+
+  if (input) input.value = '';
+  if (err) err.textContent = '';
+  if (modal) modal.classList.remove('hidden');
+
+  if (input) setTimeout(() => input.focus(), 120);
+};
+
+window.closeEnterAccessCodeModal = function() {
+  const modal = document.getElementById('enterAccessCodeModal');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.handleVerifyAccessCode = function(e) {
+  if (e && e.preventDefault) e.preventDefault();
+
+  const input = document.getElementById('inputAccessCode');
+  const err = document.getElementById('accessCodeErrorMsg');
+  const rawCode = input ? input.value.trim().toUpperCase() : '';
+
+  if (!rawCode) {
+    if (err) err.textContent = 'Please enter a valid Access Code.';
+    return;
+  }
+
+  // Look up case matching access code
+  const matched = (state.cases || []).find(c => {
+    if (c.accessCode && c.accessCode.toUpperCase() === rawCode) return true;
+    const cleanRaw = rawCode.replace('LEX-', '');
+    if (c.caseNumber && c.caseNumber.includes(cleanRaw)) return true;
+    return false;
+  });
+
+  if (!matched) {
+    if (err) err.textContent = 'Invalid Access Code. Please verify the code provided by Senior Counsel.';
+    showToast('Invalid or expired Docket Access Code.', 'error');
+    return;
+  }
+
+  if (!state.currentUser) {
+    showToast('Please sign in first to access unlocked docket.', 'warning');
+    return;
+  }
+
+  // Authorize current user
+  if (!Array.isArray(matched.sharedWith)) matched.sharedWith = [];
+  if (!matched.sharedWith.includes(state.currentUser.id)) {
+    matched.sharedWith.push(state.currentUser.id);
+  }
+  if (state.currentUser.email && !matched.sharedWith.includes(state.currentUser.email)) {
+    matched.sharedWith.push(state.currentUser.email);
+  }
+
+  if (!Array.isArray(matched.updates)) matched.updates = [];
+  matched.updates.unshift({
+    id: 'upd_code_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    author: state.currentUser.name,
+    authorRole: state.currentUser.role,
+    type: 'filing',
+    title: 'Docket Unlocked via Access Code',
+    notes: `Counsel ${state.currentUser.name} verified access code ${rawCode} and gained full document clearance.`
+  });
+
+  saveCasesToStorage();
+
+  if (typeof logAuditEvent === 'function') {
+    logAuditEvent(
+      'Docket Unlocked via Code',
+      `Counsel ${state.currentUser.name} unlocked ${matched.caseNumber} using access code ${rawCode}.`,
+      'access',
+      state.currentUser.name
+    );
+  }
+
+  window.closeEnterAccessCodeModal();
+  showToast(`Docket Unlocked! Access granted to "${matched.caseTitle}".`, 'success');
+
+  if (typeof renderDashboard === 'function') renderDashboard();
+  setTimeout(() => {
+    window.openDocketDetail(matched.id);
+  }, 200);
+};
+
+function checkUrlAccessCode() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('accessCode') || urlParams.get('code');
+    if (!code) return;
+
+    const upperCode = code.trim().toUpperCase();
+
+    if (state.currentUser) {
+      const foundCase = (state.cases || []).find(c => {
+        if (c.accessCode && c.accessCode.toUpperCase() === upperCode) return true;
+        const cleanRaw = upperCode.replace('LEX-', '');
+        if (c.caseNumber && c.caseNumber.includes(cleanRaw)) return true;
+        return false;
+      });
+
+      if (foundCase) {
+        if (!Array.isArray(foundCase.sharedWith)) foundCase.sharedWith = [];
+        if (!foundCase.sharedWith.includes(state.currentUser.id)) {
+          foundCase.sharedWith.push(state.currentUser.id);
+          if (state.currentUser.email) foundCase.sharedWith.push(state.currentUser.email);
+          saveCasesToStorage();
+        }
+        showToast(`Docket ${foundCase.caseNumber} unlocked via direct counsel link!`, 'success');
+        setTimeout(() => {
+          window.openDocketDetail(foundCase.id);
+        }, 300);
+      }
+    }
+  } catch (err) {
+    console.warn('URL param check:', err);
+  }
+}
+
 

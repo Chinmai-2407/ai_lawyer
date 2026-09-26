@@ -63,23 +63,31 @@
 
           <!-- Quick Demo Fill Banner -->
           <div class="auth-demo-picker">
-            <span class="demo-picker-label"><i class="fa-solid fa-users-gear"></i> Instant Demo Quick-Login:</span>
-            <div class="demo-pills-grid">
-              <button type="button" class="demo-badge-pill admin-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('admin@lexjuris.in');" title="Login as Chambers Admin / Managing Partner">
-                <i class="fa-solid fa-crown gold-text"></i> <span><strong>Chambers Admin</strong> (Master Oversight)</span>
-              </button>
-              <button type="button" class="demo-badge-pill counsel-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('advocate.sharma@lexjuris.in');" title="Login as Group Head (Constitutional & Writ)">
-                <i class="fa-solid fa-gavel"></i> <span><strong>Adv. Sharma</strong> (👑 Head of Group)</span>
-              </button>
-              <button type="button" class="demo-badge-pill associate-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('ananya.singh@lexjuris.in');" title="Login as Subordinate Counsel (Adv. Singh)">
-                <i class="fa-solid fa-scale-balanced"></i> <span><strong>Adv. Singh</strong> (👤 Subordinate 1)</span>
-              </button>
-              <button type="button" class="demo-badge-pill associate-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('siddharth.rao@lexjuris.in');" title="Login as Subordinate Counsel (Adv. Rao)">
-                <i class="fa-solid fa-user-shield"></i> <span><strong>Adv. Rao</strong> (👤 Subordinate 2)</span>
-              </button>
-              <button type="button" class="demo-badge-pill clerk-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('clerk.docket@lexjuris.in');" title="Login as Registry Clerk">
-                <i class="fa-solid fa-clipboard-list"></i> <span><strong>Ramesh C.</strong> (Registry Clerk)</span>
-              </button>
+            <div class="demo-category-block">
+              <span class="demo-picker-label"><i class="fa-solid fa-crown gold-text"></i> <strong>Senior Lawyers</strong> (Approvers &amp; Code Sharers):</span>
+              <div class="demo-pills-grid">
+                <button type="button" class="demo-badge-pill admin-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('admin@lexjuris.in');" title="Login as Senior Partner / Chambers Admin">
+                  <i class="fa-solid fa-crown gold-text"></i> <span><strong>Adv. Dr. Malhotra</strong> (Senior Partner / Admin)</span>
+                </button>
+                <button type="button" class="demo-badge-pill counsel-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('advocate.sharma@lexjuris.in');" title="Login as Senior Advocate & Group Head">
+                  <i class="fa-solid fa-gavel gold-text"></i> <span><strong>Adv. Sharma</strong> (Senior Advocate / Head)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="demo-category-block" style="margin-top: 0.6rem;">
+              <span class="demo-picker-label"><i class="fa-solid fa-user-lock"></i> <strong>Junior Lawyers</strong> (Must Seek Permission):</span>
+              <div class="demo-pills-grid">
+                <button type="button" class="demo-badge-pill associate-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('ananya.singh@lexjuris.in');" title="Login as Junior Lawyer (Adv. Singh)">
+                  <i class="fa-solid fa-user-shield"></i> <span><strong>Adv. Singh</strong> (Junior Lawyer)</span>
+                </button>
+                <button type="button" class="demo-badge-pill associate-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('siddharth.rao@lexjuris.in');" title="Login as Junior Lawyer (Adv. Rao)">
+                  <i class="fa-solid fa-user-shield"></i> <span><strong>Adv. Rao</strong> (Junior Lawyer)</span>
+                </button>
+                <button type="button" class="demo-badge-pill clerk-pill" onclick="if(window.quickDemoLoginAs) window.quickDemoLoginAs('clerk.docket@lexjuris.in');" title="Login as Registry Clerk">
+                  <i class="fa-solid fa-clipboard-list"></i> <span><strong>Ramesh C.</strong> (Registry Clerk)</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -147,13 +155,17 @@
 
             <div class="form-grid-2">
               <div class="form-group">
-                <label for="signupRole"><i class="fa-solid fa-shield-halved"></i> Chambers Role <span class="req">*</span></label>
+                <label for="signupRole"><i class="fa-solid fa-shield-halved"></i> Chambers Designation &amp; Role <span class="req">*</span></label>
                 <select id="signupRole" required>
-                  <option value="Senior Advocate">Senior Advocate (Senior Counsel)</option>
-                  <option value="Associate Advocate" selected>Associate Advocate (Associate Counsel)</option>
-                  <option value="Chambers Administrator">Chambers Administrator (Managing Partner)</option>
-                  <option value="Registry Clerk">Registry Clerk (Filing Staff)</option>
-                  <option value="Paralegal / Intern">Paralegal / Legal Intern</option>
+                  <optgroup label="Senior Counsel (Can authorize permissions &amp; share access codes)">
+                    <option value="Senior Advocate">Senior Lawyer / Senior Advocate</option>
+                    <option value="Chambers Administrator">Senior Partner / Chambers Administrator</option>
+                  </optgroup>
+                  <optgroup label="Junior Counsel (Must seek permission from Senior Lawyer)">
+                    <option value="Associate Advocate" selected>Junior Lawyer / Associate Advocate</option>
+                    <option value="Paralegal / Intern">Junior Counsel / Legal Intern</option>
+                    <option value="Registry Clerk">Registry Clerk (Filing Staff)</option>
+                  </optgroup>
                 </select>
               </div>
 
@@ -395,6 +407,25 @@
       </div>
 
       <div class="nav-right">
+        <!-- Access Code & Permission Action Group -->
+        <div class="nav-access-group">
+          <!-- Button to unlock docket via Access Code -->
+          <button type="button" id="btnNavEnterAccessCode" class="btn btn-outline-gold btn-sm" title="Unlock legal docket via Senior Counsel Access Code" onclick="window.openEnterAccessCodeModal();">
+            <i class="fa-solid fa-key gold-text"></i> <span>Access Code</span>
+          </button>
+
+          <!-- Button for Senior Lawyers to review Junior permission requests -->
+          <button type="button" id="btnNavReviewRequests" class="btn btn-outline-gold btn-sm btn-requests-bell hidden" title="Review Junior Lawyer Permission Requests" onclick="window.openReviewAccessRequestsModal();">
+            <i class="fa-solid fa-bell"></i> <span>Requests</span>
+            <span class="badge-requests-count" id="badgePendingRequestsCount">0</span>
+          </button>
+
+          <!-- Button for Junior Lawyers to seek permission from a Senior Lawyer -->
+          <button type="button" id="btnNavSeekPermission" class="btn btn-outline-gold btn-sm hidden" title="Seek Permission from Senior Lawyer for Case &amp; Document Access" onclick="window.openSeekPermissionModal();">
+            <i class="fa-solid fa-paper-plane gold-text"></i> <span>Seek Permission</span>
+          </button>
+        </div>
+
         <button id="toggleFullscreenAppBtn" class="btn-icon-subtle" title="Toggle Fullscreen Workspace">
           <i class="fa-solid fa-expand"></i>
         </button>
@@ -2008,6 +2039,9 @@
         </div>
 
         <div class="fs-header-actions">
+          <button type="button" id="fsShareDocketBtn" class="btn btn-outline-gold btn-sm" onclick="if(window.openShareDocketModal && state.activeFullScreenCaseId) window.openShareDocketModal(state.activeFullScreenCaseId);" title="Share Docket Access Code or Link with Co-Counsel">
+            <i class="fa-solid fa-key"></i> <span>Access Code &amp; Share</span>
+          </button>
           <button type="button" id="fsPrintDocketBtn" class="btn btn-outline-gold btn-sm" title="Print or Save PDF Case Brief">
             <i class="fa-solid fa-print"></i> <span>Print Dossier</span>
           </button>
@@ -2436,6 +2470,176 @@
           <!-- Populated dynamically -->
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= 1. JUNIOR LAWYER SEEK PERMISSION MODAL ================= -->
+  <div id="seekPermissionModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="seekPermModalTitle">
+    <div class="modal-container modal-md seek-perm-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-paper-plane gold-text" style="font-size:1.4rem;"></i>
+          <div>
+            <h3 id="seekPermModalTitle">Seek Docket &amp; Document Permission</h3>
+            <p class="modal-subtitle">Submit formal authorization request to Senior Counsel</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="window.closeSeekPermissionModal();" aria-label="Close dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="seekPermissionForm" onsubmit="window.submitAccessRequest(event);" class="modal-form-body">
+        <div class="perm-notice-banner">
+          <i class="fa-solid fa-shield-halved gold-text"></i>
+          <span>Under chambers confidentiality guidelines, Junior Lawyers require authorization from a Senior Lawyer or Group Head to access restricted briefs and evidentiary documents.</span>
+        </div>
+        <div class="form-group">
+          <label for="permTargetCase"><i class="fa-solid fa-briefcase"></i> Legal Docket / Case Brief <span class="req">*</span></label>
+          <select id="permTargetCase" required class="form-control">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="permTargetSenior"><i class="fa-solid fa-crown gold-text"></i> Senior Lawyer Approver <span class="req">*</span></label>
+          <select id="permTargetSenior" required class="form-control">
+            <!-- Populated dynamically with Senior Advocates / Group Heads -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="permReason"><i class="fa-solid fa-pen-nib"></i> Purpose / Reason for Access <span class="req">*</span></label>
+          <textarea id="permReason" rows="3" class="form-control" placeholder="e.g. Need to review pleadings and case documents to draft replication and prepare precedent citations." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="permUrgency"><i class="fa-solid fa-clock"></i> Urgency / Listing Context</label>
+          <select id="permUrgency" class="form-control">
+            <option value="Standard">Standard (Hearing within 1-2 weeks)</option>
+            <option value="Urgent">Urgent (Hearing listed tomorrow / in 48 hours)</option>
+            <option value="Emergency">Emergency (Immediate listing / Vacation bench)</option>
+          </select>
+        </div>
+        <div class="modal-footer-actions">
+          <button type="button" class="btn btn-outline-subtle btn-sm" onclick="window.closeSeekPermissionModal();">Cancel</button>
+          <button type="submit" class="btn btn-gold btn-sm"><i class="fa-solid fa-paper-plane"></i> Send Request to Senior Lawyer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= 2. SENIOR LAWYER REVIEW ACCESS REQUESTS MODAL ================= -->
+  <div id="reviewAccessRequestsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="reviewReqModalTitle">
+    <div class="modal-container modal-lg review-requests-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-shield-halved gold-text" style="font-size:1.4rem;"></i>
+          <div>
+            <h3 id="reviewReqModalTitle">Junior Counsel Permission Requests</h3>
+            <p class="modal-subtitle">Review, authorize, or decline case docket &amp; document access</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="window.closeReviewAccessRequestsModal();" aria-label="Close dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-tab-nav requests-tab-nav">
+        <button type="button" class="modal-tab-btn active" id="tabReqPendingBtn" onclick="window.switchRequestsTab('pending');">
+          <i class="fa-solid fa-clock-rotate-left"></i> Pending Requests (<span id="reqCountPending">0</span>)
+        </button>
+        <button type="button" class="modal-tab-btn" id="tabReqHistoryBtn" onclick="window.switchRequestsTab('history');">
+          <i class="fa-solid fa-check-double"></i> Authorization History (<span id="reqCountHistory">0</span>)
+        </button>
+      </div>
+      <div class="requests-modal-body" id="requestsModalBody">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 3. SHARE DOCKET & ACCESS CODE MODAL ================= -->
+  <div id="shareDocketModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="shareDocketModalTitle">
+    <div class="modal-container modal-md share-docket-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-key gold-text" style="font-size:1.4rem;"></i>
+          <div>
+            <h3 id="shareDocketModalTitle">Docket Access Code &amp; Co-Counsel Link</h3>
+            <p class="modal-subtitle" id="shareDocketModalSubtitle">Share case brief and documents with Senior Lawyers</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="window.closeShareDocketModal();" aria-label="Close dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="share-modal-body">
+        <!-- Access Code Highlight Box -->
+        <div class="share-code-card">
+          <div class="share-code-label">CONFIDENTIAL ACCESS CODE</div>
+          <div class="share-code-display-row">
+            <span class="share-code-value" id="shareDocketCodeVal">LEX-0000</span>
+            <button type="button" class="btn btn-gold btn-sm" id="btnCopyDocketCode" onclick="window.copyCurrentDocketCode();">
+              <i class="fa-solid fa-copy"></i> Copy Code
+            </button>
+          </div>
+          <p class="share-code-hint">Any Senior Lawyer or authorized counsel can enter this code in the portal to unlock the complete case docket &amp; documents.</p>
+        </div>
+
+        <!-- Shareable Link Box -->
+        <div class="share-link-group">
+          <label for="shareDocketLinkInput"><i class="fa-solid fa-link"></i> Direct Access Link for Lawyers:</label>
+          <div class="share-link-input-row">
+            <input type="text" id="shareDocketLinkInput" readonly class="form-control" value="">
+            <button type="button" class="btn btn-outline-gold btn-sm" onclick="window.copyCurrentDocketLink();">
+              <i class="fa-solid fa-copy"></i> Copy Link
+            </button>
+          </div>
+          <span class="share-link-hint">Sending this link to another Senior Lawyer opens the application and automatically unlocks this case docket.</span>
+        </div>
+
+        <!-- Quick Share with Firm Senior Lawyers -->
+        <div class="quick-senior-share-section">
+          <label><i class="fa-solid fa-user-plus gold-text"></i> Quick-Grant to Senior Lawyers:</label>
+          <div class="senior-lawyers-share-grid" id="seniorLawyersShareGrid">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Currently Authorized Counsel List -->
+        <div class="authorized-counsel-section">
+          <label><i class="fa-solid fa-users-viewfinder"></i> Currently Authorized Counsel:</label>
+          <div class="authorized-counsel-list" id="authorizedCounselList">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 4. ENTER ACCESS CODE MODAL ================= -->
+  <div id="enterAccessCodeModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="enterCodeModalTitle">
+    <div class="modal-container modal-sm enter-code-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-key gold-text" style="font-size:1.3rem;"></i>
+          <div>
+            <h3 id="enterCodeModalTitle">Unlock Docket via Access Code</h3>
+            <p class="modal-subtitle">Enter the access code provided by Senior Counsel</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="window.closeEnterAccessCodeModal();" aria-label="Close dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="enterAccessCodeForm" onsubmit="window.handleVerifyAccessCode(event);" class="modal-form-body">
+        <div class="form-group" style="text-align:center;">
+          <label for="inputAccessCode" style="margin-bottom:0.5rem; display:block; font-weight:600;">Access Code (e.g. LEX-9442):</label>
+          <input type="text" id="inputAccessCode" class="access-code-big-input" placeholder="LEX-0000" maxlength="16" autocomplete="off" required>
+          <span class="error-msg" id="accessCodeErrorMsg"></span>
+        </div>
+        <p class="enter-code-info"><i class="fa-solid fa-circle-info gold-text"></i> Entering a valid code immediately unlocks the case docket and its legal documents for your session.</p>
+        <div class="modal-footer-actions" style="justify-content:center;">
+          <button type="button" class="btn btn-outline-subtle btn-sm" onclick="window.closeEnterAccessCodeModal();">Cancel</button>
+          <button type="submit" class="btn btn-gold btn-sm"><i class="fa-solid fa-unlock-keyhole"></i> Verify &amp; Unlock Docket</button>
+        </div>
+      </form>
     </div>
   </div>
 
