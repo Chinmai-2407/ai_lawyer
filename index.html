@@ -244,40 +244,93 @@
     <!-- ================= IDLE LEFT SIDEBAR (DOCKS ON LEFT EDGE) ================= -->
     <aside id="leftSidebarRail" class="left-sidebar-rail" aria-label="Cases Directory & Search Sidebar">
       <div class="sidebar-rail-inner">
-        <!-- Main Search Trigger Button (Idle State) -->
-        <button type="button" id="sidebarRailSearchBtn" class="rail-search-btn" title="Search Legal Dockets & Directory (Ctrl + K)">
+        <!-- 1. All Clients Button -->
+        <button type="button" id="sidebarRailClientsBtn" class="rail-item-btn rail-clients-btn" title="Show All Clients in Blue Sidebar" onclick="window.toggleBlueRailWithFilter('all');">
           <div class="rail-icon-wrapper">
-            <i class="fa-solid fa-magnifying-glass"></i>
+            <i class="fa-solid fa-users"></i>
           </div>
-          <span class="rail-btn-text">SEARCH</span>
-          <span class="rail-count-badge" id="floatingTabCountBadge">0</span>
-          <span class="rail-shortcut-hint">Ctrl+K</span>
+          <span class="rail-btn-text">CLIENTS</span>
+          <span class="rail-count-badge" id="railClientsCountBadge">0</span>
+        </button>
+
+        <!-- 2. Today's Hearings Button -->
+        <button type="button" id="railQuickTodayBtn" class="rail-item-btn" title="Today's Court Hearings" onclick="window.toggleBlueRailWithFilter('today');">
+          <div class="rail-icon-wrapper">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <span class="rail-btn-text">TODAY</span>
+          <span class="rail-count-badge" id="railTodayBadge">0</span>
+        </button>
+
+        <!-- 3. Urgent / Critical Briefs Button -->
+        <button type="button" id="railQuickUrgentBtn" class="rail-item-btn" title="Urgent / Critical Dockets" onclick="window.toggleBlueRailWithFilter('critical');">
+          <div class="rail-icon-wrapper">
+            <i class="fa-solid fa-fire"></i>
+          </div>
+          <span class="rail-btn-text">URGENT</span>
+          <span class="rail-count-badge badge-urgent" id="railUrgentBadge">0</span>
+        </button>
+
+        <!-- 4. Upcoming Hearings Button -->
+        <button type="button" id="railQuickUpcomingBtn" class="rail-item-btn" title="Upcoming Court Dates" onclick="window.toggleBlueRailWithFilter('upcoming');">
+          <div class="rail-icon-wrapper">
+            <i class="fa-regular fa-clock"></i>
+          </div>
+          <span class="rail-btn-text">UPCOMING</span>
+          <span class="rail-count-badge" id="railUpcomingBadge">0</span>
         </button>
 
         <div class="rail-divider"></div>
 
-        <!-- Quick Category Shortcuts in Idle Rail -->
-        <div class="rail-quick-nav">
-          <button type="button" class="rail-nav-item" id="railQuickTodayBtn" title="Filter Today's Court Hearings" data-rail-filter="today">
-            <i class="fa-solid fa-bolt"></i>
-            <span class="rail-mini-badge" id="railTodayBadge">0</span>
-          </button>
-          <button type="button" class="rail-nav-item" id="railQuickUrgentBtn" title="Filter Urgent / Critical Dockets" data-rail-filter="critical">
-            <i class="fa-solid fa-fire"></i>
-            <span class="rail-mini-badge badge-urgent" id="railUrgentBadge">0</span>
-          </button>
-          <button type="button" class="rail-nav-item" id="railQuickUpcomingBtn" title="Filter Upcoming Hearings" data-rail-filter="upcoming">
-            <i class="fa-regular fa-clock"></i>
-            <span class="rail-mini-badge" id="railUpcomingBadge">0</span>
+        <!-- 5. Search Button -->
+        <button type="button" id="sidebarRailSearchBtn" class="rail-item-btn" title="Search Clients & Dockets (Ctrl + K)" onclick="window.toggleBlueRailWithSearch();">
+          <div class="rail-icon-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <span class="rail-btn-text">SEARCH</span>
+          <span class="rail-shortcut-hint">Ctrl+K</span>
+        </button>
+      </div>
+
+      <!-- Extended Blue Clients Pane (Revealed when clicking any rail button) -->
+      <div class="sidebar-extended-pane" id="sidebarExtendedPane">
+        <div class="ext-pane-header">
+          <div class="ext-pane-brand">
+            <i class="fa-solid fa-address-card gold-text"></i>
+            <span>CLIENTS &amp; BRIEFS</span>
+            <span class="ext-count-pill" id="extRailClientsBadge">0</span>
+          </div>
+          <div class="ext-pane-actions">
+            <button type="button" class="ext-icon-btn" id="extAddCaseBtn" title="Register New Docket" onclick="if(window.quickAddNewCase) window.quickAddNewCase();">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button type="button" class="ext-icon-btn ext-close-btn" id="extCloseRailBtn" title="Collapse sidebar" onclick="window.toggleBlueRail(false);">
+              <i class="fa-solid fa-angles-left"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search input inside extended blue panel -->
+        <div class="ext-search-wrap">
+          <i class="fa-solid fa-magnifying-glass ext-search-icon"></i>
+          <input type="text" id="extRailSearchInput" class="ext-search-input" placeholder="Search clients, dockets..." autocomplete="off">
+          <button type="button" class="ext-clear-btn hidden" id="extClearSearchBtn" title="Clear search" onclick="window.clearExtSearch();">
+            <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
-        <div class="rail-spacer"></div>
+        <!-- Filter pills inside extended blue panel -->
+        <div class="ext-filter-pills">
+          <button type="button" class="ext-pill active" id="extPillAll" data-ext-filter="all" onclick="window.filterExtRail('all');">All (<span id="extCountAll">0</span>)</button>
+          <button type="button" class="ext-pill" id="extPillToday" data-ext-filter="today" onclick="window.filterExtRail('today');">Today (<span id="extCountToday">0</span>)</button>
+          <button type="button" class="ext-pill" id="extPillUpcoming" data-ext-filter="upcoming" onclick="window.filterExtRail('upcoming');">Upcoming (<span id="extCountUpcoming">0</span>)</button>
+          <button type="button" class="ext-pill" id="extPillCritical" data-ext-filter="critical" onclick="window.filterExtRail('critical');">Urgent (<span id="extCountCritical">0</span>)</button>
+        </div>
 
-        <!-- Expand Indicator / Chevron -->
-        <button type="button" id="sidebarRailExpandBtn" class="rail-expand-btn" title="Expand Search Sidebar (Ctrl + K)">
-          <i class="fa-solid fa-angles-right"></i>
-        </button>
+        <!-- Client list inside extended blue panel -->
+        <div class="ext-clients-list" id="extClientsList">
+          <!-- Populated dynamically with rich client cards -->
+        </div>
       </div>
     </aside>
 
@@ -780,74 +833,146 @@
         </div>
       </div>
 
-        <!-- Controls & Header -->
-        <div class="panel-header active-cases-header">
-          <div class="panel-title-wrap">
-            <div class="panel-icon blue-bg">
-              <i class="fa-solid fa-list-check"></i>
+        <!-- Split Docket View: Client Index (left margin) + Full Case Detail (right) -->
+        <div class="docket-split-view">
+
+          <!-- LEFT MARGIN: Client Name Index (Collapsed by default, shown on clicking Client button) -->
+          <div class="docket-index-sidebar collapsed" id="docketIndexSidebar">
+            <!-- Sidebar Header -->
+            <div class="docket-index-header">
+              <div class="idx-header-top">
+                <div class="idx-header-brand">
+                  <i class="fa-solid fa-address-card gold-text"></i>
+                  <span>CLIENTS</span>
+                  <span class="idx-count-pill" id="idxClientsCountPill">0</span>
+                </div>
+                <div class="idx-header-actions">
+                  <button type="button" class="idx-all-btn active" id="idxShowAllClientsBtn" title="Show All Clients" onclick="if(window.showAllClients) window.showAllClients();">
+                    <i class="fa-solid fa-users"></i> All (<span id="idxAllCountBadge">0</span>)
+                  </button>
+                  <button type="button" class="idx-directory-btn" id="idxClientsDirectoryBtn" title="Open Chambers Client Directory" onclick="if(window.openAllClientsModal) window.openAllClientsModal();">
+                    <i class="fa-solid fa-table-list"></i>
+                  </button>
+                  <button type="button" class="idx-add-btn" id="idxAddCaseBtn" title="Add New Case" onclick="if(window.quickAddNewCase) window.quickAddNewCase();">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
+                  <button type="button" class="idx-close-btn" id="idxCloseSidebarBtn" title="Hide client list" onclick="if(window.toggleClientSidebar) window.toggleClientSidebar(false);">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+              <!-- Search inside sidebar -->
+              <div class="idx-search-wrap">
+                <i class="fa-solid fa-magnifying-glass idx-search-icon"></i>
+                <input type="text" id="docketSidebarSearch" class="idx-search-input" placeholder="Search clients..." autocomplete="off">
+                <button type="button" class="idx-search-clear hidden" id="idxClearDocketSearchBtn" title="Clear search" onclick="if(window.clearDocketSearch) window.clearDocketSearch();">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
             </div>
-            <div>
-              <h2 id="activeCasesTitle" class="panel-title">Active Cases & Court Scheduling</h2>
-              <p class="panel-subtitle">Sorted by client name and hearing countdowns</p>
+
+            <!-- Client List -->
+            <div class="docket-index-list" id="docketIndexList">
+              <!-- Populated dynamically -->
             </div>
-          </div>
 
-          <div class="header-action-group">
-            <button type="button" class="btn btn-gold btn-sm" id="btnOpenGlobalAddDocModal" title="Upload and add a document to any existing case docket">
-              <i class="fa-solid fa-file-circle-plus"></i> + Add Document to Case
-            </button>
-            <button id="exportCasesBtn" class="btn btn-outline-gold btn-sm" title="Export today's cause list">
-              <i class="fa-solid fa-download"></i> Cause List
-            </button>
-            <button id="addSampleDataBtn" class="btn btn-outline-subtle btn-sm" title="Load sample courtroom dockets">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Load Samples
-            </button>
-          </div>
-        </div>
-
-        <!-- Filter Ribbon (Search is unified in the left sidebar) -->
-        <div class="search-filter-ribbon dockets-filter-ribbon">
-          <!-- Filter Pills -->
-          <div class="filter-pills" role="tablist">
-            <button class="filter-pill active" data-filter="all">All Cases (<span id="countAll">0</span>)</button>
-            <button class="filter-pill" data-filter="today"><i class="fa-solid fa-bolt"></i> Today's Court (<span
-                id="countToday">0</span>)</button>
-            <button class="filter-pill" data-filter="upcoming"><i class="fa-regular fa-clock"></i> Upcoming (<span
-                id="countUpcoming">0</span>)</button>
-            <button class="filter-pill" data-filter="critical"><i class="fa-solid fa-fire"></i> Urgent (<span
-                id="countCritical">0</span>)</button>
-            <button class="filter-pill" data-filter="closed"><i class="fa-solid fa-check"></i> Resolved (<span
-                id="countClosed">0</span>)</button>
-          </div>
-
-          <!-- Active Search Indicator from Sidebar Search -->
-          <div id="activeWorkspaceSearchTag" class="active-workspace-search-tag hidden">
-            <span><i class="fa-solid fa-magnifying-glass gold-text"></i> Search: <strong id="workspaceSearchQueryText"></strong></span>
-            <button type="button" id="clearWorkspaceSearchTagBtn" title="Clear search query" class="btn-clear-tag">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Live Case Stream Feed -->
-        <div class="cases-scroll-container">
-          <div id="casesList" class="cases-list-grid">
-            <!-- Dynamic Case Cards Rendered Here -->
-          </div>
-
-          <!-- Empty State (Hidden when items exist) -->
-          <div id="emptyState" class="empty-state hidden">
-            <div class="empty-icon-wrap">
+            <!-- Empty State -->
+            <div id="emptyState" class="docket-empty-state hidden">
               <i class="fa-solid fa-scale-balanced"></i>
+              <p id="emptyStateMsg">No dockets found.</p>
+              <button id="emptyStateActionBtn" class="btn btn-gold btn-sm">
+                <i class="fa-solid fa-plus"></i> Add Case
+              </button>
             </div>
-            <h3>No Legal Dockets Found</h3>
-            <p id="emptyStateMsg">There are no cases matching the selected criteria. Use the intake form on the left to
-              register a new case.</p>
-            <button id="emptyStateActionBtn" class="btn btn-gold btn-sm">
-              <i class="fa-solid fa-plus"></i> Add New Case
-            </button>
+          </div>
+
+          <!-- RIGHT: Case Detail Panel & Controls -->
+          <div class="docket-detail-panel" id="docketDetailPanel">
+
+            <!-- Practice Group Head Banner Card (matches reference UI) -->
+            <div class="practice-group-card" id="practiceGroupBannerCard" title="Practice Group Oversight Active">
+              <div class="pg-left">
+                <div class="pg-icon-box">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+                <div class="pg-info">
+                  <div class="pg-title">Practice Group Head</div>
+                  <div class="pg-subtitle">Full group access active: <span id="pgGroupName">Antigravity</span></div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right pg-chevron"></i>
+            </div>
+
+            <!-- Controls & Header -->
+            <div class="panel-header active-cases-header">
+              <div class="panel-title-wrap">
+                <div class="panel-icon blue-bg">
+                  <i class="fa-solid fa-list-check"></i>
+                </div>
+                <div>
+                  <h2 id="activeCasesTitle" class="panel-title">Active Cases &amp; Hearings</h2>
+                  <p class="panel-subtitle">Sorted by client name and next hearing date</p>
+                </div>
+              </div>
+
+              <div class="header-action-group">
+                <button type="button" class="btn btn-outline-gold btn-sm" id="btnToggleClientsBar" title="Show/Hide Client Directory List" onclick="if(window.toggleClientSidebar) window.toggleClientSidebar();">
+                  <i class="fa-solid fa-users"></i> <span id="toggleClientsBtnText">Show Clients</span> (<span id="btnClientsCountBadge">0</span>)
+                </button>
+                <button type="button" class="btn btn-gold btn-sm" id="btnOpenGlobalAddDocModal" title="Upload and add a document to any existing case docket">
+                  <i class="fa-solid fa-file-circle-plus"></i> + Add Document
+                </button>
+                <button id="exportCasesBtn" class="btn btn-outline-gold btn-sm" title="Export today's cause list">
+                  <i class="fa-solid fa-download"></i> Cause List
+                </button>
+                <button id="addSampleDataBtn" class="btn btn-outline-subtle btn-sm" title="Load sample courtroom dockets">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Load Samples
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Ribbon -->
+            <div class="search-filter-ribbon dockets-filter-ribbon">
+              <!-- Filter Pills -->
+              <div class="filter-pills" role="tablist">
+                <button class="filter-pill active" data-filter="all">All Cases (<span id="countAll">0</span>)</button>
+                <button class="filter-pill" data-filter="upcoming"><i class="fa-regular fa-clock"></i> Upcoming Hearings (<span id="countUpcoming">0</span>)</button>
+                <button class="filter-pill" data-filter="today"><i class="fa-solid fa-spinner"></i> In Progress (<span id="countToday">0</span>)</button>
+                <button class="filter-pill" data-filter="closed"><i class="fa-solid fa-check"></i> Disposed (<span id="countClosed">0</span>)</button>
+                <button class="filter-pill" data-filter="critical"><i class="fa-solid fa-file-lines"></i> Drafts / Urgent (<span id="countCritical">0</span>)</button>
+              </div>
+
+              <!-- Active Search Indicator from Sidebar Search -->
+              <div id="activeWorkspaceSearchTag" class="active-workspace-search-tag hidden">
+                <span><i class="fa-solid fa-magnifying-glass gold-text"></i> Search: <strong id="workspaceSearchQueryText"></strong></span>
+                <button type="button" id="clearWorkspaceSearchTagBtn" title="Clear search query" class="btn-clear-tag">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Placeholder when nothing selected -->
+            <div class="docket-detail-placeholder" id="docketDetailPlaceholder">
+              <div class="placeholder-icon-wrap">
+                <i class="fa-solid fa-gavel"></i>
+              </div>
+              <h3>Active Cases &amp; Hearings</h3>
+              <p>Select a client from the left margin to view their full docket, documents, hearings, notes, and add updates.</p>
+            </div>
+
+            <!-- Case Detail Content (populated dynamically) -->
+            <div class="docket-detail-content hidden" id="docketDetailContent">
+              <!-- Sticky Header: client name + status + tabs -->
+              <div class="detail-sticky-header" id="detailStickyHeader"></div>
+              <!-- Scrollable Tab Content -->
+              <div class="detail-tab-body" id="detailTabBody"></div>
+            </div>
+
           </div>
         </div>
+
+        <!-- Hidden cases list for JS compatibility -->
+        <div id="casesList" class="hidden"></div>
 
       </section>
 
@@ -2276,6 +2401,40 @@
         </button>
       </form>
 
+    </div>
+  </div>
+
+  <!-- ================= ALL CLIENTS DIRECTORY MODAL ================= -->
+  <div id="allClientsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="allClientsModalTitle">
+    <div class="modal-container modal-lg all-clients-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-users gold-text" style="font-size:1.4rem;"></i>
+          <div>
+            <h3 id="allClientsModalTitle">Chambers Client Directory</h3>
+            <p class="modal-subtitle">All active brief clients and associated legal dockets</p>
+          </div>
+        </div>
+        <div class="modal-header-actions">
+          <div class="clients-modal-search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="clientsModalSearch" placeholder="Search clients, phone, case..." autocomplete="off">
+          </div>
+          <button type="button" id="closeAllClientsModalBtn" class="btn-close-modal" aria-label="Close dialog">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      <div class="all-clients-modal-body">
+        <div class="clients-directory-stats-bar">
+          <div class="cd-stat"><i class="fa-solid fa-user-tie gold-text"></i> <strong id="cdTotalClients">0</strong> Total Clients</div>
+          <div class="cd-stat"><i class="fa-solid fa-briefcase blue-text"></i> <strong id="cdActiveMatters">0</strong> Active Dockets</div>
+          <div class="cd-stat"><i class="fa-solid fa-gavel gold-text"></i> <strong id="cdHearingsListed">0</strong> Hearings Listed</div>
+        </div>
+        <div class="clients-directory-grid" id="clientsDirectoryGrid">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
     </div>
   </div>
 

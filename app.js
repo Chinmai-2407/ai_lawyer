@@ -133,6 +133,280 @@ const DEFAULT_USERS = [
 // Initial realistic legal dockets seeded with Practice Group & Subordinate assignments
 const SAMPLE_CASES = [
   {
+    id: 'case_kunal_1',
+    clientName: 'Kunal Singhal',
+    clientPhone: '+91 98118 77652',
+    opposingParty: 'National Highways Authority of India (NHAI)',
+    caseTitle: 'Singhal vs. NHAI (Letters Appeal - Land Compensation Enhancement)',
+    caseNumber: 'LA.APP. 9442/2024',
+    caseCategory: 'Letters Appeal',
+    group: 'Constitutional & Writ',
+    assignedTo: 'user_associate_3',
+    assignedToName: 'Adv. Ananya Singh',
+    assignedToEmail: 'ananya.singh@lexjuris.in',
+    assignedBy: 'Adv. Vikramaditya Sharma (Group Head)',
+    priority: 'High',
+    courtName: 'High Court',
+    hearingDate: getOffsetDateString(4),
+    hearingTime: '11:00',
+    notes: 'Arguments to be finalized on circle rate valuation discrepancies and statutory solatium under Section 30(1) RFCTLARR Act 2013.',
+    status: 'In Progress',
+    updates: [
+      {
+        id: 'upd_k_1',
+        date: getOffsetDateString(-2),
+        time: '11:30 AM',
+        author: 'Adv. Ananya Singh',
+        authorRole: 'Associate Advocate',
+        type: 'filing',
+        title: 'Document uploaded',
+        notes: 'Written Submissions.pdf'
+      },
+      {
+        id: 'upd_k_2',
+        date: getOffsetDateString(-3),
+        time: '04:20 PM',
+        author: 'Adv. Vikramaditya Sharma',
+        authorRole: 'Head of Group',
+        type: 'hearing',
+        title: 'Hearing updated',
+        notes: 'Next hearing scheduled for 18 Oct 2024'
+      },
+      {
+        id: 'upd_k_3',
+        date: getOffsetDateString(-4),
+        time: '10:15 AM',
+        author: 'Adv. Ananya Singh',
+        authorRole: 'Associate Advocate',
+        type: 'instruction',
+        title: 'Note added',
+        notes: 'Arguments to be finalized'
+      }
+    ],
+    documents: [
+      {
+        id: 'doc_k_1',
+        name: 'Written Submissions.pdf',
+        size: '2.4 MB',
+        category: 'Written Submissions',
+        uploadedBy: 'Adv. Ananya Singh',
+        uploadedAt: getOffsetDateString(-2)
+      },
+      {
+        id: 'doc_k_2',
+        name: 'High Court Impugned Order.pdf',
+        size: '1.8 MB',
+        category: 'Court Order',
+        uploadedBy: 'High Court Registry',
+        uploadedAt: getOffsetDateString(-5)
+      },
+      {
+        id: 'doc_k_3',
+        name: 'Valuation & Circle Rate Survey.pdf',
+        size: '4.1 MB',
+        category: 'Evidence Annexure',
+        uploadedBy: 'Adv. Vikramaditya Sharma',
+        uploadedAt: getOffsetDateString(-6)
+      }
+    ],
+    tasks: [
+      { id: 't_k_1', title: 'Prepare compilation of judgments on Section 30(1) solatium', completed: true, priority: 'High', dueDate: getOffsetDateString(-1) },
+      { id: 't_k_2', title: 'Cross-verify circle rate notification dated 15 Jan 2023', completed: true, priority: 'Standard', dueDate: getOffsetDateString(-1) },
+      { id: 't_k_3', title: 'Serve advance copy of Written Submissions to NHAI standing counsel', completed: false, priority: 'Critical', dueDate: getOffsetDateString(2) },
+      { id: 't_k_4', title: 'Confer with Senior Advocate regarding oral arguments', completed: false, priority: 'High', dueDate: getOffsetDateString(3) }
+    ],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'case_kunal_2',
+    clientName: 'Kunal Singhal',
+    clientPhone: '+91 98118 77652',
+    opposingParty: 'Land Acquisition Collector (South West)',
+    caseTitle: 'Singhal vs. LAC (Interim Reference Petition)',
+    caseNumber: 'LA.APP. 4561/2024',
+    caseCategory: 'Letters Appeal',
+    group: 'Constitutional & Writ',
+    assignedTo: 'user_associate_5',
+    assignedToName: 'Adv. Siddharth Rao',
+    assignedToEmail: 'siddharth.rao@lexjuris.in',
+    assignedBy: 'Adv. Vikramaditya Sharma (Group Head)',
+    priority: 'Standard',
+    courtName: 'High Court',
+    hearingDate: getOffsetDateString(8),
+    hearingTime: '12:15',
+    notes: 'Reference petition under Section 64 RFCTLARR Act forwarded to High Court registry.',
+    status: 'In Progress',
+    updates: [
+      {
+        id: 'upd_k2_1',
+        date: getOffsetDateString(-1),
+        time: '02:30 PM',
+        author: 'Adv. Siddharth Rao',
+        authorRole: 'Associate Advocate',
+        type: 'filing',
+        title: 'Reference Petition Lodged',
+        notes: 'Section 64 statutory reference papers submitted.'
+      }
+    ],
+    documents: [
+      { id: 'doc_k2_1', name: 'LAC_Statutory_Reference_Papers.pdf', size: '3.2 MB', category: 'Petition', uploadedBy: 'Adv. Siddharth Rao', uploadedAt: getOffsetDateString(-1) }
+    ],
+    tasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'case_harsith_1',
+    clientName: 'harsith',
+    clientPhone: '+91 98234 11200',
+    opposingParty: 'Union of India & Anr',
+    caseTitle: 'Harsith vs. Union of India (Appeal against Acquisition Award)',
+    caseNumber: 'LA.APP. 1583/2024',
+    caseCategory: 'Letters Appeal',
+    group: 'Constitutional & Writ',
+    assignedTo: 'user_associate_3',
+    assignedToName: 'Adv. Ananya Singh',
+    assignedToEmail: 'ananya.singh@lexjuris.in',
+    assignedBy: 'Adv. Vikramaditya Sharma (Group Head)',
+    priority: 'Standard',
+    courtName: 'High Court',
+    hearingDate: getOffsetDateString(6),
+    hearingTime: '10:45',
+    notes: 'Grounds of appeal drafted challenging market value assessment.',
+    status: 'In Progress',
+    updates: [
+      { id: 'upd_h_1', date: getOffsetDateString(-2), time: '11:00 AM', author: 'Adv. Ananya Singh', authorRole: 'Associate Advocate', type: 'instruction', title: 'Grounds of Appeal Reviewed', notes: 'Draft reviewed and approved.' }
+    ],
+    documents: [
+      { id: 'doc_h_1', name: 'Appeal_Memo_Grounds.pdf', size: '1.9 MB', category: 'Appeal Memo', uploadedBy: 'Adv. Ananya Singh', uploadedAt: getOffsetDateString(-2) }
+    ],
+    tasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'case_amit_1',
+    clientName: 'Amit Verma',
+    clientPhone: '+91 98101 22345',
+    opposingParty: 'State (NCT of Delhi) & Anr',
+    caseTitle: 'Verma vs. State (Section 482 Quashing Petition)',
+    caseNumber: 'CRL.M.C. 2210/2024',
+    caseCategory: 'Criminal Defense',
+    group: 'Constitutional & Writ',
+    assignedTo: 'user_associate_3',
+    assignedToName: 'Adv. Ananya Singh',
+    assignedToEmail: 'ananya.singh@lexjuris.in',
+    assignedBy: 'Adv. Vikramaditya Sharma (Group Head)',
+    priority: 'High',
+    courtName: 'High Court',
+    hearingDate: getOffsetDateString(5),
+    hearingTime: '11:30',
+    notes: 'Quashing petition filed citing Bhajan Lal guidelines on malicious prosecution.',
+    status: 'In Progress',
+    updates: [
+      { id: 'upd_av_1', date: getOffsetDateString(-1), time: '10:00 AM', author: 'Adv. Ananya Singh', authorRole: 'Associate Advocate', type: 'filing', title: 'Quashing Petition Indexed', notes: 'Certified copy of FIR annexed.' }
+    ],
+    documents: [],
+    tasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'case_ritu_1',
+    clientName: 'Ritu Khanna',
+    clientPhone: '+91 99112 33445',
+    opposingParty: 'Sanjay Khanna',
+    caseTitle: 'Khanna vs. Khanna (First Appeal from Order)',
+    caseNumber: 'FAO 1189/2023',
+    caseCategory: 'Civil Litigation',
+    group: 'Constitutional & Writ',
+    assignedTo: 'user_associate_5',
+    assignedToName: 'Adv. Siddharth Rao',
+    assignedToEmail: 'siddharth.rao@lexjuris.in',
+    assignedBy: 'Adv. Vikramaditya Sharma (Group Head)',
+    priority: 'Standard',
+    courtName: 'High Court',
+    hearingDate: getOffsetDateString(9),
+    hearingTime: '14:00',
+    notes: 'First appeal listed for admission hearing and stay on execution.',
+    status: 'In Progress',
+    updates: [],
+    documents: [],
+    tasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'case_vivek_1',
+    clientName: 'Vivek Sharma',
+    clientPhone: '+91 98114 55667',
+    opposingParty: 'Pooja Sharma',
+    caseTitle: 'Sharma vs. Sharma (Matrimonial Appeal on Maintenance)',
+    caseNumber: 'MAT.APP. 556/2024',
+    caseCategory: 'Family & Matrimonial',
+    group: 'Constitutional & Writ',
+    assignedTo: 'user_associate_5',
+    assignedToName: 'Adv. Siddharth Rao',
+    assignedToEmail: 'siddharth.rao@lexjuris.in',
+    assignedBy: 'Adv. Vikramaditya Sharma (Group Head)',
+    priority: 'Standard',
+    courtName: 'High Court',
+    hearingDate: getOffsetDateString(11),
+    hearingTime: '12:00',
+    notes: 'Challenge to quantum of interim maintenance under Section 24 HMA.',
+    status: 'In Progress',
+    updates: [],
+    documents: [],
+    tasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'case_meera_1',
+    clientName: 'Meera Iyer',
+    clientPhone: '+91 98401 99887',
+    opposingParty: 'Union of India (Ministry of Finance)',
+    caseTitle: 'Iyer vs. Union of India (Writ Petition on Customs Seizure)',
+    caseNumber: 'WP(C) 3342/2024',
+    caseCategory: 'Constitutional & Writ',
+    group: 'Constitutional & Writ',
+    assignedTo: 'user_associate_3',
+    assignedToName: 'Adv. Ananya Singh',
+    assignedToEmail: 'ananya.singh@lexjuris.in',
+    assignedBy: 'Adv. Vikramaditya Sharma (Group Head)',
+    priority: 'Critical',
+    courtName: 'High Court',
+    hearingDate: getOffsetDateString(1),
+    hearingTime: '10:30',
+    notes: 'Emergency listing granted by Chief Justice Court. Argue release of perishable goods under bond.',
+    status: 'In Progress',
+    updates: [
+      { id: 'upd_mi_1', date: getOffsetDateString(0), time: '09:00 AM', author: 'Adv. Ananya Singh', authorRole: 'Associate Advocate', type: 'instruction', title: 'Mentioning Memo Filed', notes: 'Urgent mentioning accepted for tomorrow.' }
+    ],
+    documents: [],
+    tasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'case_globaltech_1',
+    clientName: 'Global Tech Solutions',
+    clientPhone: '+91 99887 66554',
+    opposingParty: 'Nexus Systems LLP',
+    caseTitle: 'Global Tech vs. Nexus (Trademark & Copyright Infringement)',
+    caseNumber: 'COM.IPD-TM 120/2024',
+    caseCategory: 'Intellectual Property',
+    group: 'Constitutional & Writ',
+    assignedTo: 'user_associate_5',
+    assignedToName: 'Adv. Siddharth Rao',
+    assignedToEmail: 'siddharth.rao@lexjuris.in',
+    assignedBy: 'Adv. Vikramaditya Sharma (Group Head)',
+    priority: 'Standard',
+    courtName: 'Intellectual Property Division (IPD), High Court',
+    hearingDate: getOffsetDateString(14),
+    hearingTime: '11:30',
+    notes: 'Commercial suit for permanent injunction, damages and rendition of accounts.',
+    status: 'In Progress',
+    updates: [],
+    documents: [],
+    tasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
     id: 'case_' + Date.now() + '_1',
     clientName: 'Rajesh Mehra',
     clientPhone: '+91 98112 44321',
@@ -436,7 +710,9 @@ let state = {
   currentQuickAttachedDoc: null,
   previewDoc: null,
   targetEditUserId: null,
-  targetResetUserId: null
+  targetResetUserId: null,
+  activeDocketCaseId: null,
+  activeDocketTab: 'overview'
 };
 
 // ==========================================================================
@@ -747,10 +1023,26 @@ const dom = {
   btnOpenSearchDrawer: document.getElementById('btnOpenSearchDrawer'),
   leftSidebarRail: document.getElementById('leftSidebarRail'),
   sidebarRailSearchBtn: document.getElementById('sidebarRailSearchBtn'),
+  sidebarRailClientsBtn: document.getElementById('sidebarRailClientsBtn'),
+  railClientsCountBadge: document.getElementById('railClientsCountBadge'),
   sidebarRailExpandBtn: document.getElementById('sidebarRailExpandBtn'),
+  railQuickClientsBtn: document.getElementById('railQuickClientsBtn'),
+  railClientsBadge: document.getElementById('railClientsBadge'),
   railQuickTodayBtn: document.getElementById('railQuickTodayBtn'),
   railQuickUrgentBtn: document.getElementById('railQuickUrgentBtn'),
   railQuickUpcomingBtn: document.getElementById('railQuickUpcomingBtn'),
+  idxShowAllClientsBtn: document.getElementById('idxShowAllClientsBtn'),
+  idxClientsDirectoryBtn: document.getElementById('idxClientsDirectoryBtn'),
+  idxClientsCountPill: document.getElementById('idxClientsCountPill'),
+  idxAllCountBadge: document.getElementById('idxAllCountBadge'),
+  idxClearDocketSearchBtn: document.getElementById('idxClearDocketSearchBtn'),
+  allClientsModal: document.getElementById('allClientsModal'),
+  closeAllClientsModalBtn: document.getElementById('closeAllClientsModalBtn'),
+  clientsModalSearch: document.getElementById('clientsModalSearch'),
+  clientsDirectoryGrid: document.getElementById('clientsDirectoryGrid'),
+  cdTotalClients: document.getElementById('cdTotalClients'),
+  cdActiveMatters: document.getElementById('cdActiveMatters'),
+  cdHearingsListed: document.getElementById('cdHearingsListed'),
   activeWorkspaceSearchTag: document.getElementById('activeWorkspaceSearchTag'),
   workspaceSearchQueryText: document.getElementById('workspaceSearchQueryText'),
   clearWorkspaceSearchTagBtn: document.getElementById('clearWorkspaceSearchTagBtn'),
@@ -1065,7 +1357,7 @@ function loadStoredCases() {
   if (stored) {
     try {
       state.cases = JSON.parse(stored);
-      if (!state.cases || !Array.isArray(state.cases) || state.cases.length === 0) {
+      if (!state.cases || !Array.isArray(state.cases) || state.cases.length === 0 || !state.cases.some(c => c.clientName === 'Kunal Singhal' && c.caseNumber === 'LA.APP. 9442/2024')) {
         state.cases = [...SAMPLE_CASES];
         saveCasesToStorage();
       } else {
@@ -1342,24 +1634,42 @@ function setupEventListeners() {
     });
   });
 
-  // Sliding Case Search & Directory Drawer Event Handlers
+  // Extended Blue Sidebar search input
+  const extSearchInput = document.getElementById('extRailSearchInput');
+  const extClearBtn = document.getElementById('extClearSearchBtn');
+  if (extSearchInput) {
+    extSearchInput.addEventListener('input', (e) => {
+      extRailSearchQuery = e.target.value.trim();
+      if (extClearBtn) {
+        if (extRailSearchQuery.length > 0) extClearBtn.classList.remove('hidden');
+        else extClearBtn.classList.add('hidden');
+      }
+      window.renderExtClientsList();
+    });
+  }
+  if (dom.idxShowAllClientsBtn) {
+    dom.idxShowAllClientsBtn.addEventListener('click', () => window.showAllClients());
+  }
+  if (dom.idxClientsDirectoryBtn) {
+    dom.idxClientsDirectoryBtn.addEventListener('click', () => window.openAllClientsModal());
+  }
+  if (dom.closeAllClientsModalBtn) {
+    dom.closeAllClientsModalBtn.addEventListener('click', () => window.closeAllClientsModal());
+  }
+  if (dom.allClientsModal) {
+    dom.allClientsModal.addEventListener('click', (e) => {
+      if (e.target === dom.allClientsModal) window.closeAllClientsModal();
+    });
+  }
+  if (dom.clientsModalSearch) {
+    dom.clientsModalSearch.addEventListener('input', (e) => {
+      window.filterClientsDirectory(e.target.value);
+    });
+  }
+
+  // Sliding Case Search & Directory Drawer Event Handlers (for header/nav trigger)
   if (dom.floatingSearchDrawerBtn) {
     dom.floatingSearchDrawerBtn.addEventListener('click', () => openSearchDrawer());
-  }
-  if (dom.sidebarRailSearchBtn) {
-    dom.sidebarRailSearchBtn.addEventListener('click', () => openSearchDrawer());
-  }
-  if (dom.sidebarRailExpandBtn) {
-    dom.sidebarRailExpandBtn.addEventListener('click', () => openSearchDrawer());
-  }
-  if (dom.railQuickTodayBtn) {
-    dom.railQuickTodayBtn.addEventListener('click', () => openSearchDrawer('', 'today'));
-  }
-  if (dom.railQuickUrgentBtn) {
-    dom.railQuickUrgentBtn.addEventListener('click', () => openSearchDrawer('', 'critical'));
-  }
-  if (dom.railQuickUpcomingBtn) {
-    dom.railQuickUpcomingBtn.addEventListener('click', () => openSearchDrawer('', 'upcoming'));
   }
   if (dom.openSearchDrawerNavBtn) {
     dom.openSearchDrawerNavBtn.addEventListener('click', () => openSearchDrawer());
@@ -3325,6 +3635,26 @@ function updateMetrics() {
   dom.countUpcoming.textContent = upcomingCases.length;
   dom.countCritical.textContent = urgentCases.length;
   dom.countClosed.textContent = closedCases.length;
+
+  // Client Count Badges
+  const uniqueClients = new Set(accessible.map(c => (c.clientName || '').trim()).filter(Boolean));
+  const totalClientsCount = uniqueClients.size || accessible.length;
+  if (dom.railClientsCountBadge) dom.railClientsCountBadge.textContent = totalClientsCount;
+  if (dom.railClientsBadge) dom.railClientsBadge.textContent = totalClientsCount;
+  if (dom.idxClientsCountPill) dom.idxClientsCountPill.textContent = totalClientsCount;
+  if (dom.idxAllCountBadge) dom.idxAllCountBadge.textContent = totalClientsCount;
+  const btnClientsBadge = document.getElementById('btnClientsCountBadge');
+  if (btnClientsBadge) btnClientsBadge.textContent = totalClientsCount;
+
+  // Rail Filter Button Badges
+  const railToday = document.getElementById('railTodayBadge');
+  const railUrgent = document.getElementById('railUrgentBadge');
+  const railUpcoming = document.getElementById('railUpcomingBadge');
+  const extCountToday = document.getElementById('extCountToday');
+  if (railToday) railToday.textContent = todayCases.length;
+  if (railUrgent) railUrgent.textContent = urgentCases.length;
+  if (railUpcoming) railUpcoming.textContent = upcomingCases.length;
+  if (extCountToday) extCountToday.textContent = todayCases.length;
 }
 
 function renderCasesList() {
@@ -3400,12 +3730,1278 @@ function renderCasesList() {
 
   dom.emptyState.classList.add('hidden');
 
-  // Render Case Cards
-  dom.casesList.innerHTML = filtered.map(item => createCaseCardHTML(item, todayStr)).join('');
-
-  // Attach dynamic button listeners for cards
-  attachCardActionListeners();
+  // Render docket index sidebar (client name list)
+  renderDocketIndex(filtered, todayStr);
 }
+
+// Render the left-side client name index for the docket split-view
+function renderDocketIndex(filteredCases, todayStr) {
+  const indexList = document.getElementById('docketIndexList');
+  if (!indexList) return;
+
+  // Update practice group banner name
+  const pgName = document.getElementById('pgGroupName');
+  if (pgName && state.currentUser) {
+    pgName.textContent = state.currentUser.group || state.currentUser.name || 'Antigravity';
+  }
+
+  if (!filteredCases || filteredCases.length === 0) {
+    indexList.innerHTML = '';
+    return;
+  }
+
+  // Auto-select first case if none active or not in filtered
+  if (!state.activeDocketCaseId || !filteredCases.some(c => c.id === state.activeDocketCaseId)) {
+    state.activeDocketCaseId = filteredCases[0].id;
+    setTimeout(() => openDocketDetail(filteredCases[0].id, state.activeDocketTab || 'overview'), 0);
+  }
+
+  indexList.innerHTML = filteredCases.map(item => {
+    const isToday = item.hearingDate === todayStr;
+    const isUrgent = item.priority === 'Critical';
+    const isClosed = item.status === 'Disposed';
+    let dotClass = '';
+    if (isClosed) dotClass = 'closed';
+    else if (isUrgent) dotClass = 'urgent';
+    else if (isToday) dotClass = 'today';
+
+    const isActive = state.activeDocketCaseId === item.id;
+    return `
+      <div class="docket-index-item ${isActive ? 'active' : ''}" data-case-id="${item.id}" onclick="openDocketDetail('${item.id}')">
+        <div class="idx-item-text">
+          <span class="idx-client-name">${escapeHTML(item.clientName)}</span>
+          <span class="idx-case-tag">${escapeHTML(item.caseNumber)}</span>
+        </div>
+        <span class="idx-status-dot ${dotClass}"></span>
+      </div>
+    `;
+  }).join('');
+
+  // Wire sidebar search
+  const searchInput = document.getElementById('docketSidebarSearch');
+  const clearBtn = document.getElementById('idxClearDocketSearchBtn');
+  if (searchInput && !searchInput._docketWired) {
+    searchInput._docketWired = true;
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      if (clearBtn) {
+        if (q.length > 0) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+      document.querySelectorAll('.docket-index-item').forEach(el => {
+        const name = el.querySelector('.idx-client-name')?.textContent.toLowerCase() || '';
+        const tag  = el.querySelector('.idx-case-tag')?.textContent.toLowerCase() || '';
+        el.style.display = (name.includes(q) || tag.includes(q)) ? '' : 'none';
+      });
+    });
+  }
+}
+
+// ---- Clear sidebar docket client search ----
+window.clearDocketSearch = function() {
+  const searchInput = document.getElementById('docketSidebarSearch');
+  const clearBtn = document.getElementById('idxClearDocketSearchBtn');
+  if (searchInput) searchInput.value = '';
+  if (clearBtn) clearBtn.classList.add('hidden');
+  document.querySelectorAll('.docket-index-item').forEach(el => {
+    el.style.display = '';
+  });
+};
+
+// ==========================================================================
+// EXTENDED BLUE SIDEBAR RAIL LOGIC (CLIENTS LIST)
+// ==========================================================================
+
+let extRailFilter = 'all';
+let extRailSearchQuery = '';
+
+function formatDisplayDate(dateStr) {
+  if (typeof formatDateDisplay === 'function') {
+    return formatDateDisplay(dateStr);
+  }
+  return dateStr || 'Pending';
+}
+
+window.toggleBlueRail = function(forceOpen) {
+  const rail = document.getElementById('leftSidebarRail');
+  if (!rail) return;
+
+  const isCurrentlyExtended = rail.classList.contains('extended');
+  const willExtend = (typeof forceOpen === 'boolean') ? forceOpen : !isCurrentlyExtended;
+
+  const workspaceSidebar = document.getElementById('docketIndexSidebar');
+
+  if (willExtend) {
+    if (state.activeView !== 'workspace') {
+      switchWorkspaceView('workspace');
+    }
+
+    rail.classList.add('extended');
+    updateRailActiveButtons(extRailFilter || 'all');
+    const toggleText = document.getElementById('toggleClientsBtnText');
+    if (toggleText) toggleText.textContent = 'Hide Clients';
+
+    // Also uncollapse workspace client sidebar so names are visible in both places
+    if (workspaceSidebar) {
+      workspaceSidebar.classList.remove('collapsed');
+      const allCases = (state.currentUser ? getAccessibleCases(state.currentUser) : null) || state.cases || [];
+      renderDocketIndex(allCases, getOffsetDateString(0));
+    }
+
+    // Render list in blue panel
+    window.renderExtClientsList();
+
+    const searchInput = document.getElementById('extRailSearchInput');
+    if (searchInput) {
+      setTimeout(() => searchInput.focus(), 120);
+    }
+  } else {
+    rail.classList.remove('extended');
+    updateRailActiveButtons('none');
+    const toggleText = document.getElementById('toggleClientsBtnText');
+    if (toggleText) toggleText.textContent = 'Show Clients';
+    if (workspaceSidebar) {
+      workspaceSidebar.classList.add('collapsed');
+    }
+  }
+};
+
+window.toggleBlueRailWithFilter = function(filterType) {
+  const rail = document.getElementById('leftSidebarRail');
+  if (!rail) return;
+
+  const isExtended = rail.classList.contains('extended');
+
+  // If already open with the same filter, toggle close
+  if (isExtended && extRailFilter === filterType) {
+    window.toggleBlueRail(false);
+    return;
+  }
+
+  // Set filter
+  extRailFilter = filterType || 'all';
+
+  // Open if closed
+  if (!isExtended) {
+    window.toggleBlueRail(true);
+  }
+
+  // Update pills inside the blue panel
+  document.querySelectorAll('.ext-filter-pills .ext-pill').forEach(pill => {
+    if (pill.getAttribute('data-ext-filter') === extRailFilter) {
+      pill.classList.add('active');
+    } else {
+      pill.classList.remove('active');
+    }
+  });
+
+  // Update active button on the rail
+  updateRailActiveButtons(filterType);
+
+  // Render list
+  window.renderExtClientsList();
+};
+
+window.toggleBlueRailWithSearch = function() {
+  const rail = document.getElementById('leftSidebarRail');
+  if (!rail) return;
+
+  if (!rail.classList.contains('extended')) {
+    window.toggleBlueRail(true);
+  }
+
+  const searchInput = document.getElementById('extRailSearchInput');
+  if (searchInput) {
+    setTimeout(() => {
+      searchInput.focus();
+      searchInput.select();
+    }, 150);
+  }
+
+  updateRailActiveButtons('search');
+};
+
+function updateRailActiveButtons(activeType) {
+  const btnClients = document.getElementById('sidebarRailClientsBtn');
+  const btnToday = document.getElementById('railQuickTodayBtn');
+  const btnUrgent = document.getElementById('railQuickUrgentBtn');
+  const btnUpcoming = document.getElementById('railQuickUpcomingBtn');
+  const btnSearch = document.getElementById('sidebarRailSearchBtn');
+
+  [btnClients, btnToday, btnUrgent, btnUpcoming, btnSearch].forEach(b => {
+    if (b) b.classList.remove('active');
+  });
+
+  if (activeType === 'all' && btnClients) btnClients.classList.add('active');
+  if (activeType === 'today' && btnToday) btnToday.classList.add('active');
+  if (activeType === 'critical' && btnUrgent) btnUrgent.classList.add('active');
+  if (activeType === 'upcoming' && btnUpcoming) btnUpcoming.classList.add('active');
+  if (activeType === 'search' && btnSearch) btnSearch.classList.add('active');
+}
+
+window.toggleClientSidebar = function(forceOpen) {
+  window.toggleBlueRail(forceOpen);
+};
+
+window.renderExtClientsList = function() {
+  const listEl = document.getElementById('extClientsList');
+  if (!listEl) return;
+
+  let accessible = (state.currentUser ? getAccessibleCases(state.currentUser) : null) || state.cases || [];
+  if (!accessible || accessible.length === 0) {
+    accessible = state.cases || [];
+  }
+  const todayStr = getOffsetDateString(0);
+
+  // Update counts
+  const badgeEl = document.getElementById('extRailClientsBadge');
+  const countAllEl = document.getElementById('extCountAll');
+  const countTodayEl = document.getElementById('extCountToday');
+  const countUpcomingEl = document.getElementById('extCountUpcoming');
+  const countCriticalEl = document.getElementById('extCountCritical');
+
+  const todayCount = accessible.filter(c => c.hearingDate === todayStr && c.status !== 'Disposed').length;
+  const upcomingCount = accessible.filter(c => c.hearingDate > todayStr && c.status !== 'Disposed').length;
+  const criticalCount = accessible.filter(c => (c.priority === 'Critical' || c.priority === 'High') && c.status !== 'Disposed').length;
+
+  if (badgeEl) badgeEl.textContent = accessible.length;
+  if (countAllEl) countAllEl.textContent = accessible.length;
+  if (countTodayEl) countTodayEl.textContent = todayCount;
+  if (countUpcomingEl) countUpcomingEl.textContent = upcomingCount;
+  if (countCriticalEl) countCriticalEl.textContent = criticalCount;
+
+  // Sync badges on the left blue rail itself
+  const railClientsCountBadge = document.getElementById('railClientsCountBadge');
+  const railToday = document.getElementById('railTodayBadge');
+  const railUrgent = document.getElementById('railUrgentBadge');
+  const railUpcoming = document.getElementById('railUpcomingBadge');
+  if (railClientsCountBadge) railClientsCountBadge.textContent = accessible.length;
+  if (railToday) railToday.textContent = todayCount;
+  if (railUrgent) railUrgent.textContent = criticalCount;
+  if (railUpcoming) railUpcoming.textContent = upcomingCount;
+
+  // Filter
+  let filtered = accessible.filter(c => {
+    if (extRailFilter === 'today') return c.hearingDate === todayStr && c.status !== 'Disposed';
+    if (extRailFilter === 'upcoming') return c.hearingDate > todayStr && c.status !== 'Disposed';
+    if (extRailFilter === 'critical') return (c.priority === 'Critical' || c.priority === 'High') && c.status !== 'Disposed';
+    return true;
+  });
+
+  if (extRailSearchQuery) {
+    const q = extRailSearchQuery.toLowerCase();
+    filtered = filtered.filter(c =>
+      (c.clientName || '').toLowerCase().includes(q) ||
+      (c.caseTitle || '').toLowerCase().includes(q) ||
+      (c.caseNumber || '').toLowerCase().includes(q)
+    );
+  }
+
+  // Sort
+  filtered.sort((a, b) => {
+    if (a.status === 'Disposed' && b.status !== 'Disposed') return 1;
+    if (a.status !== 'Disposed' && b.status === 'Disposed') return -1;
+    return (a.hearingDate || '').localeCompare(b.hearingDate || '');
+  });
+
+  if (filtered.length === 0) {
+    let emptyMsg = 'No clients found';
+    if (extRailFilter === 'today') emptyMsg = 'No court hearings scheduled for today';
+    else if (extRailFilter === 'critical') emptyMsg = 'No urgent or critical briefs found';
+    else if (extRailFilter === 'upcoming') emptyMsg = 'No upcoming hearings scheduled';
+
+    listEl.innerHTML = `
+      <div style="text-align:center; padding: 2.5rem 1rem; color: rgba(255,255,255,0.7); font-size: 0.85rem;">
+        <i class="fa-solid fa-folder-open" style="font-size: 1.8rem; margin-bottom: 0.6rem; opacity: 0.6; display:block; color: var(--gold-primary);"></i>
+        <strong style="color:#fff; display:block; margin-bottom:0.25rem;">${emptyMsg}</strong>
+        <p style="margin:0; font-size:0.78rem; opacity:0.8;">Switch filter or register a new legal docket.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Auto-select first if none selected
+  if (!state.activeDocketCaseId && filtered.length > 0) {
+    state.activeDocketCaseId = filtered[0].id;
+    openDocketDetail(filtered[0].id);
+  }
+
+  listEl.innerHTML = filtered.map(c => {
+    const rawName = (c.clientName || 'Client Name Pending').trim();
+    const initials = rawName.replace(/^(Adv\.|Dr\.|Mr\.|Ms\.)\s+/i, '').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'CL';
+    const isToday = c.hearingDate === todayStr;
+    const isUrgent = c.priority === 'Critical';
+    const isClosed = c.status === 'Disposed';
+    let dotClass = '';
+    if (isClosed) dotClass = 'closed';
+    else if (isUrgent) dotClass = 'urgent';
+    else if (isToday) dotClass = 'today';
+
+    const isActive = state.activeDocketCaseId === c.id;
+
+    return `
+      <div class="ext-client-card ${isActive ? 'active' : ''}" data-case-id="${c.id}" onclick="window.selectClientFromExtRail('${c.id}')">
+        <div class="ext-client-avatar">${initials}</div>
+        <div class="ext-client-meta">
+          <div class="ext-client-name" title="${escapeHTML(rawName)}">${escapeHTML(rawName)}</div>
+          <div class="ext-client-sub">
+            <span class="ext-client-tag">${escapeHTML(c.caseNumber || 'MATTER')}</span>
+            <span class="ext-hearing-tag"><i class="fa-regular fa-calendar"></i> ${formatDisplayDate(c.hearingDate)}</span>
+          </div>
+        </div>
+        <span class="ext-status-dot ${dotClass}" title="${escapeHTML(c.status || 'Active')}"></span>
+      </div>
+    `;
+  }).join('');
+};
+
+window.selectClientFromExtRail = function(caseId) {
+  state.activeDocketCaseId = caseId;
+  openDocketDetail(caseId);
+
+  // Update active card styling
+  document.querySelectorAll('.ext-client-card').forEach(card => {
+    if (card.getAttribute('data-case-id') === caseId) {
+      card.classList.add('active');
+    } else {
+      card.classList.remove('active');
+    }
+  });
+};
+
+window.filterExtRail = function(type) {
+  extRailFilter = type;
+  document.querySelectorAll('.ext-filter-pills .ext-pill').forEach(pill => {
+    if (pill.getAttribute('data-ext-filter') === type) pill.classList.add('active');
+    else pill.classList.remove('active');
+  });
+  updateRailActiveButtons(type);
+  window.renderExtClientsList();
+};
+
+window.clearExtSearch = function() {
+  extRailSearchQuery = '';
+  const input = document.getElementById('extRailSearchInput');
+  const clearBtn = document.getElementById('extClearSearchBtn');
+  if (input) input.value = '';
+  if (clearBtn) clearBtn.classList.add('hidden');
+  window.renderExtClientsList();
+};
+
+// ---- Show All Clients in Sidebar & Docket View ----
+window.showAllClients = function() {
+  if (state.activeView !== 'workspace') {
+    switchWorkspaceView('workspace');
+  }
+  window.toggleClientSidebar(true);
+};
+
+// ---- Chambers Client Directory Modal Logic ----
+window.openAllClientsModal = function() {
+  const modal = document.getElementById('allClientsModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  const accessible = getAccessibleCases(state.currentUser);
+  
+  // Group cases by clientName
+  const clientsMap = new Map();
+  accessible.forEach(c => {
+    const key = (c.clientName || 'Unnamed Client').trim();
+    if (!clientsMap.has(key)) {
+      clientsMap.set(key, {
+        clientName: key,
+        clientPhone: c.clientPhone || '+91 98110 00000',
+        cases: []
+      });
+    }
+    clientsMap.get(key).cases.push(c);
+  });
+
+  const clientsArray = Array.from(clientsMap.values());
+
+  // Update stats
+  const totalClientsEl = document.getElementById('cdTotalClients');
+  const activeMattersEl = document.getElementById('cdActiveMatters');
+  const hearingsListedEl = document.getElementById('cdHearingsListed');
+  if (totalClientsEl) totalClientsEl.textContent = clientsArray.length;
+  if (activeMattersEl) activeMattersEl.textContent = accessible.length;
+  if (hearingsListedEl) {
+    const todayStr = getOffsetDateString(0);
+    const upcoming = accessible.filter(c => c.hearingDate >= todayStr && c.status !== 'Disposed').length;
+    hearingsListedEl.textContent = upcoming;
+  }
+
+  renderClientsDirectoryGrid(clientsArray);
+
+  const searchInput = document.getElementById('clientsModalSearch');
+  if (searchInput) {
+    searchInput.value = '';
+    setTimeout(() => searchInput.focus(), 100);
+  }
+};
+
+window.closeAllClientsModal = function() {
+  const modal = document.getElementById('allClientsModal');
+  if (modal) modal.classList.add('hidden');
+};
+
+function renderClientsDirectoryGrid(clientsList) {
+  const grid = document.getElementById('clientsDirectoryGrid');
+  if (!grid) return;
+
+  if (clientsList.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-users" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+        <p>No clients found matching the search criteria.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const todayStr = getOffsetDateString(0);
+
+  grid.innerHTML = clientsList.map(item => {
+    const initials = item.clientName.replace(/^(Adv\.|Dr\.|Mr\.|Ms\.)\s+/i, '').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'CL';
+    
+    const mattersHtml = item.cases.map(c => {
+      return `
+        <div class="cd-matter-item">
+          <span class="cd-matter-title" title="${escapeHTML(c.caseTitle)}">${escapeHTML(c.caseTitle)}</span>
+          <span class="cd-matter-tag">${escapeHTML(c.caseNumber)}</span>
+        </div>
+      `;
+    }).join('');
+
+    const primaryCase = item.cases[0];
+    const isUrgent = item.cases.some(c => c.priority === 'Critical');
+
+    return `
+      <div class="client-directory-card" data-client-name="${escapeHTML(item.clientName.toLowerCase())}">
+        <div class="cd-card-top">
+          <div class="cd-avatar-badge">${initials}</div>
+          <div class="cd-client-info">
+            <div class="cd-client-name" title="${escapeHTML(item.clientName)}">${escapeHTML(item.clientName)}</div>
+            <div class="cd-client-phone"><i class="fa-solid fa-phone"></i> ${escapeHTML(item.clientPhone)}</div>
+          </div>
+        </div>
+
+        <div class="cd-card-matters">
+          <div style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">
+            ${item.cases.length} ${item.cases.length === 1 ? 'Matter' : 'Matters'}
+          </div>
+          ${mattersHtml}
+        </div>
+
+        <div class="cd-card-actions">
+          <div class="cd-hearing-pill ${isUrgent ? 'urgent' : ''}">
+            <i class="fa-regular fa-calendar"></i> Next: ${formatDisplayDate(primaryCase.hearingDate)}
+          </div>
+          <button type="button" class="cd-open-docket-btn" onclick="selectClientFromDirectory('${primaryCase.id}')">
+            <span>Open Docket</span> <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.selectClientFromDirectory = function(caseId) {
+  window.closeAllClientsModal();
+  window.showAllClients();
+  setTimeout(() => {
+    openDocketDetail(caseId);
+  }, 60);
+};
+
+window.filterClientsDirectory = function(query) {
+  const q = (query || '').trim().toLowerCase();
+  const accessible = getAccessibleCases(state.currentUser);
+  
+  const clientsMap = new Map();
+  accessible.forEach(c => {
+    const key = (c.clientName || 'Unnamed Client').trim();
+    if (!clientsMap.has(key)) {
+      clientsMap.set(key, {
+        clientName: key,
+        clientPhone: c.clientPhone || '+91 98110 00000',
+        cases: []
+      });
+    }
+    clientsMap.get(key).cases.push(c);
+  });
+
+  const clientsArray = Array.from(clientsMap.values());
+  const filtered = clientsArray.filter(client => {
+    if (client.clientName.toLowerCase().includes(q)) return true;
+    if (client.clientPhone.toLowerCase().includes(q)) return true;
+    return client.cases.some(c => 
+      (c.caseNumber || '').toLowerCase().includes(q) || 
+      (c.caseTitle || '').toLowerCase().includes(q)
+    );
+  });
+
+  renderClientsDirectoryGrid(filtered);
+};
+
+// ---- Helper: build status pill ----
+function buildStatusPill(caseItem, todayStr) {
+  const s = caseItem.status;
+  if (s === 'Disposed') return `<span class="status-pill closed-pill"><span class="pill-dot"></span> Disposed</span>`;
+  if (caseItem.hearingDate === todayStr) return `<span class="status-pill today-pill"><span class="pill-dot"></span> Today</span>`;
+  if (caseItem.priority === 'Critical') return `<span class="status-pill urgent-pill"><span class="pill-dot"></span> Critical</span>`;
+  return `<span class="status-pill active-pill"><span class="pill-dot"></span> In Progress</span>`;
+}
+
+// ---- Open docket detail with tabs ----
+window.openDocketDetail = function(caseId, activeTab) {
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem) return;
+
+  state.activeDocketCaseId = caseId;
+  if (!activeTab) activeTab = state.activeDocketTab || 'overview';
+  state.activeDocketTab = activeTab;
+
+  // Refresh sidebar active highlights
+  document.querySelectorAll('.docket-index-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-case-id') === caseId);
+  });
+
+  const placeholder = document.getElementById('docketDetailPlaceholder');
+  const content = document.getElementById('docketDetailContent');
+  const stickyHeader = document.getElementById('detailStickyHeader');
+  const tabBody = document.getElementById('detailTabBody');
+  if (!content || !stickyHeader || !tabBody) return;
+
+  if (placeholder) placeholder.classList.add('hidden');
+  content.classList.remove('hidden');
+
+  const todayStr = getOffsetDateString(0);
+  const docsList = (caseItem.documents && Array.isArray(caseItem.documents)) ? caseItem.documents : [];
+  const updates = (caseItem.updates && Array.isArray(caseItem.updates)) ? caseItem.updates : [];
+  const tasks = (caseItem.tasks && Array.isArray(caseItem.tasks)) ? caseItem.tasks : [];
+
+  const statusLabel = caseItem.status === 'Disposed' ? 'Disposed' : (caseItem.status || 'In Progress');
+  const statusDotClass = caseItem.status === 'Disposed' ? 'closed' : (caseItem.priority === 'Critical' ? 'urgent' : 'active');
+
+  // ---- Sticky Header ----
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'hearings', label: 'Hearings' },
+    { id: 'documents', label: `Documents${docsList.length ? ` (${docsList.length})` : ''}` },
+    { id: 'notes', label: 'Notes' },
+    { id: 'tasks', label: `Tasks${tasks.length ? ` (${tasks.length})` : ''}` },
+    { id: 'updates', label: `Updates (${updates.length})` },
+    { id: 'team', label: 'Team' }
+  ];
+
+  stickyHeader.innerHTML = `
+    <div class="detail-sh-top">
+      <div class="detail-sh-client">
+        <div class="detail-sh-name">${escapeHTML(caseItem.clientName)}</div>
+        <div class="detail-sh-case-no">
+          <i class="fa-solid fa-hashtag" style="font-size:0.65rem;"></i>
+          ${escapeHTML(caseItem.caseNumber)}
+          ${caseItem.opposingParty ? `<span style="color:#cbd5e1;">•</span> vs. ${escapeHTML(caseItem.opposingParty)}` : ''}
+        </div>
+      </div>
+      <div class="detail-sh-actions">
+        <!-- Interactive Status Dropdown -->
+        <div class="status-dropdown-wrap" style="position:relative;display:inline-block;">
+          <button type="button" class="detail-status-badge" onclick="window.toggleStatusMenu('${caseItem.id}', event)" title="Change case status">
+            <span class="status-dot ${statusDotClass}"></span>
+            <span class="status-text">${escapeHTML(statusLabel)}</span>
+            <i class="fa-solid fa-chevron-down status-chevron"></i>
+          </button>
+          <div id="statusMenu-${caseItem.id}" class="status-dropdown-menu hidden">
+            <div class="status-menu-header">Change Status</div>
+            <div class="status-menu-item" onclick="window.setCaseStatus('${caseItem.id}', 'In Progress')">
+              <span class="idx-status-dot" style="background:#1e3a5f;display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:0.35rem;"></span> In Progress
+            </div>
+            <div class="status-menu-item" onclick="window.setCaseStatus('${caseItem.id}', 'Upcoming Hearing')">
+              <span class="idx-status-dot today" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:0.35rem;"></span> Upcoming Hearing
+            </div>
+            <div class="status-menu-item" onclick="window.setCaseStatus('${caseItem.id}', 'Critical')">
+              <span class="idx-status-dot urgent" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:0.35rem;"></span> Critical / Urgent
+            </div>
+            <div class="status-menu-item" onclick="window.setCaseStatus('${caseItem.id}', 'Adjourned')">
+              <span class="idx-status-dot" style="background:#eab308;display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:0.35rem;"></span> Adjourned
+            </div>
+            <div class="status-menu-item" onclick="window.setCaseStatus('${caseItem.id}', 'Disposed')">
+              <span class="idx-status-dot closed" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:0.35rem;"></span> Disposed / Closed
+            </div>
+          </div>
+        </div>
+
+        <a href="tel:${escapeHTML(caseItem.clientPhone)}" class="detail-action-btn" title="Call client">
+          <i class="fa-solid fa-phone"></i> Call
+        </a>
+        <button type="button" class="detail-action-btn primary" onclick="openDocketDetail('${caseItem.id}','updates')" title="Add update">
+          <i class="fa-solid fa-plus"></i> Add Update
+        </button>
+        <button type="button" class="detail-action-btn" onclick="openRescheduleModal('${caseItem.id}')" title="Reschedule hearing">
+          <i class="fa-solid fa-calendar-plus"></i> Reschedule
+        </button>
+        <button type="button" class="detail-action-btn danger" onclick="deleteCaseAndRefresh('${caseItem.id}')" title="Delete case">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      </div>
+    </div>
+    <div class="detail-tab-bar">
+      ${tabs.map(t => `<button type="button" class="detail-tab-pill ${activeTab === t.id ? 'active' : ''}" onclick="openDocketDetail('${caseItem.id}','${t.id}')">${t.label}</button>`).join('')}
+    </div>
+  `;
+
+  // ---- Tab Content ----
+  if (activeTab === 'overview') tabBody.innerHTML = buildOverviewTab(caseItem, todayStr, docsList, updates);
+  else if (activeTab === 'hearings') tabBody.innerHTML = buildHearingsTab(caseItem, todayStr);
+  else if (activeTab === 'documents') tabBody.innerHTML = buildDocumentsTab(caseItem, docsList);
+  else if (activeTab === 'notes') tabBody.innerHTML = buildNotesTab(caseItem);
+  else if (activeTab === 'tasks') tabBody.innerHTML = buildTasksTab(caseItem);
+  else if (activeTab === 'updates') tabBody.innerHTML = buildUpdatesTab(caseItem, updates);
+  else if (activeTab === 'team') tabBody.innerHTML = buildTeamTab(caseItem);
+};
+
+// ==============================
+// TAB BUILDERS
+// ==============================
+
+function buildOverviewTab(caseItem, todayStr, docsList, updates) {
+  const nextDate = caseItem.hearingDate;
+  const dateObj = nextDate ? new Date(nextDate + 'T00:00:00') : null;
+  const nextHearingDisplay = dateObj
+    ? `${dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`
+    : 'Not scheduled';
+
+  const statusLabel = caseItem.status === 'Disposed' ? 'Disposed' : (caseItem.status || 'In Progress');
+  const statusDotClass = caseItem.status === 'Disposed' ? 'closed' : (caseItem.priority === 'Critical' ? 'urgent' : 'active');
+
+  // Recent activity: last 5 updates
+  const recentActivity = updates.length > 0 ? updates.slice(0, 5) : [
+    { title: 'Document uploaded', notes: 'Written Submissions.pdf', timeDisplay: '14 Oct 2024, 11:30 AM', icon: 'fa-file-lines' },
+    { title: 'Hearing updated', notes: 'Next hearing scheduled for ' + nextHearingDisplay, timeDisplay: '13 Oct 2024, 4:20 PM', icon: 'fa-calendar-check' },
+    { title: 'Note added', notes: 'Arguments to be finalized', timeDisplay: '12 Oct 2024, 10:15 AM', icon: 'fa-pen-nib' }
+  ];
+
+  const activityTimelineHTML = recentActivity.map(u => {
+    let icon = u.icon || 'fa-file-lines';
+    if (u.type === 'hearing') icon = 'fa-calendar-check';
+    else if (u.type === 'order') icon = 'fa-stamp';
+    else if (u.type === 'instruction') icon = 'fa-pen-nib';
+    else if (u.type === 'status') icon = 'fa-clock-rotate-left';
+    else if (u.type === 'filing') icon = 'fa-file-lines';
+
+    const timeDisplay = u.timeDisplay || (u.date ? `${formatDateDisplay(u.date)}${u.time ? ', ' + u.time : ''}` : '');
+    return `
+      <div class="activity-tl-item">
+        <div class="activity-tl-icon-box"><i class="fa-solid ${icon}"></i></div>
+        <div class="activity-tl-body">
+          <div class="activity-tl-header">
+            <span class="activity-tl-title">${escapeHTML(u.title || 'Update')}</span>
+            <span class="activity-tl-time">${timeDisplay}</span>
+          </div>
+          <div class="activity-tl-sub">${escapeHTML(u.notes || '')}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <!-- 2x3 Grid matching reference UI -->
+    <div class="detail-info-grid">
+      <div class="detail-info-card">
+        <div class="info-card-label">Case Number</div>
+        <div class="info-card-value">${escapeHTML(caseItem.caseNumber)}</div>
+      </div>
+      <div class="detail-info-card">
+        <div class="info-card-label">Case Type</div>
+        <div class="info-card-value">${escapeHTML(caseItem.caseCategory || 'Letters Appeal')}</div>
+      </div>
+      <div class="detail-info-card">
+        <div class="info-card-label">Court</div>
+        <div class="info-card-value">${escapeHTML(caseItem.courtName || 'High Court')}</div>
+      </div>
+      <div class="detail-info-card">
+        <div class="info-card-label">Filing Date</div>
+        <div class="info-card-value">${caseItem.createdAt ? formatDateDisplay(caseItem.createdAt.substring(0,10)) : '12 Mar 2024'}</div>
+      </div>
+      <div class="detail-info-card">
+        <div class="info-card-label">Next Hearing</div>
+        <div class="info-card-value blue-highlight">${nextHearingDisplay}</div>
+      </div>
+      <div class="detail-info-card">
+        <div class="info-card-label">Status</div>
+        <div class="info-card-value">
+          <span class="status-value-wrap">
+            <span class="idx-status-dot ${statusDotClass}" style="display:inline-block;vertical-align:middle;margin-right:0.35rem;"></span>
+            ${escapeHTML(statusLabel)}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Update Actions Strip -->
+    <div class="quick-update-actions-strip">
+      <div class="qua-heading"><i class="fa-solid fa-bolt gold-text"></i> Options to Add Updates:</div>
+      <div class="qua-btn-group">
+        <button type="button" class="qua-btn primary" onclick="openDocketDetail('${caseItem.id}', 'updates')">
+          <i class="fa-solid fa-pen-to-square"></i> + Log Update
+        </button>
+        <button type="button" class="qua-btn" onclick="openQuickHearingUpdate('${caseItem.id}')">
+          <i class="fa-solid fa-gavel"></i> + Hearing Outcome
+        </button>
+        <button type="button" class="qua-btn" onclick="openAddNewDocModal('${caseItem.id}')">
+          <i class="fa-solid fa-folder-open"></i> + Upload Document
+        </button>
+        <button type="button" class="qua-btn" onclick="openQuickNoteModal('${caseItem.id}')">
+          <i class="fa-solid fa-note-sticky"></i> + Add Strategy Note
+        </button>
+        <button type="button" class="qua-btn" onclick="openQuickTaskModal('${caseItem.id}')">
+          <i class="fa-solid fa-list-check"></i> + Add Task
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent Activity Section matching reference UI -->
+    <div class="recent-activity-section">
+      <div class="activity-section-header">
+        <div class="activity-title-wrap">
+          <span class="activity-title-bar"></span>
+          <span class="activity-title-text">Recent Activity</span>
+        </div>
+        <button type="button" class="view-all-activity-btn" onclick="openDocketDetail('${caseItem.id}', 'updates')">
+          View All (${updates.length}) <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+      <div class="activity-timeline">
+        ${activityTimelineHTML}
+      </div>
+    </div>
+  `;
+}
+
+function buildHearingsTab(caseItem, todayStr) {
+  const dateObj = caseItem.hearingDate ? new Date(caseItem.hearingDate + 'T00:00:00') : null;
+  const day = dateObj ? dateObj.toLocaleDateString('en-IN', { day: '2-digit' }) : '--';
+  const mon = dateObj ? dateObj.toLocaleDateString('en-IN', { month: 'short' }) : '--';
+  const isToday = caseItem.hearingDate === todayStr;
+  const badge = isToday
+    ? `<span class="hearing-badge badge-today" style="margin-left:auto;"><span class="pulse-dot"></span> TODAY</span>`
+    : (caseItem.hearingDate > todayStr
+      ? `<span class="hearing-badge badge-upcoming" style="margin-left:auto;"><i class="fa-regular fa-clock"></i> Upcoming</span>`
+      : `<span class="hearing-badge badge-passed" style="margin-left:auto;"><i class="fa-solid fa-clock-rotate-left"></i> Past</span>`);
+
+  return `
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-gavel"></i> Scheduled Hearing</span>
+        <button type="button" class="detail-action-btn primary" onclick="openRescheduleModal('${caseItem.id}')">
+          <i class="fa-solid fa-calendar-plus"></i> Reschedule Hearing
+        </button>
+      </div>
+      <div class="hearing-card">
+        <div class="hearing-date-badge">
+          <div class="hearing-date-day">${day}</div>
+          <div class="hearing-date-mon">${mon}</div>
+        </div>
+        <div class="hearing-info">
+          <div class="hearing-title">${escapeHTML(caseItem.courtName || 'High Court')}</div>
+          <div class="hearing-meta">
+            <i class="fa-regular fa-clock" style="margin-right:0.3rem;"></i>
+            ${formatTime12Hour(caseItem.hearingTime || '11:00')} &nbsp;•&nbsp;
+            <i class="fa-solid fa-users" style="margin-right:0.3rem;"></i>
+            ${escapeHTML(caseItem.group || caseItem.caseCategory || 'Letters Appeal')}
+          </div>
+        </div>
+        ${badge}
+      </div>
+    </div>
+
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-user-check"></i> Assigned Counsel</span>
+      </div>
+      <div class="detail-notes-block" style="display:flex;align-items:center;gap:0.85rem;">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(30,58,95,0.08);border:1.5px solid rgba(30,58,95,0.15);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--gold-primary);">
+          <i class="fa-solid fa-user-tie"></i>
+        </div>
+        <div>
+          <div style="font-size:0.85rem;font-weight:600;color:#1f2937;">${escapeHTML(caseItem.assignedToName || 'Adv. Ananya Singh')}</div>
+          <div style="font-size:0.72rem;color:#6b7280;">${escapeHTML(caseItem.assignedToEmail || 'ananya.singh@lexjuris.in')}</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-pen-to-square gold-text"></i> Log Hearing Outcome</span>
+      </div>
+      <form class="detail-update-form" onsubmit="window.handleQuickHearingSubmit(event, '${caseItem.id}')">
+        <div class="update-form-row">
+          <input type="text" name="hearingOutcomeSummary" placeholder="Hearing outcome (e.g. Arguments heard in part, listed next Monday)" required style="flex:2;">
+        </div>
+        <textarea name="hearingOutcomeNotes" placeholder="Summary of arguments submitted, bench observations, or directions given..." required></textarea>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="detail-action-btn primary">
+            <i class="fa-solid fa-floppy-disk"></i> Save Hearing Record
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function buildDocumentsTab(caseItem, docsList) {
+  const docsHTML = docsList.length === 0
+    ? `<div style="color:#9ca3af;font-size:0.82rem;text-align:center;padding:2rem 0;"><i class="fa-regular fa-folder-open" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;"></i>No documents attached yet.</div>`
+    : `<div class="detail-docs-list">${docsList.map(d => `
+        <div class="detail-doc-item">
+          <div class="doc-icon-wrap"><i class="fa-solid fa-file-pdf"></i></div>
+          <div class="doc-info">
+            <div class="doc-name">${escapeHTML(d.name || 'Document')}</div>
+            <div class="doc-meta">${escapeHTML(d.category || 'Document')} • ${escapeHTML(d.size || '1.5 MB')}${d.uploadedBy ? ' • ' + escapeHTML(d.uploadedBy) : ''}</div>
+          </div>
+          <button type="button" class="detail-action-btn" onclick="openCaseDocsModal('${caseItem.id}')" title="View documents">
+            <i class="fa-solid fa-eye"></i> View
+          </button>
+        </div>`).join('')}</div>`;
+
+  return `
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-folder-open"></i> Case Documents (${docsList.length})</span>
+        <button type="button" class="detail-action-btn primary" onclick="openAddNewDocModal('${caseItem.id}')">
+          <i class="fa-solid fa-plus"></i> Upload Document
+        </button>
+      </div>
+      ${docsHTML}
+    </div>
+  `;
+}
+
+function buildNotesTab(caseItem) {
+  return `
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-quote-left"></i> Strategy &amp; Case Notes</span>
+      </div>
+      <div class="detail-notes-block">
+        <p class="notes-text" style="white-space:pre-wrap;">${caseItem.notes ? escapeHTML(caseItem.notes) : 'No strategy notes recorded yet. Add strategy notes below.'}</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-pen-to-square gold-text"></i> Append Strategy Note</span>
+      </div>
+      <form class="detail-update-form" onsubmit="window.saveCaseNote(event, '${caseItem.id}')">
+        <textarea name="caseNoteText" placeholder="Enter strategy insights, client conference outcomes, or judicial observations..." required></textarea>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="detail-action-btn primary">
+            <i class="fa-solid fa-floppy-disk"></i> Append Note
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-circle-info"></i> Case Background</span>
+      </div>
+      <div class="detail-info-grid">
+        <div class="detail-info-card">
+          <div class="info-card-label">Case Matter</div>
+          <div class="info-card-value">${escapeHTML(caseItem.caseTitle)}</div>
+        </div>
+        <div class="detail-info-card">
+          <div class="info-card-label">Opposing Counsel / Party</div>
+          <div class="info-card-value">${escapeHTML(caseItem.opposingParty || '—')}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildTasksTab(caseItem) {
+  const tasks = (caseItem.tasks && Array.isArray(caseItem.tasks)) ? caseItem.tasks : [];
+  const completedCount = tasks.filter(t => t.completed).length;
+
+  const tasksHTML = tasks.length === 0
+    ? `<div style="color:#94a3b8;font-size:0.82rem;text-align:center;padding:1.5rem 0;"><i class="fa-solid fa-list-check" style="font-size:1.3rem;display:block;margin-bottom:0.5rem;"></i>No tasks assigned yet. Add an action item below.</div>`
+    : `<div class="case-tasks-list">${tasks.map(t => `
+        <div class="case-task-item ${t.completed ? 'completed' : ''}">
+          <input type="checkbox" class="case-task-checkbox" ${t.completed ? 'checked' : ''} onchange="window.toggleTaskComplete('${caseItem.id}', '${t.id}')">
+          <span class="task-title">${escapeHTML(t.title)}</span>
+          ${t.priority ? `<span class="task-badge ${t.priority.toLowerCase()}">${escapeHTML(t.priority)}</span>` : ''}
+          ${t.dueDate ? `<span class="task-due"><i class="fa-regular fa-clock"></i> ${formatDateDisplay(t.dueDate)}</span>` : ''}
+        </div>
+      `).join('')}</div>`;
+
+  return `
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-list-check"></i> Case Tasks (${completedCount}/${tasks.length} Done)</span>
+      </div>
+      ${tasksHTML}
+    </div>
+
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-plus gold-text"></i> Add New Task</span>
+      </div>
+      <form class="detail-update-form" onsubmit="window.addTaskToCase(event, '${caseItem.id}')">
+        <div class="update-form-row">
+          <input type="text" name="taskTitle" placeholder="Task description (e.g. Serve advance copy to opposing counsel)" required style="flex:2;">
+          <select name="taskPriority" style="flex:1;min-width:110px;">
+            <option value="Standard">Standard</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+          <input type="date" name="taskDueDate" style="flex:1;min-width:130px;">
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="detail-action-btn primary">
+            <i class="fa-solid fa-plus"></i> Add Task
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function buildUpdatesTab(caseItem, updates) {
+  const updatesHTML = updates.length === 0
+    ? `<div style="color:#9ca3af;font-size:0.8rem;text-align:center;padding:1.5rem 0;"><i class="fa-solid fa-clock-rotate-left" style="font-size:1.3rem;display:block;margin-bottom:0.5rem;"></i>No updates recorded yet.</div>`
+    : `<div class="detail-timeline">${updates.map(u => {
+        let icon = 'fa-file-lines';
+        if (u.type === 'hearing') icon = 'fa-calendar-check';
+        else if (u.type === 'order') icon = 'fa-stamp';
+        else if (u.type === 'instruction') icon = 'fa-pen-nib';
+        else if (u.type === 'status') icon = 'fa-clock-rotate-left';
+        return `
+          <div class="detail-timeline-item">
+            <div class="detail-timeline-dot"></div>
+            <div class="tl-title"><i class="fa-solid ${icon}"></i> ${escapeHTML(u.title || 'Update')}</div>
+            <div class="tl-meta">
+              <span class="timeline-type-pill">${escapeHTML(u.type || 'general')}</span>
+              <span>${formatDateDisplay(u.date)}${u.time ? ' • ' + u.time : ''}</span>
+              <span>By <strong>${escapeHTML(u.author || 'Counsel')}</strong></span>
+            </div>
+            <div class="tl-notes">${escapeHTML(u.notes || '')}</div>
+          </div>`;
+      }).join('')}</div>`;
+
+  return `
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-pen-to-square"></i> Add Case Update</span>
+      </div>
+      <form class="detail-update-form" onsubmit="handleDetailAddUpdate(event,'${caseItem.id}')">
+        <div class="update-form-row">
+          <input type="text" name="updateTitle" placeholder="Update summary (e.g. Arguments Heard in Part / Adjourned)" required style="flex:2;">
+          <select name="updateType" style="flex:1;min-width:130px;">
+            <option value="hearing">Hearing</option>
+            <option value="order">Order / Judgment</option>
+            <option value="filing">Filing</option>
+            <option value="instruction">Instruction / Meeting</option>
+            <option value="status">Status Change</option>
+          </select>
+        </div>
+        <textarea name="updateNotes" placeholder="Detailed proceedings, bench directions, client instructions, or next steps..." required></textarea>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="detail-action-btn primary">
+            <i class="fa-solid fa-floppy-disk"></i> Save Update
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-clock-rotate-left"></i> Case Updates Timeline (${updates.length})</span>
+      </div>
+      ${updatesHTML}
+    </div>
+  `;
+}
+
+function buildTeamTab(caseItem) {
+  const assignee = state.users ? state.users.find(u => u.id === caseItem.assignedTo) : null;
+  const assignedBy = caseItem.assignedBy || 'Adv. Vikramaditya Sharma (Group Head)';
+  return `
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-users"></i> Case Team &amp; Counsel</span>
+      </div>
+
+      <div class="detail-docs-list">
+        ${assignee ? `
+        <div class="detail-doc-item" style="gap:0.9rem;">
+          <div style="width:38px;height:38px;border-radius:50%;background:rgba(30,58,95,0.08);border:1.5px solid rgba(30,58,95,0.15);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--gold-primary);flex-shrink:0;">
+            <i class="fa-solid fa-user-check"></i>
+          </div>
+          <div class="doc-info">
+            <div class="doc-name">${escapeHTML(assignee.name)}</div>
+            <div class="doc-meta">${escapeHTML(assignee.role)} • ${escapeHTML(assignee.dept || '')} • Lead Counsel</div>
+          </div>
+          <span class="badge-assignee my-assignment" style="flex-shrink:0;">Lead</span>
+        </div>` : `
+        <div class="detail-doc-item">
+          <div class="doc-info">
+            <div class="doc-name">${escapeHTML(caseItem.assignedToName || 'Adv. Ananya Singh')}</div>
+            <div class="doc-meta">${escapeHTML(caseItem.assignedToEmail || 'ananya.singh@lexjuris.in')} • Lead Counsel</div>
+          </div>
+        </div>`}
+      </div>
+    </div>
+
+    <div>
+      <div class="detail-section-header">
+        <span class="detail-section-label"><i class="fa-solid fa-circle-info"></i> Practice Group Oversight</span>
+      </div>
+      <div class="detail-info-grid">
+        <div class="detail-info-card">
+          <div class="info-card-label">Practice Group</div>
+          <div class="info-card-value">${escapeHTML(caseItem.group || caseItem.caseCategory)}</div>
+        </div>
+        <div class="detail-info-card">
+          <div class="info-card-label">Assigned By / Supervising Head</div>
+          <div class="info-card-value">${escapeHTML(assignedBy)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ==============================
+// INTERACTIVE ACTION HANDLERS
+// ==============================
+
+// ---- Status dropdown menu ----
+window.toggleStatusMenu = function(caseId, event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById(`statusMenu-${caseId}`);
+  if (!menu) return;
+  menu.classList.toggle('hidden');
+};
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.status-dropdown-wrap')) {
+    document.querySelectorAll('.status-dropdown-menu').forEach(m => m.classList.add('hidden'));
+  }
+});
+
+window.setCaseStatus = function(caseId, newStatus) {
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem) return;
+  const oldStatus = caseItem.status;
+  caseItem.status = newStatus;
+
+  if (!caseItem.updates) caseItem.updates = [];
+  caseItem.updates.unshift({
+    id: 'upd_st_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+    author: state.currentUser ? state.currentUser.name : 'Advocate',
+    authorRole: state.currentUser ? state.currentUser.role : 'Counsel',
+    type: 'status',
+    title: 'Status changed to ' + newStatus,
+    notes: `Case status changed from ${oldStatus || 'In Progress'} to ${newStatus}.`
+  });
+
+  saveCasesToStorage();
+  showToast(`Case status updated to "${newStatus}"!`, 'success');
+  renderDashboard();
+  openDocketDetail(caseId, state.activeDocketTab || 'overview');
+};
+
+// ---- Task complete toggle ----
+window.toggleTaskComplete = function(caseId, taskId) {
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem || !caseItem.tasks) return;
+  const task = caseItem.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  task.completed = !task.completed;
+  saveCasesToStorage();
+  showToast(task.completed ? 'Task marked complete.' : 'Task marked pending.', 'info');
+  openDocketDetail(caseId, 'tasks');
+};
+
+// ---- Add Task ----
+window.addTaskToCase = function(e, caseId) {
+  e.preventDefault();
+  const form = e.target;
+  const title = form.taskTitle.value.trim();
+  const priority = form.taskPriority.value;
+  const dueDate = form.taskDueDate.value || getOffsetDateString(3);
+  if (!title) return;
+
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem) return;
+  if (!caseItem.tasks) caseItem.tasks = [];
+
+  caseItem.tasks.push({
+    id: 't_' + Date.now(),
+    title, priority, dueDate, completed: false
+  });
+
+  if (!caseItem.updates) caseItem.updates = [];
+  caseItem.updates.unshift({
+    id: 'upd_t_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+    author: state.currentUser ? state.currentUser.name : 'Counsel',
+    authorRole: 'Advocate',
+    type: 'instruction',
+    title: 'Task Added: ' + title,
+    notes: `New action item assigned with ${priority} priority, due on ${formatDateDisplay(dueDate)}.`
+  });
+
+  saveCasesToStorage();
+  showToast('New task added.', 'success');
+  openDocketDetail(caseId, 'tasks');
+};
+
+// ---- Save Strategy Note ----
+window.saveCaseNote = function(e, caseId) {
+  e.preventDefault();
+  const text = e.target.caseNoteText.value.trim();
+  if (!text) return;
+
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem) return;
+
+  const timestamp = `[${formatDateDisplay(getOffsetDateString(0))} - ${state.currentUser ? state.currentUser.name : 'Counsel'}]`;
+  caseItem.notes = caseItem.notes ? `${caseItem.notes}\n\n${timestamp}: ${text}` : `${timestamp}: ${text}`;
+
+  if (!caseItem.updates) caseItem.updates = [];
+  caseItem.updates.unshift({
+    id: 'upd_n_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+    author: state.currentUser ? state.currentUser.name : 'Counsel',
+    authorRole: 'Advocate',
+    type: 'instruction',
+    title: 'Strategy Note Added',
+    notes: text
+  });
+
+  saveCasesToStorage();
+  showToast('Strategy note saved.', 'success');
+  openDocketDetail(caseId, 'notes');
+};
+
+// ---- Quick Actions Helpers ----
+window.openQuickHearingUpdate = function(caseId) {
+  openDocketDetail(caseId, 'hearings');
+  setTimeout(() => {
+    const input = document.querySelector('input[name="hearingOutcomeSummary"]');
+    if (input) input.focus();
+  }, 100);
+};
+
+window.openQuickNoteModal = function(caseId) {
+  openDocketDetail(caseId, 'notes');
+  setTimeout(() => {
+    const textarea = document.querySelector('textarea[name="caseNoteText"]');
+    if (textarea) textarea.focus();
+  }, 100);
+};
+
+window.openQuickTaskModal = function(caseId) {
+  openDocketDetail(caseId, 'tasks');
+  setTimeout(() => {
+    const input = document.querySelector('input[name="taskTitle"]');
+    if (input) input.focus();
+  }, 100);
+};
+
+window.handleQuickHearingSubmit = function(e, caseId) {
+  e.preventDefault();
+  const form = e.target;
+  const summary = form.hearingOutcomeSummary.value.trim();
+  const notes = form.hearingOutcomeNotes.value.trim();
+  if (!summary) return;
+
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem) return;
+
+  if (!caseItem.updates) caseItem.updates = [];
+  caseItem.updates.unshift({
+    id: 'upd_h_' + Date.now(),
+    date: getOffsetDateString(0),
+    time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+    author: state.currentUser ? state.currentUser.name : 'Chambers Counsel',
+    authorRole: 'Advocate',
+    type: 'hearing',
+    title: summary,
+    notes: notes
+  });
+
+  saveCasesToStorage();
+  showToast('Hearing outcome logged.', 'success');
+  openDocketDetail(caseId, 'updates');
+};
+
+// ---- Handle add update submit ----
+window.handleDetailAddUpdate = function(e, caseId) {
+  e.preventDefault();
+  const form = e.target;
+  const title = form.updateTitle.value.trim();
+  const type = form.updateType.value;
+  const notes = form.updateNotes.value.trim();
+  if (!title || !notes) { showToast('Please provide a title and notes.', 'error'); return; }
+
+  const caseItem = state.cases.find(c => c.id === caseId);
+  if (!caseItem) return;
+  if (!caseItem.updates) caseItem.updates = [];
+
+  const newUpdate = {
+    id: 'upd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    date: getOffsetDateString(0),
+    time: formatTime12Hour(new Date().toTimeString().substring(0, 5)),
+    author: state.currentUser ? state.currentUser.name : 'Chambers Counsel',
+    authorRole: state.currentUser ? state.currentUser.role : 'Advocate',
+    type, title, notes
+  };
+
+  caseItem.updates.unshift(newUpdate);
+  saveCasesToStorage();
+  logAuditEvent('Docket Update Added', `Update "${title}" on ${caseItem.caseNumber} (${caseItem.clientName}).`, 'create');
+  showToast(`Update logged on "${caseItem.caseNumber}"!`, 'success');
+  form.reset();
+  openDocketDetail(caseId, 'updates');
+};
+
+window.toggleCaseStatusAndRefresh = function(caseId) {
+  toggleCaseStatus(caseId);
+  if (state.activeDocketCaseId === caseId) {
+    setTimeout(() => openDocketDetail(caseId, state.activeDocketTab), 120);
+  }
+};
+
+window.deleteCaseAndRefresh = function(caseId) {
+  if (!confirm('Delete this case permanently? This cannot be undone.')) return;
+  state.cases = state.cases.filter(c => c.id !== caseId);
+  saveCasesToStorage();
+  if (state.activeDocketCaseId === caseId) {
+    state.activeDocketCaseId = null;
+    state.activeDocketTab = 'overview';
+    const placeholder = document.getElementById('docketDetailPlaceholder');
+    const content = document.getElementById('docketDetailContent');
+    if (placeholder) placeholder.classList.remove('hidden');
+    if (content) content.classList.add('hidden');
+  }
+  showToast('Case deleted.', 'success');
+  renderDashboard();
+};
+
+window.quickAddNewCase = function() {
+  const btn = document.getElementById('quickAddToggleBtn');
+  if (btn) btn.click();
+};
+
 
 function getHearingScheduleBadge(dateStr, timeStr, status) {
   if (status === 'Disposed') {
