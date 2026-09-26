@@ -241,12 +241,45 @@
   <!-- ================= MAIN APPLICATION DASHBOARD ================= -->
   <div id="appContainer" class="app-container hidden">
 
-    <!-- Floating Left Trigger for Case Search & Directory Drawer -->
-    <button type="button" id="floatingSearchDrawerBtn" class="floating-left-tab" title="Open Case Search & Directory (Ctrl + K)">
-      <i class="fa-solid fa-folder-tree"></i>
-      <span>Cases Index</span>
-      <span class="floating-tab-badge" id="floatingTabCountBadge">0</span>
-    </button>
+    <!-- ================= IDLE LEFT SIDEBAR (DOCKS ON LEFT EDGE) ================= -->
+    <aside id="leftSidebarRail" class="left-sidebar-rail" aria-label="Cases Directory & Search Sidebar">
+      <div class="sidebar-rail-inner">
+        <!-- Main Search Trigger Button (Idle State) -->
+        <button type="button" id="sidebarRailSearchBtn" class="rail-search-btn" title="Search Legal Dockets & Directory (Ctrl + K)">
+          <div class="rail-icon-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <span class="rail-btn-text">SEARCH</span>
+          <span class="rail-count-badge" id="floatingTabCountBadge">0</span>
+          <span class="rail-shortcut-hint">Ctrl+K</span>
+        </button>
+
+        <div class="rail-divider"></div>
+
+        <!-- Quick Category Shortcuts in Idle Rail -->
+        <div class="rail-quick-nav">
+          <button type="button" class="rail-nav-item" id="railQuickTodayBtn" title="Filter Today's Court Hearings" data-rail-filter="today">
+            <i class="fa-solid fa-bolt"></i>
+            <span class="rail-mini-badge" id="railTodayBadge">0</span>
+          </button>
+          <button type="button" class="rail-nav-item" id="railQuickUrgentBtn" title="Filter Urgent / Critical Dockets" data-rail-filter="critical">
+            <i class="fa-solid fa-fire"></i>
+            <span class="rail-mini-badge badge-urgent" id="railUrgentBadge">0</span>
+          </button>
+          <button type="button" class="rail-nav-item" id="railQuickUpcomingBtn" title="Filter Upcoming Hearings" data-rail-filter="upcoming">
+            <i class="fa-regular fa-clock"></i>
+            <span class="rail-mini-badge" id="railUpcomingBadge">0</span>
+          </button>
+        </div>
+
+        <div class="rail-spacer"></div>
+
+        <!-- Expand Indicator / Chevron -->
+        <button type="button" id="sidebarRailExpandBtn" class="rail-expand-btn" title="Expand Search Sidebar (Ctrl + K)">
+          <i class="fa-solid fa-angles-right"></i>
+        </button>
+      </div>
+    </aside>
 
     <!-- Top Navigation Bar -->
     <header class="top-nav">
@@ -262,8 +295,9 @@
           <button type="button" id="workspaceNavBtn" class="nav-tab-btn active" title="Active Dockets & Case Intake">
             <i class="fa-solid fa-briefcase"></i> <span>Legal Dockets</span>
           </button>
-          <button type="button" id="openSearchDrawerNavBtn" class="nav-tab-btn" title="Open Sliding Case Directory & Search (Ctrl + K)">
-            <i class="fa-solid fa-folder-tree gold-text"></i> <span>Search Directory</span>
+          <button type="button" id="openSearchDrawerNavBtn" class="nav-tab-btn" title="Open Case Search & Directory Sidebar (Ctrl + K)">
+            <i class="fa-solid fa-magnifying-glass gold-text"></i> <span>Search Cases</span>
+            <span class="badge-pill-gold" id="navSearchCountBadge">0</span>
           </button>
           <a href="notice-maker.html" id="noticeNavBtn" class="nav-tab-btn" title="Official Legal Notice Studio & Statutory Drafter">
             <i class="fa-solid fa-file-signature gold-text"></i> <span>Notice Maker</span>
@@ -759,6 +793,9 @@
           </div>
 
           <div class="header-action-group">
+            <button type="button" class="btn btn-gold btn-sm" id="btnOpenGlobalAddDocModal" title="Upload and add a document to any existing case docket">
+              <i class="fa-solid fa-file-circle-plus"></i> + Add Document to Case
+            </button>
             <button id="exportCasesBtn" class="btn btn-outline-gold btn-sm" title="Export today's cause list">
               <i class="fa-solid fa-download"></i> Cause List
             </button>
@@ -768,45 +805,8 @@
           </div>
         </div>
 
-        <!-- Search & Filter Ribbon -->
-        <div class="search-filter-ribbon">
-          <div class="search-top-bar">
-            <div class="search-box">
-              <i class="fa-solid fa-magnifying-glass search-icon"></i>
-              <input type="text" id="clientSearchInput" placeholder="Search legal dockets by Case Name, Client Name..."
-                aria-label="Search cases">
-              <button id="clearSearchBtn" class="btn-clear-search hidden" title="Clear search"><i
-                  class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <!-- Open Left Sliding Case Directory Button -->
-            <button type="button" class="btn btn-outline-gold btn-sm" id="btnOpenSearchDrawer" title="Slide out Case Directory & Search from left (Ctrl + K)">
-              <i class="fa-solid fa-folder-tree"></i> <span>Cases Index</span>
-            </button>
-
-            <!-- Search Mode Filter: Case Name or Client Name -->
-            <div class="search-mode-selector" role="group" aria-label="Search filter field">
-              <span class="search-mode-label"><i class="fa-solid fa-sliders"></i> Search By:</span>
-              <div class="search-mode-pills" id="searchModePills">
-                <button type="button" class="search-mode-pill active" data-mode="all" title="Search across all fields">All</button>
-                <button type="button" class="search-mode-pill" data-mode="caseTitle" title="Search specifically by Case Name / Matter">
-                  <i class="fa-solid fa-scale-balanced"></i> Case Name
-                </button>
-                <button type="button" class="search-mode-pill" data-mode="clientName" title="Search specifically by Client Name">
-                  <i class="fa-solid fa-user-tie"></i> Client Name
-                </button>
-                <button type="button" class="search-mode-pill" data-mode="caseNumber" title="Search specifically by Case / Suit Number">
-                  <i class="fa-solid fa-hashtag"></i> Case No.
-                </button>
-              </div>
-            </div>
-
-            <!-- Quick Add Document to Existing Case Button -->
-            <button type="button" class="btn btn-gold btn-sm" id="btnOpenGlobalAddDocModal" title="Upload and add a document to any existing case docket">
-              <i class="fa-solid fa-file-circle-plus"></i> + Add Document to Case
-            </button>
-          </div>
-
+        <!-- Filter Ribbon (Search is unified in the left sidebar) -->
+        <div class="search-filter-ribbon dockets-filter-ribbon">
           <!-- Filter Pills -->
           <div class="filter-pills" role="tablist">
             <button class="filter-pill active" data-filter="all">All Cases (<span id="countAll">0</span>)</button>
@@ -818,6 +818,14 @@
                 id="countCritical">0</span>)</button>
             <button class="filter-pill" data-filter="closed"><i class="fa-solid fa-check"></i> Resolved (<span
                 id="countClosed">0</span>)</button>
+          </div>
+
+          <!-- Active Search Indicator from Sidebar Search -->
+          <div id="activeWorkspaceSearchTag" class="active-workspace-search-tag hidden">
+            <span><i class="fa-solid fa-magnifying-glass gold-text"></i> Search: <strong id="workspaceSearchQueryText"></strong></span>
+            <button type="button" id="clearWorkspaceSearchTagBtn" title="Clear search query" class="btn-clear-tag">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
         </div>
 

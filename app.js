@@ -745,6 +745,15 @@ const dom = {
   floatingTabCountBadge: document.getElementById('floatingTabCountBadge'),
   openSearchDrawerNavBtn: document.getElementById('openSearchDrawerNavBtn'),
   btnOpenSearchDrawer: document.getElementById('btnOpenSearchDrawer'),
+  leftSidebarRail: document.getElementById('leftSidebarRail'),
+  sidebarRailSearchBtn: document.getElementById('sidebarRailSearchBtn'),
+  sidebarRailExpandBtn: document.getElementById('sidebarRailExpandBtn'),
+  railQuickTodayBtn: document.getElementById('railQuickTodayBtn'),
+  railQuickUrgentBtn: document.getElementById('railQuickUrgentBtn'),
+  railQuickUpcomingBtn: document.getElementById('railQuickUpcomingBtn'),
+  activeWorkspaceSearchTag: document.getElementById('activeWorkspaceSearchTag'),
+  workspaceSearchQueryText: document.getElementById('workspaceSearchQueryText'),
+  clearWorkspaceSearchTagBtn: document.getElementById('clearWorkspaceSearchTagBtn'),
 
   // Full Screen Case Dossier Modal Elements
   fullScreenCaseModal: document.getElementById('fullScreenCaseModal'),
@@ -1337,6 +1346,21 @@ function setupEventListeners() {
   if (dom.floatingSearchDrawerBtn) {
     dom.floatingSearchDrawerBtn.addEventListener('click', () => openSearchDrawer());
   }
+  if (dom.sidebarRailSearchBtn) {
+    dom.sidebarRailSearchBtn.addEventListener('click', () => openSearchDrawer());
+  }
+  if (dom.sidebarRailExpandBtn) {
+    dom.sidebarRailExpandBtn.addEventListener('click', () => openSearchDrawer());
+  }
+  if (dom.railQuickTodayBtn) {
+    dom.railQuickTodayBtn.addEventListener('click', () => openSearchDrawer('', 'today'));
+  }
+  if (dom.railQuickUrgentBtn) {
+    dom.railQuickUrgentBtn.addEventListener('click', () => openSearchDrawer('', 'critical'));
+  }
+  if (dom.railQuickUpcomingBtn) {
+    dom.railQuickUpcomingBtn.addEventListener('click', () => openSearchDrawer('', 'upcoming'));
+  }
   if (dom.openSearchDrawerNavBtn) {
     dom.openSearchDrawerNavBtn.addEventListener('click', () => openSearchDrawer());
   }
@@ -1355,16 +1379,32 @@ function setupEventListeners() {
     });
   }
 
-  // Drawer Search Input
+  // Active Workspace Search Tag Clear button
+  if (dom.clearWorkspaceSearchTagBtn) {
+    dom.clearWorkspaceSearchTagBtn.addEventListener('click', () => {
+      state.searchQuery = '';
+      drawerState.searchQuery = '';
+      if (dom.drawerSearchInput) dom.drawerSearchInput.value = '';
+      if (dom.clearDrawerSearchBtn) dom.clearDrawerSearchBtn.classList.add('hidden');
+      updateWorkspaceSearchTag();
+      renderCasesList();
+      renderDrawerCasesList();
+    });
+  }
+
+  // Drawer Search Input - live sync with workspace & tag
   if (dom.drawerSearchInput) {
     dom.drawerSearchInput.addEventListener('input', (e) => {
       drawerState.searchQuery = e.target.value.trim().toLowerCase();
+      state.searchQuery = drawerState.searchQuery;
       if (drawerState.searchQuery) {
         if (dom.clearDrawerSearchBtn) dom.clearDrawerSearchBtn.classList.remove('hidden');
       } else {
         if (dom.clearDrawerSearchBtn) dom.clearDrawerSearchBtn.classList.add('hidden');
       }
+      updateWorkspaceSearchTag();
       renderDrawerCasesList();
+      renderCasesList();
     });
   }
 
@@ -1373,8 +1413,11 @@ function setupEventListeners() {
     dom.clearDrawerSearchBtn.addEventListener('click', () => {
       if (dom.drawerSearchInput) dom.drawerSearchInput.value = '';
       drawerState.searchQuery = '';
+      state.searchQuery = '';
       dom.clearDrawerSearchBtn.classList.add('hidden');
+      updateWorkspaceSearchTag();
       renderDrawerCasesList();
+      renderCasesList();
       if (dom.drawerSearchInput) dom.drawerSearchInput.focus();
     });
   }
@@ -3406,7 +3449,7 @@ function createCaseCardHTML(item, todayStr) {
   const caseTitleDisplay = highlightSearchMatch(item.caseTitle, state.searchQuery, state.searchMode, 'caseTitle');
   
   return `
-    <div class="case-card ${borderClass}" data-case-id="${item.id}">
+    <div class="case-card ${borderClass}" data-case-id="${item.id}" id="caseCard-${item.id}">
       
       <!-- Card Top: Client Info & Docket Tag -->
       <div class="card-header-row">
@@ -3611,19 +3654,30 @@ const drawerState = {
   isFullscreen: false
 };
 
-function openSearchDrawer(prefillQuery) {
+function openSearchDrawer(prefillQuery, prefillFilter) {
   if (!dom.searchDrawerOverlay) return;
   dom.searchDrawerOverlay.classList.remove('hidden');
   requestAnimationFrame(() => {
     dom.searchDrawerOverlay.classList.add('active');
   });
 
-  if (typeof prefillQuery === 'string') {
+  if (typeof prefillFilter === 'string' && prefillFilter) {
+    drawerState.currentFilter = prefillFilter;
+    if (dom.drawerFilterPills) {
+      dom.drawerFilterPills.forEach(p => {
+        if (p.getAttribute('data-filter') === prefillFilter) p.classList.add('active');
+        else p.classList.remove('active');
+      });
+    }
+  }
+
+  if (typeof prefillQuery === 'string' && prefillQuery.length > 0) {
     drawerState.searchQuery = prefillQuery.trim().toLowerCase();
+    state.searchQuery = drawerState.searchQuery;
     if (dom.drawerSearchInput) dom.drawerSearchInput.value = prefillQuery;
-  } else if (dom.clientSearchInput && dom.clientSearchInput.value.trim() && (!dom.drawerSearchInput || !dom.drawerSearchInput.value)) {
-    drawerState.searchQuery = dom.clientSearchInput.value.trim().toLowerCase();
-    if (dom.drawerSearchInput) dom.drawerSearchInput.value = dom.clientSearchInput.value;
+  } else if (state.searchQuery && (!dom.drawerSearchInput || !dom.drawerSearchInput.value)) {
+    drawerState.searchQuery = state.searchQuery;
+    if (dom.drawerSearchInput) dom.drawerSearchInput.value = state.searchQuery;
   }
 
   if (dom.clearDrawerSearchBtn) {
@@ -3634,6 +3688,7 @@ function openSearchDrawer(prefillQuery) {
     }
   }
 
+  updateWorkspaceSearchTag();
   renderDrawerCasesList();
   setTimeout(() => {
     if (dom.drawerSearchInput) dom.drawerSearchInput.focus();
@@ -3668,6 +3723,18 @@ function toggleDrawerFullscreen(forceState) {
   }
 }
 
+function updateWorkspaceSearchTag() {
+  const tag = document.getElementById('activeWorkspaceSearchTag') || dom.activeWorkspaceSearchTag;
+  const text = document.getElementById('workspaceSearchQueryText') || dom.workspaceSearchQueryText;
+  if (!tag || !text) return;
+  if (state.searchQuery && state.searchQuery.trim().length > 0) {
+    text.textContent = `"${state.searchQuery}"`;
+    tag.classList.remove('hidden');
+  } else {
+    tag.classList.add('hidden');
+  }
+}
+
 function updateDrawerCounts() {
   const accessible = getAccessibleCases(state.currentUser);
   const todayStr = getOffsetDateString(0);
@@ -3691,8 +3758,55 @@ function updateDrawerCounts() {
 
   const floatBadge = document.getElementById('floatingTabCountBadge');
   if (floatBadge) floatBadge.textContent = accessible.length;
-  const navBadge = document.getElementById('navDrawerCountBadge');
+  const navBadge = document.getElementById('navSearchCountBadge') || document.getElementById('navDrawerCountBadge');
   if (navBadge) navBadge.textContent = accessible.length;
+  const railTabCount = document.getElementById('railTabCountBadge');
+  if (railTabCount) railTabCount.textContent = accessible.length;
+
+  const railToday = document.getElementById('railTodayBadge');
+  if (railToday) railToday.textContent = todayCases.length;
+  const railUrgent = document.getElementById('railUrgentBadge');
+  if (railUrgent) railUrgent.textContent = urgentCases.length;
+  const railUp = document.getElementById('railUpcomingBadge');
+  if (railUp) railUp.textContent = upcomingCases.length;
+}
+
+function locateCaseInWorkspace(caseId) {
+  closeSearchDrawer();
+  
+  if (typeof switchWorkspaceView === 'function') {
+    switchWorkspaceView('workspace');
+  }
+
+  // If there's an active category filter on workspace that would hide this case, switch filter to 'all'
+  const targetCase = state.cases.find(c => c.id === caseId);
+  const todayStr = getOffsetDateString(0);
+  if (targetCase) {
+    let wouldBeHidden = false;
+    if (state.currentFilter === 'today' && (targetCase.hearingDate !== todayStr || targetCase.status === 'Disposed')) wouldBeHidden = true;
+    if (state.currentFilter === 'upcoming' && (targetCase.hearingDate <= todayStr || targetCase.status === 'Disposed')) wouldBeHidden = true;
+    if (state.currentFilter === 'critical' && !(targetCase.priority === 'Critical' || targetCase.priority === 'High')) wouldBeHidden = true;
+    if (state.currentFilter === 'closed' && targetCase.status !== 'Disposed') wouldBeHidden = true;
+
+    if (wouldBeHidden) {
+      state.currentFilter = 'all';
+      const pills = document.querySelectorAll('.filter-pills .filter-pill');
+      pills.forEach(p => {
+        if (p.getAttribute('data-filter') === 'all') p.classList.add('active');
+        else p.classList.remove('active');
+      });
+      renderCasesList();
+    }
+  }
+
+  setTimeout(() => {
+    const card = document.getElementById(`caseCard-${caseId}`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('case-highlight-flash');
+      setTimeout(() => card.classList.remove('case-highlight-flash'), 2500);
+    }
+  }, 320);
 }
 
 function renderDrawerCasesList() {
@@ -3780,8 +3894,13 @@ function renderDrawerCasesList() {
             ${item.priority === 'Critical' ? '<span class="hearing-badge badge-urgent"><i class="fa-solid fa-bolt"></i> Urgent</span>' : ''}
             <span class="badge-group">${escapeHTML(item.group || item.caseCategory)}</span>
           </div>
-          <div class="drawer-fullscreen-hint">
-            <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Full Screen
+          <div class="drawer-case-footer-actions">
+            <button type="button" class="btn-locate-case" data-locate-id="${item.id}" title="Scroll to and view in workspace dockets">
+              <i class="fa-solid fa-location-crosshairs"></i> View in Dockets
+            </button>
+            <div class="drawer-fullscreen-hint">
+              <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Full Screen
+            </div>
           </div>
         </div>
       </div>
@@ -3790,7 +3909,8 @@ function renderDrawerCasesList() {
 
   // Attach click to open full screen
   dom.drawerCasesList.querySelectorAll('.drawer-case-item').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-locate-case')) return;
       const caseId = card.getAttribute('data-case-id');
       openFullScreenCase(caseId);
     });
@@ -3800,6 +3920,15 @@ function renderDrawerCasesList() {
         const caseId = card.getAttribute('data-case-id');
         openFullScreenCase(caseId);
       }
+    });
+  });
+
+  // Attach click to locate case in workspace
+  dom.drawerCasesList.querySelectorAll('.btn-locate-case').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const caseId = btn.getAttribute('data-locate-id');
+      locateCaseInWorkspace(caseId);
     });
   });
 }
