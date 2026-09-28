@@ -4334,6 +4334,572 @@ textarea:focus {
 }
 
 /* ==========================================================================
+   ENHANCED LEGAL NOTICE MAKER: REFERENCE SHOWCASE, LAND TABLES & AI STUDIO
+   ========================================================================== */
+
+/* Reference Notices Showcase Bar */
+.reference-showcase-bar {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.reference-showcase-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+.reference-showcase-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gold-light, #f1d279);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reference-showcase-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.reference-pills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.ref-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: var(--bg-surface, #1e293b);
+  border: 1px solid var(--border-subtle, #334155);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  color: var(--text-primary, #f8fafc);
+}
+
+.ref-pill-btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: var(--gold, #d4af37);
+  transform: translateY(-1px);
+}
+
+.ref-pill-btn.active {
+  border-color: var(--gold, #d4af37);
+  background: rgba(212, 175, 55, 0.18);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.ref-pill-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold, #d4af37);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.ref-pill-text {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ref-pill-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ref-pill-desc {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Land Schedule Interactive Table Editor */
+.schedule-table-wrap {
+  margin-top: 0.75rem;
+  border: 1px solid var(--border-subtle, #334155);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.4);
+  padding: 0.75rem;
+}
+
+.schedule-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.schedule-table-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold, #d4af37);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.schedule-table-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.schedule-interactive-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.schedule-interactive-table th,
+.schedule-interactive-table td {
+  border: 1px solid var(--border-subtle, #334155);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+}
+
+.schedule-interactive-table th {
+  background: rgba(30, 41, 59, 0.8);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.schedule-interactive-table input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary, #fff);
+  padding: 0.2rem 0.3rem;
+  font-size: 0.74rem;
+  border-radius: 3px;
+}
+
+.schedule-interactive-table input:focus {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: var(--gold, #d4af37);
+  outline: none;
+}
+
+.btn-remove-row {
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.btn-remove-row:hover {
+  opacity: 1;
+}
+
+/* Schedule Table Inside Printed Parchment */
+.doc-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.85rem 0;
+  font-size: 0.82rem;
+  color: #0f172a;
+}
+
+.doc-schedule-table th,
+.doc-schedule-table td {
+  border: 1px solid #0f172a;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc-schedule-table th {
+  background: #f1f5f9;
+  font-weight: 800;
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+}
+
+.doc-schedule-note {
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-style: italic;
+  margin-top: 0.5rem;
+  color: #1e293b;
+}
+
+/* Alternate Letterhead Styles */
+/* 1. Girish Style (Classic Single Advocate) */
+.letterhead-classic-girish {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.classic-girish-left {
+  text-align: left;
+}
+
+.classic-adv-name {
+  font-family: 'Cinzel', serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.classic-adv-degree {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  margin-top: 0.15rem;
+}
+
+.classic-adv-chambers {
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.classic-girish-right {
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* 2. BSS & Associates Style (Law Firm Partnership) */
+.letterhead-firm-bss {
+  margin-bottom: 1.25rem;
+}
+
+.firm-bss-top {
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #0f172a;
+  margin-bottom: 0.6rem;
+}
+
+.firm-bss-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.firm-bss-left {
+  text-align: left;
+  color: #1e293b;
+}
+
+.firm-bss-left strong {
+  font-size: 0.82rem;
+  display: block;
+  color: #0f172a;
+}
+
+.firm-bss-right {
+  text-align: right;
+  color: #1e293b;
+}
+
+.firm-bss-divider {
+  border-top: 2px solid #0f172a;
+  border-bottom: 1px solid #0f172a;
+  height: 4px;
+  margin-top: 0.65rem;
+}
+
+/* 3. Direct Public Representation Header (No Advocate letterhead) */
+.letterhead-direct-authority {
+  text-align: right;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Contd..2 and Pagination Markers */
+.doc-contd-marker {
+  text-align: right;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 1.5rem;
+  padding-top: 0.5rem;
+  color: #334155;
+}
+
+.doc-page-2-header {
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin: 1.5rem 0 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed #cbd5e1;
+  color: #0f172a;
+}
+
+.doc-postscript-notice {
+  margin-top: 1.5rem;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: #475569;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.6rem;
+}
+
+/* Direct Parchment Click-to-Edit Mode */
+.legal-parchment-paper.editable-active {
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.45), 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.legal-parchment-paper.editable-active [contenteditable="true"] {
+  outline: 1px dashed rgba(212, 175, 55, 0.5);
+  border-radius: 2px;
+  cursor: text;
+  transition: background 0.15s ease;
+}
+
+.legal-parchment-paper.editable-active [contenteditable="true"]:hover {
+  background: rgba(254, 240, 138, 0.25);
+}
+
+.legal-parchment-paper.editable-active [contenteditable="true"]:focus {
+  outline: 2px solid #d4af37;
+  background: rgba(254, 240, 138, 0.4);
+}
+
+.badge-edit-indicator {
+  background: #d4af37;
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  text-transform: uppercase;
+  animation: pulseEdit 2s infinite;
+}
+
+@keyframes pulseEdit {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* AI Legal Notice Studio Modal */
+.ai-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 30, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.ai-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ai-modal-window {
+  background: #0f172a;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: var(--radius-lg, 12px);
+  width: 100%;
+  max-width: 780px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 30px rgba(212, 175, 55, 0.15);
+  overflow: hidden;
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(20px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.ai-modal-header {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-bottom: 1px solid var(--border-subtle, #334155);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-modal-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ai-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+}
+
+.ai-modal-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ai-modal-tabs {
+  display: flex;
+  background: rgba(15, 23, 42, 0.8);
+  border-bottom: 1px solid var(--border-subtle, #334155);
+  padding: 0 1.25rem;
+}
+
+.ai-tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ai-tab-btn:hover {
+  color: #f8fafc;
+}
+
+.ai-tab-btn.active {
+  color: var(--gold, #d4af37);
+  border-bottom-color: var(--gold, #d4af37);
+}
+
+.ai-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  flex: 1;
+}
+
+.ai-prompt-box {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid var(--border-subtle, #334155);
+  border-radius: var(--radius-md);
+  color: #f8fafc;
+  padding: 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.ai-prompt-box:focus {
+  outline: none;
+  border-color: var(--gold, #d4af37);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25);
+}
+
+.ai-chips-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.ai-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ai-chip {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  color: #f1d279;
+  font-size: 0.74rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ai-chip:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold, #d4af37);
+  transform: translateY(-1px);
+}
+
+.ai-modal-footer {
+  padding: 1rem 1.5rem;
+  background: rgba(15, 23, 42, 0.9);
+  border-top: 1px solid var(--border-subtle, #334155);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-engine-badge {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ai-engine-badge i {
+  color: #10b981;
+}
+
+/* ==========================================================================
    PRINT MEDIA STYLES (Clean PDF/Paper Export)
    ========================================================================== */
 @media print {

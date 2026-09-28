@@ -126,8 +126,11 @@
         </div>
 
         <div class="quick-header-actions">
+          <button type="button" id="btnOpenAiDrafterTop" class="btn btn-primary btn-sm" title="Take help from AI to type notices">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>AI Notice Drafter</span>
+          </button>
           <button type="button" id="btnQuickDemoLoad" class="btn btn-outline-gold btn-sm" title="Load sample scenario">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Demo Scenario</span>
+            <i class="fa-solid fa-bolt"></i> <span>Sample Data</span>
           </button>
           <button type="button" id="btnResetNoticeForm" class="btn-icon-subtle" title="Reset all fields">
             <i class="fa-solid fa-rotate-right"></i>
@@ -135,11 +138,49 @@
         </div>
       </div>
 
-      <!-- Quick Category Selection Pills Grid -->
+      <!-- Quick Category Selection Pills Grid (Court Notice Formats) -->
       <div class="notice-category-selector-wrap">
-        <label class="section-label"><i class="fa-solid fa-scale-unbalanced"></i> Select Official Notice Category:</label>
+        <label class="section-label"><i class="fa-solid fa-scale-unbalanced"></i> Select Court Notice Format:</label>
         <div class="notice-types-grid" id="noticeTypesGrid">
-          <button type="button" class="notice-type-card active" data-type="ni_act_138">
+          
+          <!-- Format 1: General Statutory Notice by RPAD -->
+          <button type="button" class="notice-type-card active" data-type="general_notice">
+            <div class="card-type-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">General Legal Notice</span>
+              <span class="card-type-sub">Official RPAD Court Format</span>
+            </div>
+          </button>
+
+          <!-- Format 2: Matrimonial & Maintenance Notice -->
+          <button type="button" class="notice-type-card" data-type="matrimonial_maintenance">
+            <div class="card-type-icon"><i class="fa-solid fa-person-breastfeeding"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Maintenance & Alimony</span>
+              <span class="card-type-sub">Sec 125 CrPC / Hindu Law</span>
+            </div>
+          </button>
+
+          <!-- Format 3: Land & Property Schedule Notice -->
+          <button type="button" class="notice-type-card" data-type="land_acquisition_claim">
+            <div class="card-type-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Land Schedule Notice</span>
+              <span class="card-type-sub">Particulars & Parcels Table</span>
+            </div>
+          </button>
+
+          <!-- Format 4: Power of Attorney Revocation Notice -->
+          <button type="button" class="notice-type-card" data-type="gpa_cancellation">
+            <div class="card-type-icon"><i class="fa-solid fa-stamp"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">GPA Revocation</span>
+              <span class="card-type-sub">Cancel Power & Restrain Sale</span>
+            </div>
+          </button>
+
+          <!-- Format 5: Cheque Dishonour -->
+          <button type="button" class="notice-type-card" data-type="ni_act_138">
             <div class="card-type-icon"><i class="fa-solid fa-money-check-dollar"></i></div>
             <div class="card-type-info">
               <span class="card-type-title">Sec 138 NI Act</span>
@@ -147,14 +188,16 @@
             </div>
           </button>
 
+          <!-- Format 6: Money Recovery -->
           <button type="button" class="notice-type-card" data-type="money_recovery">
             <div class="card-type-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
             <div class="card-type-info">
               <span class="card-type-title">Money Recovery</span>
-              <span class="card-type-sub">Unpaid Invoices & Dues</span>
+              <span class="card-type-sub">Unpaid Dues & Debt</span>
             </div>
           </button>
 
+          <!-- Format 7: Tenant Eviction -->
           <button type="button" class="notice-type-card" data-type="tenant_eviction">
             <div class="card-type-icon"><i class="fa-solid fa-house-chimney-crack"></i></div>
             <div class="card-type-info">
@@ -163,6 +206,7 @@
             </div>
           </button>
 
+          <!-- Format 8: Breach of Contract -->
           <button type="button" class="notice-type-card" data-type="contract_breach">
             <div class="card-type-icon"><i class="fa-solid fa-file-contract"></i></div>
             <div class="card-type-info">
@@ -171,35 +215,21 @@
             </div>
           </button>
 
+          <!-- Format 9: Statutory Representation to Authority -->
+          <button type="button" class="notice-type-card" data-type="utility_disconnection">
+            <div class="card-type-icon"><i class="fa-solid fa-building-columns"></i></div>
+            <div class="card-type-info">
+              <span class="card-type-title">Public Authority Letter</span>
+              <span class="card-type-sub">Direct Representation</span>
+            </div>
+          </button>
+
+          <!-- Format 10: Consumer Protection -->
           <button type="button" class="notice-type-card" data-type="consumer_deficiency">
             <div class="card-type-icon"><i class="fa-solid fa-cart-shopping"></i></div>
             <div class="card-type-info">
               <span class="card-type-title">Consumer Protection</span>
               <span class="card-type-sub">Deficiency of Service (CPA)</span>
-            </div>
-          </button>
-
-          <button type="button" class="notice-type-card" data-type="defamation_cease">
-            <div class="card-type-icon"><i class="fa-solid fa-comment-slash"></i></div>
-            <div class="card-type-info">
-              <span class="card-type-title">Defamation & Cease</span>
-              <span class="card-type-sub">Sec 499 IPC / Damages</span>
-            </div>
-          </button>
-
-          <button type="button" class="notice-type-card" data-type="employment_dues">
-            <div class="card-type-icon"><i class="fa-solid fa-user-tie"></i></div>
-            <div class="card-type-info">
-              <span class="card-type-title">Employment Claim</span>
-              <span class="card-type-sub">Severance, F&F & Gratuity</span>
-            </div>
-          </button>
-
-          <button type="button" class="notice-type-card" data-type="property_partition">
-            <div class="card-type-icon"><i class="fa-solid fa-landmark"></i></div>
-            <div class="card-type-info">
-              <span class="card-type-title">Property Partition</span>
-              <span class="card-type-sub">Ancestral Share & Division</span>
             </div>
           </button>
         </div>
@@ -211,31 +241,41 @@
         <!-- Accordion Section 1: Optional Docket Linking & Dispatch Metadata -->
         <div class="form-collapsible-group">
           <div class="group-header">
-            <span><i class="fa-solid fa-link gold-text"></i> Docket Link & Reference</span>
+            <span><i class="fa-solid fa-link gold-text"></i> Dispatch, Reference & Letterhead Format</span>
             <span class="badge-mini">Auto-Configured</span>
           </div>
           <div class="group-content">
             <div class="form-grid-2">
+              <div class="form-group">
+                <label for="letterheadStyleSelect"><i class="fa-solid fa-heading gold-text"></i> Letterhead Format</label>
+                <select id="letterheadStyleSelect">
+                  <option value="classic_girish">Classic Court Letterhead (Single Advocate Layout)</option>
+                  <option value="firm_bss">Advocates Law Chambers / Partnership Firm Layout</option>
+                  <option value="lexjuris_crest" selected>LexJuris High Court Crest</option>
+                  <option value="direct_authority">Direct Requisition (Party-in-Person / Public Authority)</option>
+                </select>
+              </div>
               <div class="form-group">
                 <label for="linkDocketSelect"><i class="fa-solid fa-briefcase"></i> Link Existing Case Docket (Optional)</label>
                 <select id="linkDocketSelect">
                   <option value="">-- Start Fresh Notice / Unlinked --</option>
                 </select>
               </div>
+            </div>
+
+            <div class="form-grid-3">
               <div class="form-group">
                 <label for="noticeDispatchMode"><i class="fa-solid fa-paper-plane"></i> Dispatch Mode</label>
                 <select id="noticeDispatchMode">
-                  <option value="REGISTERED POST WITH ACKNOWLEDGEMENT DUE (RPAD)">Registered Post A.D. (RPAD)</option>
+                  <option value="REGISTERED POST WITH ACKNOWLEDGEMENT DUE (R.P.A.D.)">Registered Post A.D. (RPAD)</option>
+                  <option value="REGISTERED POST A.D. AND COPY BY CERTIFICATE OF POSTINGS">RPAD + Certificate of Postings</option>
                   <option value="SPEED POST / REGISTERED A.D.">Speed Post & Registered A.D.</option>
                   <option value="REGISTERED A.D. & OFFICIAL LEGAL EMAIL">Registered A.D. + Legal Email</option>
                   <option value="BY HAND DELIVERY & SPEED POST">By Hand Delivery + Speed Post</option>
                 </select>
               </div>
-            </div>
-
-            <div class="form-grid-2">
               <div class="form-group">
-                <label for="noticeRefNumber"><i class="fa-solid fa-hashtag"></i> Notice Reference Number</label>
+                <label for="noticeRefNumber"><i class="fa-solid fa-hashtag"></i> Notice Reference / Letter Ref</label>
                 <input type="text" id="noticeRefNumber" value="LJ/NOT/2026/048">
               </div>
               <div class="form-group">
@@ -254,37 +294,49 @@
           <div class="group-content">
             
             <!-- Client Details -->
-            <div class="sub-section-title"><i class="fa-solid fa-user-shield"></i> Client (Notice Sender)</div>
-            <div class="form-grid-2">
+            <div class="sub-section-title"><i class="fa-solid fa-user-shield"></i> Client / Complainant (Notice Sender)</div>
+            <div class="form-grid-3">
               <div class="form-group">
                 <label for="clientFullName">Client Full Name <span class="req">*</span></label>
-                <input type="text" id="clientFullName" placeholder="e.g. Rajesh V. Sharma" required>
+                <input type="text" id="clientFullName" placeholder="e.g. Smt. / Sri. [Client Name]" required>
               </div>
               <div class="form-group">
-                <label for="clientParentage">Parentage / Entity Capacity</label>
-                <input type="text" id="clientParentage" placeholder="e.g. S/o Late Shri R. K. Sharma / Sole Proprietor">
+                <label for="clientParentage">Parentage / Spouse / Capacity</label>
+                <input type="text" id="clientParentage" placeholder="e.g. w/o or s/o [Father / Spouse Name]">
+              </div>
+              <div class="form-group">
+                <label for="clientAge">Age</label>
+                <input type="text" id="clientAge" placeholder="e.g. Aged about 45 years">
               </div>
             </div>
             <div class="form-group">
-              <label for="clientFullAddress">Client Full Postal Address</label>
-              <input type="text" id="clientFullAddress" placeholder="e.g. H-42, Defence Colony, New Delhi - 110024">
+              <label for="clientFullAddress">Client Full Postal Address (with Town, Hobli, Taluk)</label>
+              <input type="text" id="clientFullAddress" placeholder="e.g. No. 12, 1st Cross, [Locality / Extension], Bengaluru - 560001">
             </div>
 
             <!-- Recipient Details -->
-            <div class="sub-section-title" style="margin-top: 1rem;"><i class="fa-solid fa-user-xmark"></i> Addressee / Notice Recipient (Opposite Party)</div>
-            <div class="form-grid-2">
+            <div class="sub-section-title" style="margin-top: 1rem;"><i class="fa-solid fa-user-xmark"></i> Addressee / Notice Recipient (Opposite Party / Respondent)</div>
+            <div class="form-grid-3">
               <div class="form-group">
-                <label for="recipientFullName">Recipient Name / Company <span class="req">*</span></label>
-                <input type="text" id="recipientFullName" placeholder="e.g. ABC Logistics & Enterprises Pvt Ltd" required>
+                <label for="recipientFullName">Recipient Name(s) <span class="req">*</span></label>
+                <input type="text" id="recipientFullName" placeholder="e.g. Sri. / Smt. [Opposite Party Name]" required>
               </div>
               <div class="form-group">
-                <label for="recipientDesignation">Attention / Designation</label>
-                <input type="text" id="recipientDesignation" placeholder="e.g. The Managing Director / Authorized Signatory">
+                <label for="recipientParentage">Recipient Parentage</label>
+                <input type="text" id="recipientParentage" placeholder="e.g. s/o or w/o [Father / Spouse Name]">
+              </div>
+              <div class="form-group">
+                <label for="recipientAge">Recipient Age</label>
+                <input type="text" id="recipientAge" placeholder="e.g. Aged about 50 years">
               </div>
             </div>
             <div class="form-group">
-              <label for="recipientFullAddress">Recipient Full Postal Address <span class="req">*</span></label>
-              <textarea id="recipientFullAddress" rows="2" placeholder="e.g. Plot No. 88, Sector 18, Udyog Vihar, Gurugram, Haryana - 122015" required></textarea>
+              <label for="recipientDesignation">Attention / Designation / Capacity (Optional)</label>
+              <input type="text" id="recipientDesignation" placeholder="e.g. Managing Director / Partner / Proprietor / Respondent">
+            </div>
+            <div class="form-group">
+              <label for="recipientFullAddress">Recipient Full Address (Village, Hobli, Taluk, District) <span class="req">*</span></label>
+              <textarea id="recipientFullAddress" rows="2" placeholder="e.g. Door No. 24, [Street / Village], [Hobli / Taluk], [District] - 560010" required></textarea>
             </div>
           </div>
         </div>
@@ -296,6 +348,124 @@
             <span class="badge-mini gold">Core Inputs Only</span>
           </div>
           <div class="group-content">
+
+            <!-- Dynamic Slot: Matrimonial & Maintenance -->
+            <div id="dynamicFields_matrimonial_maintenance" class="dynamic-category-fields hidden">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="matrimonialMarriageDuration">Marriage Timeline / Period</label>
+                  <input type="text" id="matrimonialMarriageDuration" placeholder="e.g. about 12 years back">
+                </div>
+                <div class="form-group">
+                  <label for="matrimonialMarriagePlace">Marriage Place & Rites</label>
+                  <input type="text" id="matrimonialMarriagePlace" placeholder="e.g. as per Hindu Custom and Rites under Hindu Law at [City/Place]">
+                </div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="matrimonialHusbandAssets">Opposite Party Property / Income Details</label>
+                  <input type="text" id="matrimonialHusbandAssets" placeholder="e.g. Owning agricultural lands and commercial business earning > Rs.8,00,000/- p.a.">
+                </div>
+                <div class="form-group">
+                  <label for="matrimonialMonthlyClaim">Monthly Maintenance Claim (₹) <span class="req">*</span></label>
+                  <input type="text" id="matrimonialMonthlyClaim" placeholder="e.g. 15,000/- per month">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="matrimonialWifeCondition">Client's Economic Inability / Ailments</label>
+                <input type="text" id="matrimonialWifeCondition" placeholder="e.g. Having no independent means of income and unable to maintain herself due to ailments">
+              </div>
+            </div>
+
+            <!-- Dynamic Slot: Land Acquisition Representation & Schedule Table -->
+            <div id="dynamicFields_land_acquisition_claim" class="dynamic-category-fields hidden">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="laoStatutorySection">Statutory Section / Act</label>
+                  <input type="text" id="laoStatutorySection" value="Section 18(1) of the Land Acquisition Act">
+                </div>
+                <div class="form-group">
+                  <label for="laoCourtReference">Decreeing / Referring Court</label>
+                  <input type="text" id="laoCourtReference" value="Hon'ble Civil Judge (Senior Division) Court">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="laoScheduleTerritoryNote">Schedule Village / Taluk Scope Note</label>
+                <input type="text" id="laoScheduleTerritoryNote" value="Note : Scheduled parcels situated at [Village Name] Village, [Hobli Name] Hobli, [Taluk Name] Taluk.">
+              </div>
+
+              <!-- Interactive Land Schedule Table Builder -->
+              <div class="schedule-table-wrap">
+                <div class="schedule-table-header">
+                  <span class="schedule-table-title"><i class="fa-solid fa-table"></i> Land Schedule & Claimants Particulars</span>
+                  <div class="schedule-table-actions">
+                    <button type="button" class="btn btn-outline-gold btn-xs" id="btnAddScheduleRow"><i class="fa-solid fa-plus"></i> Add Parcel</button>
+                    <button type="button" class="btn btn-outline-subtle btn-xs" id="btnLoadSampleSchedule">Reset Sample Rows</button>
+                  </div>
+                </div>
+                <div style="max-height: 220px; overflow-y: auto;">
+                  <table class="schedule-interactive-table" id="scheduleTableEditor">
+                    <thead>
+                      <tr>
+                        <th style="width: 45px;">Sl.</th>
+                        <th>L.A.C.(Mis).No.</th>
+                        <th>Claimant Name</th>
+                        <th>Survey No</th>
+                        <th>Extent</th>
+                        <th style="width: 35px;"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="scheduleTableEditorBody">
+                      <!-- Populated dynamically via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Slot: Registered GPA Cancellation -->
+            <div id="dynamicFields_gpa_cancellation" class="dynamic-category-fields hidden">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="gpaExecutionDate">Registered GPA Date</label>
+                  <input type="text" id="gpaExecutionDate" placeholder="e.g. 15-04-2021">
+                </div>
+                <div class="form-group">
+                  <label for="gpaRevocationDate">Revocation / Cancellation Date</label>
+                  <input type="text" id="gpaRevocationDate" placeholder="e.g. 10-02-2026">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="gpaPropertySchedule">Immovable Property Schedule Particulars <span class="req">*</span></label>
+                <input type="text" id="gpaPropertySchedule" placeholder="e.g. Property bearing Survey No. [X], measuring [Y] acres/guntas situated at [Village/Locality], [Taluk], [District]">
+              </div>
+              <div class="form-group">
+                <label for="gpaCoExecutants">Family Co-Executants / Principals</label>
+                <input type="text" id="gpaCoExecutants" placeholder="e.g. & co-principals / legal representatives">
+              </div>
+              <div class="form-group">
+                <label for="gpaRefusalNote">Prior Notice Refusal Note (if any)</label>
+                <input type="text" id="gpaRefusalNote" value="Noticee intentionally avoided prior communication; this statutory notice is issued on client's peremptory instructions.">
+              </div>
+            </div>
+
+            <!-- Dynamic Slot: Utility / Authority Disconnection -->
+            <div id="dynamicFields_utility_disconnection" class="dynamic-category-fields hidden">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="utilAuthorityTitle">Department / Authority</label>
+                  <input type="text" id="utilAuthorityTitle" placeholder="e.g. The Executive Engineer / Assistant Executive Engineer">
+                </div>
+                <div class="form-group">
+                  <label for="utilConnectionNumber">Connection / Meter / Landline No. <span class="req">*</span></label>
+                  <input type="text" id="utilConnectionNumber" placeholder="e.g. Consumer Account / Connection No. [Number]">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="utilRelocationReason">Reason for Disconnection</label>
+                <input type="text" id="utilRelocationReason" placeholder="e.g. Said connection is not required as client has relocated">
+              </div>
+            </div>
             
             <!-- Dynamic Slot 1: Cheque / Section 138 NI Act Fields -->
             <div id="dynamicFields_ni_act" class="dynamic-category-fields">
@@ -516,28 +686,60 @@
             <span><i class="fa-solid fa-id-badge gold-text"></i> Advocate Letterhead & Chambers Registry</span>
           </div>
           <div class="group-content">
-            <div class="form-grid-2">
+            <div class="form-grid-3">
               <div class="form-group">
                 <label for="advocateFullName">Advocate Name</label>
-                <input type="text" id="advocateFullName" value="Adv. Vikramaditya Sharma">
+                <input type="text" id="advocateFullName" value="Adv. S. Sharma">
               </div>
               <div class="form-group">
-                <label for="advocateBarReg">Bar Council Registration No.</label>
-                <input type="text" id="advocateBarReg" value="D/1998/2012">
+                <label for="advocateDegrees">Legal Qualifications / Degrees</label>
+                <input type="text" id="advocateDegrees" value="B.A.Law L.L.B.">
+              </div>
+              <div class="form-group">
+                <label for="advocatePlace">Advocate Place / City</label>
+                <input type="text" id="advocatePlace" value="Bengaluru">
               </div>
             </div>
-            <div class="form-group">
-              <label for="advocateChambersAddress">Chambers Office Address</label>
-              <input type="text" id="advocateChambersAddress" value="Chamber No. 412, Lawyers Chambers Block, High Court of Delhi, New Delhi - 110003">
-            </div>
+
             <div class="form-grid-2">
               <div class="form-group">
-                <label for="advocatePhone">Official Contact No.</label>
-                <input type="text" id="advocatePhone" value="+91 98112 44321">
+                <label for="advocateFirmName">Chambers / Firm Name (e.g. Law Chambers & Associates)</label>
+                <input type="text" id="advocateFirmName" placeholder="e.g. Sharma & Associates, Advocates">
               </div>
               <div class="form-group">
-                <label for="advocateEmail">Chambers Email</label>
-                <input type="text" id="advocateEmail" value="advocate.sharma@lexjuris.in">
+                <label for="advocatePartner2">Co-Advocate / Partner (Optional)</label>
+                <input type="text" id="advocatePartner2" placeholder="e.g. Adv. R. Verma, B.A.Law, LL.B.">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="advocateChambersAddress">Chambers Office Address</label>
+              <input type="text" id="advocateChambersAddress" value="Chambers No. 14, Lawyers Block, District Court Complex">
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="advocatePhone">Phone / Mobile No. 1</label>
+                <input type="text" id="advocatePhone" value="98450-12345">
+              </div>
+              <div class="form-group">
+                <label for="advocatePhone2">Mobile No. 2 (Optional)</label>
+                <input type="text" id="advocatePhone2" value="98450-67890">
+              </div>
+              <div class="form-group">
+                <label for="advocateLandline">Office Landline No. (Optional)</label>
+                <input type="text" id="advocateLandline" value="080-22345678">
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="advocateBarReg">Bar Council Registration No.</label>
+                <input type="text" id="advocateBarReg" value="KAR/1240/2015">
+              </div>
+              <div class="form-group">
+                <label for="advocateEmail">Chambers Official Email</label>
+                <input type="text" id="advocateEmail" value="counsel@lexjuris.in">
               </div>
             </div>
           </div>
@@ -553,10 +755,16 @@
       <div class="preview-toolbar">
         <div class="toolbar-left">
           <span class="preview-status-pill"><i class="fa-solid fa-circle-check"></i> Live Court Parchment</span>
-          <span class="preview-zoom-label" id="previewPageIndicator">Page 1 of 1 (A4 Official)</span>
+          <span class="preview-zoom-label" id="previewPageIndicator">A4 Court Parchment</span>
         </div>
 
         <div class="toolbar-actions">
+          <button type="button" id="btnOpenAiStudioModal" class="btn btn-outline-gold btn-sm" title="Take help from AI to type this notice">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>AI Assistant</span>
+          </button>
+          <button type="button" id="btnToggleDirectEdit" class="btn btn-outline-subtle btn-sm" title="Click anywhere on the paper to type or edit text directly">
+            <i class="fa-solid fa-pen-to-square"></i> <span id="directEditLabel">Direct Edit: Off</span>
+          </button>
           <button type="button" id="btnFontToggle" class="btn btn-outline-subtle btn-sm" title="Toggle between Classic Serif & Modern Clean Font">
             <i class="fa-solid fa-font"></i> <span>Font: Serif</span>
           </button>
@@ -577,52 +785,48 @@
         
         <div class="legal-parchment-paper" id="legalPaperDocument">
           
-          <!-- Official Advocate Crest / Letterhead -->
-          <header class="legal-paper-header">
-            <div class="letterhead-crest">
-              <i class="fa-solid fa-scale-balanced crest-icon"></i>
-            </div>
-            <h1 class="advocate-heading-name" id="docAdvocateName">ADV. VIKRAMADITYA SHARMA</h1>
-            <div class="advocate-court-qualifications">B.A. LL.B. (Hons.), LL.M. • ADVOCATE ON RECORD / SENIOR COUNSEL</div>
-            <div class="advocate-bar-council" id="docAdvocateBar">Bar Council of Delhi Enrollment No.: D/1998/2012</div>
-            <div class="advocate-address-line" id="docAdvocateAddress">Chambers: Chamber No. 412, Lawyers Chambers Block, High Court of Delhi, New Delhi - 110003</div>
-            <div class="advocate-contact-line" id="docAdvocateContact">Phone: +91 98112 44321 • Email: advocate.sharma@lexjuris.in</div>
-          </header>
+          <!-- Dynamic Advocate Letterhead Container -->
+          <div id="docLetterheadContainer">
+            <!-- Rendered dynamically based on selected format: Classic Single Advocate, Law Chambers Firm, Crest, or Direct -->
+          </div>
 
-          <div class="legal-divider-double"></div>
-
-          <!-- Dispatch Mode & Reference Bar -->
-          <div class="doc-dispatch-meta">
+          <!-- Dispatch Mode & Title Bar -->
+          <div class="doc-dispatch-meta" id="docDispatchMeta">
             <div class="meta-left">
-              <strong class="dispatch-badge-text" id="docDispatchMode">BY REGISTERED POST WITH A.D. / SPEED POST</strong>
-              <div class="meta-ref-row">REF NO: <span id="docRefNo">LJ/NOT/2026/048</span></div>
+              <strong class="dispatch-badge-text" id="docDispatchMode">LEGAL NOTICE BY R.P.A.D:</strong>
+              <div class="meta-ref-row" id="docRefRow">REF NO: <span id="docRefNo">LJ/NOT/2026/048</span></div>
             </div>
             <div class="meta-right">
-              <div class="meta-date-row">DATED: <span id="docNoticeDate">08/09/2026</span></div>
-              <div class="meta-badge-confidential">LEGAL NOTICE / URGENT</div>
+              <div class="meta-date-row" id="docDateRow"><span id="docNoticeDate">28-09-2026.</span></div>
+              <div class="meta-badge-confidential" id="docConfidentialBadge">URGENT / STATUTORY DEMAND</div>
             </div>
           </div>
 
           <!-- Addressee Block -->
           <div class="doc-addressee-section">
-            <div class="addressee-label">TO,</div>
-            <div class="addressee-name" id="docRecipientName">ABC LOGISTICS & ENTERPRISES PVT LTD</div>
-            <div class="addressee-desig" id="docRecipientDesig">Attention: The Managing Director / Authorized Signatory</div>
-            <div class="addressee-address" id="docRecipientAddress">Plot No. 88, Sector 18, Udyog Vihar, Gurugram, Haryana - 122015</div>
+            <div class="addressee-label">To,</div>
+            <div id="docRecipientContainer">
+              <div class="addressee-name" id="docRecipientName">[Opposite Party / Noticee Name]</div>
+              <div class="addressee-parentage" id="docRecipientParentage">s/o or w/o [Father / Spouse Name],</div>
+              <div class="addressee-age" id="docRecipientAge">Aged about 48 years,</div>
+              <div class="addressee-desig" id="docRecipientDesig" style="display:none;"></div>
+              <div class="addressee-address" id="docRecipientAddress">Door No. 24, 2nd Main Road, [Locality], [City / District] - 560001</div>
+            </div>
           </div>
 
-          <!-- Subject Line -->
-          <div class="doc-subject-banner">
+          <!-- Subject Line (Optional / Displayed when applicable) -->
+          <div class="doc-subject-banner" id="docSubjectBanner">
             <strong>SUBJECT: </strong>
-            <span id="docSubjectText">LEGAL NOTICE UNDER SECTION 138 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881 READ WITH SECTION 420 OF THE INDIAN PENAL CODE FOR DISHONOUR OF CHEQUE NO. 482019 DATED 15/08/2026 FOR ₹5,50,000/-</span>
+            <span id="docSubjectText"></span>
           </div>
 
-          <!-- Main Legal Body Text -->
+          <!-- Main Legal Body Content -->
           <div class="doc-body-content">
-            <p class="doc-salutation">Sir / Madam,</p>
+            <p class="doc-salutation" id="docSalutationText"></p>
 
+            <!-- Instructions Preamble Clause -->
             <p class="doc-preamble" id="docPreambleText">
-              Under instructions from and on behalf of my client, <strong><span id="docClientName">Rajesh V. Sharma</span></strong>, <span id="docClientParentage">S/o Late Shri R. K. Sharma</span>, residing at <span id="docClientAddress">H-42, Defence Colony, New Delhi - 110024</span> (hereinafter referred to as <strong>"My Client"</strong>), I hereby serve upon you this formal Legal Notice as hereunder:
+              Under the Instructions of our client <strong><span id="docClientName">[Client Name]</span></strong> <span id="docClientParentage">w/o or s/o [Father / Spouse Name]</span>, <span id="docClientAge">aged about 45 years</span>, R/at <span id="docClientAddress">No. 15, 1st Cross, [Locality], [City / District] - 560001</span>, we do hereby issue this notice to you as follows:
             </p>
 
             <!-- Numbered Paragraphs -->
@@ -630,9 +834,25 @@
               <!-- Dynamically rendered -->
             </div>
 
+            <!-- Land Schedule Table (Rendered when Land Schedule category is active) -->
+            <div class="doc-schedule-container" id="docScheduleContainer" style="display: none;">
+              <!-- Dynamic Table populated via JS -->
+            </div>
+
+            <!-- Page 1 Continuation Marker -->
+            <div class="doc-contd-marker" id="docContdMarker">Contd..2</div>
+
+            <!-- Page 2 Header Marker -->
+            <div class="doc-page-2-header" id="docPage2Header">2</div>
+
             <!-- Demand & Requisition Clause -->
             <div class="doc-demand-clause" id="docDemandClause">
               <!-- Dynamically rendered -->
+            </div>
+
+            <!-- Legal Fee Charges Clause -->
+            <div class="doc-fee-clause" id="docFeeClause" style="margin-top: 0.6rem; font-weight: 600;">
+              You are further notified to pay <span id="docAdvFeeText">Rs.2,000/- towards this notice charges.</span>
             </div>
 
             <!-- Consequences Warning Clause -->
@@ -644,17 +864,24 @@
           <!-- Signature & Sign-off Block -->
           <div class="doc-signature-block">
             <div class="sign-left">
-              <div class="copy-note">Copy retained in chambers for legal record and court exhibit.</div>
-              <div class="client-auth-note">Issued upon verified client instructions.</div>
+              <div class="sign-place-date" id="docSignPlaceDate">
+                <span id="docSignPlace">Bengaluru.</span><br>
+                <span id="docSignDate">Date: 28-09-2026.</span>
+              </div>
             </div>
             <div class="sign-right">
               <div class="advocate-sign-wrap">
-                <div class="sign-placeholder">[ Digitally / Physically Signed ]</div>
-                <div class="sign-name" id="docSignAdvocateName">Adv. Vikramaditya Sharma</div>
-                <div class="sign-title">Advocate for the Client</div>
-                <div class="sign-bar" id="docSignBarReg">Bar Reg: D/1998/2012</div>
+                <div class="sign-placeholder" id="docSignPlaceholder">( Advocate Signature )</div>
+                <div class="sign-name" id="docSignAdvocateName">( Adv. S. Sharma )</div>
+                <div class="sign-title" id="docSignTitle">Advocate.</div>
+                <div class="sign-bar" id="docSignBarReg" style="display: none;"></div>
               </div>
             </div>
+          </div>
+
+          <!-- Postscript Postal Dispatch Note -->
+          <div class="doc-postscript-notice" id="docPostscriptNotice">
+            Notice is sent by registered post Acknowledgement due and a copy by Certificate of postings also.
           </div>
 
         </div>
@@ -665,7 +892,112 @@
 
   </main>
 
+  <!-- ================= AI NOTICE DRAFTER STUDIO MODAL ================= -->
+  <div class="ai-modal-overlay" id="aiNoticeStudioModal" role="dialog" aria-modal="true" aria-labelledby="aiModalTitle">
+    <div class="ai-modal-window">
+      
+      <div class="ai-modal-header">
+        <div class="ai-modal-title" id="aiModalTitle">
+          <i class="fa-solid fa-wand-magic-sparkles gold-text"></i>
+          <span>AI Legal Notice Drafter & Assistant</span>
+        </div>
+        <button type="button" class="ai-modal-close" id="btnCloseAiModal" title="Close AI Modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="ai-modal-tabs">
+        <button type="button" class="ai-tab-btn active" data-tab="aiTabDraft">
+          <i class="fa-solid fa-bolt"></i> <span>1. Draft Notice from Facts</span>
+        </button>
+        <button type="button" class="ai-tab-btn" data-tab="aiTabPolish">
+          <i class="fa-solid fa-feather-pointed"></i> <span>2. Polish Narrative</span>
+        </button>
+        <button type="button" class="ai-tab-btn" data-tab="aiTabClauses">
+          <i class="fa-solid fa-scale-balanced"></i> <span>3. Statutory Clauses</span>
+        </button>
+      </div>
+
+      <div class="ai-modal-body">
+        
+        <!-- Tab 1: AI Full Drafter -->
+        <div id="aiTabDraft" class="ai-tab-pane active">
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Describe the situation in plain English, Kannada, or rough notes. AI will extract names, select the right category, generate formal numbered legal grounds ("That..."), demands, and statutory warnings.
+          </p>
+
+          <div class="ai-chips-label"><i class="fa-solid fa-lightbulb gold-text"></i> Try One-Click Example Scenarios:</div>
+          <div class="ai-chips-list" style="margin-bottom: 0.85rem;">
+            <button type="button" class="ai-chip" data-scenario="matrimonial">💍 Maintenance Claim (Abandonment & Sustenance)</button>
+            <button type="button" class="ai-chip" data-scenario="land_acq">🌾 Land & Property Particulars Representation</button>
+            <button type="button" class="ai-chip" data-scenario="gpa_cancel">📜 Revocation of General Power of Attorney</button>
+            <button type="button" class="ai-chip" data-scenario="cheque_bounce">💳 Cheque Dishonour (Sec 138 NI Act)</button>
+            <button type="button" class="ai-chip" data-scenario="tenant_evict">🏠 Tenant Eviction & Rent Default</button>
+            <button type="button" class="ai-chip" data-scenario="debt_recovery">💰 Recovery of Commercial Debt & Invoices</button>
+          </div>
+
+          <textarea id="aiPromptInput" class="ai-prompt-box" rows="5" placeholder="Describe the dispute or situation in your own words (e.g. 'Wife married 10 years ago, husband deserted her and refuses maintenance, husband owns agricultural orchards earning 8 lakhs, demand 20,000 per month within 15 days' OR 'Client executed GPA for survey land to agent, client wants to revoke it immediately and restrain any sale'). The AI will draft the entire statutory legal notice in official court format."></textarea>
+          
+          <div id="aiGenerationStatus" style="display: none; padding: 0.6rem 0.8rem; background: rgba(212, 175, 55, 0.1); border-radius: 6px; font-size: 0.8rem; color: var(--gold); margin-top: 0.5rem;">
+            <i class="fa-solid fa-spinner fa-spin"></i> <span id="aiStatusText">Analyzing legal facts and drafting statutory notice...</span>
+          </div>
+        </div>
+
+        <!-- Tab 2: Polish & Enhance Narrative -->
+        <div id="aiTabPolish" class="ai-tab-pane" style="display: none;">
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Convert rough bullet points or colloquial sentences into court-admissible numbered legal grounds with proper statutory citations.
+          </p>
+          <textarea id="aiPolishInput" class="ai-prompt-box" rows="6" placeholder="Paste rough client story or bullet points here..."></textarea>
+          <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+            <button type="button" id="btnExecutePolish" class="btn btn-outline-gold btn-sm"><i class="fa-solid fa-wand-magic-sparkles"></i> Polish Into Legal Grounds</button>
+          </div>
+        </div>
+
+        <!-- Tab 3: Statutory Clauses Library -->
+        <div id="aiTabClauses" class="ai-tab-pane" style="display: none;">
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Click any statutory clause to append it directly to your notice grounds and warnings:
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <button type="button" class="btn btn-outline-subtle btn-sm text-left" id="insertClauseMaintenance">
+              <strong>+ Maintenance & Alimony Requisition:</strong> Demands monthly sustenance for food, clothing, shelter, and medicines under Hindu Law & CrPC 125.
+            </button>
+            <button type="button" class="btn btn-outline-subtle btn-sm text-left" id="insertClauseGpaCancel">
+              <strong>+ GPA Revocation & Restraint on Alienation:</strong> Restrains agent from executing sale deed or creating third-party rights.
+            </button>
+            <button type="button" class="btn btn-outline-subtle btn-sm text-left" id="insertClauseNoticeFee">
+              <strong>+ Notice Charges Clause:</strong> Directs payment of Rs.1,000 / Rs.2,000 drafting expenses.
+            </button>
+            <button type="button" class="btn btn-outline-subtle btn-sm text-left" id="insertClausePenalWarning">
+              <strong>+ Peremptory Civil & Criminal Court Action:</strong> Initiates civil suits and criminal complaints with full legal costs.
+            </button>
+            <button type="button" class="btn btn-outline-subtle btn-sm text-left" id="insertClausePostalDispatch">
+              <strong>+ RPAD & Certificate of Postings Dispatch:</strong> Official postal delivery verification statement.
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="ai-modal-footer">
+        <div class="ai-engine-badge">
+          <i class="fa-solid fa-circle-check"></i>
+          <span id="activeAiEngineLabel">LexJuris Legal Intelligence Engine (Active)</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-outline-subtle btn-sm" id="btnCancelAiModal">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnGenerateWithAi">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Draft Complete Notice</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script src="notice-maker.js"></script>
 </body>
 
 </html>
+
