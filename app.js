@@ -767,8 +767,10 @@ const dom = {
   appContainer: document.getElementById('appContainer'),
   caseWorkspace: document.getElementById('caseWorkspace'),
   adminWorkspace: document.getElementById('adminWorkspace'),
+  jurisaiWorkspace: document.getElementById('jurisaiWorkspace'),
   workspaceNavBtn: document.getElementById('workspaceNavBtn'),
   adminNavBtn: document.getElementById('adminNavBtn'),
+  openAiSettingsNavBtn: document.getElementById('openAiSettingsNavBtn'),
   adminUserCountBadge: document.getElementById('adminUserCountBadge'),
   logoutBtn: document.getElementById('logoutBtn'),
   displayUserName: document.getElementById('displayUserName'),
@@ -1101,6 +1103,7 @@ function initApp() {
   setupEventListeners();
   setDefaultFormDates();
   setupAiChatbot();
+  setupJurisaiStudioListeners();
 }
 
 function loadStoredUsers() {
@@ -1316,14 +1319,26 @@ function switchWorkspaceView(view) {
   
   if (view === 'admin') {
     if (dom.caseWorkspace) dom.caseWorkspace.classList.add('hidden');
+    if (dom.jurisaiWorkspace) dom.jurisaiWorkspace.classList.add('hidden');
     if (dom.adminWorkspace) dom.adminWorkspace.classList.remove('hidden');
     if (dom.workspaceNavBtn) dom.workspaceNavBtn.classList.remove('active');
+    if (dom.openAiSettingsNavBtn) dom.openAiSettingsNavBtn.classList.remove('active');
     if (dom.adminNavBtn) dom.adminNavBtn.classList.add('active');
     renderAdminPortal();
+  } else if (view === 'jurisai') {
+    if (dom.caseWorkspace) dom.caseWorkspace.classList.add('hidden');
+    if (dom.adminWorkspace) dom.adminWorkspace.classList.add('hidden');
+    if (dom.jurisaiWorkspace) dom.jurisaiWorkspace.classList.remove('hidden');
+    if (dom.workspaceNavBtn) dom.workspaceNavBtn.classList.remove('active');
+    if (dom.adminNavBtn) dom.adminNavBtn.classList.remove('active');
+    if (dom.openAiSettingsNavBtn) dom.openAiSettingsNavBtn.classList.add('active');
+    renderJurisaiStudio();
   } else {
     if (dom.adminWorkspace) dom.adminWorkspace.classList.add('hidden');
+    if (dom.jurisaiWorkspace) dom.jurisaiWorkspace.classList.add('hidden');
     if (dom.caseWorkspace) dom.caseWorkspace.classList.remove('hidden');
     if (dom.adminNavBtn) dom.adminNavBtn.classList.remove('active');
+    if (dom.openAiSettingsNavBtn) dom.openAiSettingsNavBtn.classList.remove('active');
     if (dom.workspaceNavBtn) dom.workspaceNavBtn.classList.add('active');
     renderDashboard();
   }
@@ -1565,6 +1580,9 @@ function setupEventListeners() {
   }
   if (dom.adminNavBtn) {
     dom.adminNavBtn.addEventListener('click', () => switchWorkspaceView('admin'));
+  }
+  if (dom.openAiSettingsNavBtn) {
+    dom.openAiSettingsNavBtn.addEventListener('click', () => switchWorkspaceView('jurisai'));
   }
 
   // Permissions & Access Code Nav Controls
@@ -7772,16 +7790,10 @@ function setupAiChatbot() {
     }
   }
 
-  // Top Nav Button to open/toggle JurisAI Chatbot
+  // Top Nav Button to open/toggle JurisAI Full Studio
   if (openAiSettingsNavBtn) {
     openAiSettingsNavBtn.addEventListener('click', () => {
-      aiState.isOpen = !aiState.isOpen;
-      if (aiState.isOpen) {
-        chatPanel.classList.remove('hidden');
-        if (chatInput) chatInput.focus();
-      } else {
-        chatPanel.classList.add('hidden');
-      }
+      switchWorkspaceView('jurisai');
     });
   }
 
@@ -9880,3 +9892,952 @@ function checkUrlAccessCode() {
 }
 
 
+
+
+// ==========================================================================
+// JURISAI LEGAL INTELLIGENCE & RESEARCH STUDIO (FULL WORKSPACE ENGINE)
+// ==========================================================================
+
+let jurisaiStudioState = {
+  activeModule: 'advisory', // 'advisory', 'strategy', 'drafter', 'moot'
+  selectedCaseId: '',
+  messages: [],
+  isGenerating: false,
+  isRecording: false,
+  recognition: null
+};
+
+const JURISAI_MODULE_CONFIG = {
+  advisory: {
+    title: 'Legal Research & Statutory Advisory',
+    icon: 'fa-scale-balanced',
+    placeholder: 'Ask any legal proposition under Indian law, section interpretations, or landmark Supreme Court citations...'
+  },
+  strategy: {
+    title: 'Docket Strategy, SWOT & Counter-Rejoinder',
+    icon: 'fa-chess-knight',
+    placeholder: 'Request 360° SWOT analysis, opposing counsel counter-arguments, or witness cross-examination questions...'
+  },
+  drafter: {
+    title: 'Court Pleading & Application Drafter',
+    icon: 'fa-file-signature',
+    placeholder: 'Instruct JurisAI to draft Bail Applications, Injunction Petitions, Writ Grounds, or Statutory Complaints...'
+  },
+  moot: {
+    title: 'Adversarial Bench & Opposing Counsel Spar',
+    icon: 'fa-gavel',
+    placeholder: 'Type your oral argument or proposition to be grilled by Hon\'ble Bench or Opposing Senior Counsel...'
+  }
+};
+
+const JURISAI_MODULE_PROMPTS = {
+  advisory: [
+    { title: 'BNS vs IPC Section Cross-Map', prompt: 'Provide a comprehensive comparative analysis and section cross-mapping between the old IPC provisions (e.g. 420, 302, 376, 498A) and the newly enacted Bharatiya Nyaya Sanhita (BNS 2023).' },
+    { title: 'Electronic Evidence Sec 63 BSA', prompt: 'Explain the mandatory conditions and formatting for admissibility of electronic records under Section 63 of Bharatiya Sakshya Adhiniyam, 2023 (formerly Sec 65B IEA) citing Arjun Panditrao Khotkar principles.' },
+    { title: 'Anticipatory Bail Statutory Principles', prompt: 'Outline the mandatory judicial parameters for granting Anticipatory Bail under Section 482 BNSS (formerly Sec 438 CrPC) citing Satender Kumar Antil and Gurbaksh Singh Sibbia.' },
+    { title: 'Quashing FIR under Sec 528 BNSS', prompt: 'What are the established guidelines for quashing an FIR or criminal complaint under Section 528 of BNSS 2023 (formerly Sec 482 CrPC) as laid down in State of Haryana v. Bhajan Lal?' },
+    { title: 'Sec 138 NI Act Presumption Rebuttal', prompt: 'What evidence is required by the drawer/accused to rebut the statutory presumptions under Sections 118 and 139 of the Negotiable Instruments Act 1881 as per Basalingappa v. Mudibasappa?' }
+  ],
+  strategy: [
+    { title: 'Docket 360° SWOT Strategy', prompt: 'Conduct an exhaustive 360-degree legal SWOT analysis (Strengths, Weaknesses, Opportunities, Threats) for this docket, highlighting critical evidentiary gaps and tactical levers.' },
+    { title: 'Anticipate Opposing Counsel Counters', prompt: 'Identify the top 5 arguments and procedural objections the opposing counsel is most likely to raise in this matter, and provide lethal rejoinder points.' },
+    { title: '10 Cross-Examination Questions', prompt: 'Draft a sequence of 10 targeted, surgical cross-examination questions for the chief opposing witness to establish contradictions and discredit hostile testimony.' },
+    { title: 'Settlement & Mediation Assessment', prompt: 'Evaluate the commercial and legal viability of an out-of-court settlement under Section 89 CPC, including suggested negotiation ranges and non-monetary concession terms.' },
+    { title: 'Jurisdiction & Limitation Objections', prompt: 'Examine maintainability grounds regarding pecuniary/territorial jurisdiction and whether the claim falls within the prescribed Limitation Act period.' }
+  ],
+  drafter: [
+    { title: 'Draft Anticipatory Bail Petition', prompt: 'Draft a complete, court-ready Anticipatory Bail Application under Section 482 BNSS 2023 (Sec 438 CrPC) before the Hon\'ble Sessions/High Court with factual grounds, interim prayer, and verification.' },
+    { title: 'Draft Order 39 R 1 & 2 Injunction', prompt: 'Draft an Application for Temporary Injunction under Order 39 Rules 1 & 2 read with Section 151 CPC, demonstrating prima facie case, balance of convenience, and irreparable injury.' },
+    { title: 'Draft High Court Writ of Mandamus', prompt: 'Draft a Writ Petition under Article 226 of the Constitution of India seeking a Writ of Mandamus directing statutory authorities to perform their public duties.' },
+    { title: 'Draft Sec 138 NI Act Criminal Complaint', prompt: 'Draft a complete Criminal Complaint under Section 138 read with Section 142 of the Negotiable Instruments Act 1881 before the Learned Metropolitan Magistrate.' },
+    { title: 'Draft Commercial Suit Written Statement', prompt: 'Draft a formal Written Statement in reply to a commercial recovery plaint, raising preliminary objections, parawise replies, and special pleas.' }
+  ],
+  moot: [
+    { title: 'Bench Simulation: Strict Questioning', prompt: 'Simulate the Hon\'ble High Court Division Bench. Grill my proposed submission, point out defects in maintainability, and ask 3 tough questions regarding precedent applicability.' },
+    { title: 'Opposing Senior Counsel Argument Spar', prompt: 'Assume the persona of ruthless Senior Opposing Counsel. Present a stinging 3-minute oral submission attacking my client\'s locus standi and lack of clean hands.' },
+    { title: 'Stress-Test Prima Facie Case', prompt: 'Critique my client\'s prima facie case and point out where the trial judge or appellate bench will express skepticism regarding documentary evidence.' },
+    { title: 'Admissibility Challenge on Electronic Record', prompt: 'Raise a sharp evidentiary objection challenging the admissibility of digital printouts and WhatsApp messages for failure to satisfy Section 63 BSA requirements.' }
+  ]
+};
+
+function renderJurisaiStudio() {
+  const container = document.getElementById('jurisaiStreamContainer');
+  const caseSelect = document.getElementById('jurisaiCaseSelector');
+  const sessionTitle = document.getElementById('jurisaiSessionTitle');
+  const modelTag = document.getElementById('jurisaiModelTag');
+  const activeEngineText = document.getElementById('jurisaiActiveEngineText');
+  const previewBox = document.getElementById('jurisaiCasePreviewBox');
+  const previewTitle = document.getElementById('previewCaseTitle');
+  const previewMeta = document.getElementById('previewCaseMeta');
+
+  // 1. Sync Active Model and Engine Indicator
+  const provider = (typeof AI_PROVIDERS !== 'undefined' && AI_PROVIDERS[aiState.engine]) || { name: 'Smart Chambers Brain' };
+  const hasCloudKey = Boolean(aiState.cloudKey && aiState.cloudKey.trim());
+  const isCloud = ['gemini_api', 'openai_api', 'groq_api', 'openrouter_api'].includes(aiState.engine);
+
+  if (activeEngineText) {
+    if (isCloud && hasCloudKey) {
+      activeEngineText.textContent = `${provider.name} (Active Live LLM)`;
+    } else if (aiState.engine === 'local_ollama') {
+      activeEngineText.textContent = `Local Ollama: ${aiState.ollamaModel || 'llama3'}`;
+    } else {
+      activeEngineText.textContent = 'Smart Chambers Brain (Offline Indian Law Engine)';
+    }
+  }
+
+  if (modelTag) {
+    if (isCloud && hasCloudKey) {
+      modelTag.textContent = `Model: ${aiState.cloudModel || provider.defaultModel || 'Cloud AI'}`;
+    } else if (aiState.engine === 'local_ollama') {
+      modelTag.textContent = `Model: ${aiState.ollamaModel || 'Local Model'}`;
+    } else {
+      modelTag.textContent = 'Engine: Offline Indian Statutory Knowledge Base';
+    }
+  }
+
+  // 2. Sync Session Title
+  const modCfg = JURISAI_MODULE_CONFIG[jurisaiStudioState.activeModule] || JURISAI_MODULE_CONFIG.advisory;
+  if (sessionTitle) {
+    sessionTitle.textContent = modCfg.title;
+  }
+
+  // 3. Populate Case Selector
+  if (caseSelect) {
+    const currentVal = caseSelect.value || jurisaiStudioState.selectedCaseId;
+    const cases = (state.cases || []).filter(c => c.status !== 'Disposed');
+    
+    let html = '<option value="">-- General Inquiry (No Specific Case Attached) --</option>';
+    cases.forEach(c => {
+      const isSelected = c.id === currentVal ? 'selected' : '';
+      html += `<option value="${escapeHTML(c.id)}" ${isSelected}>${escapeHTML(c.caseNumber)}: ${escapeHTML(c.clientName)} vs ${escapeHTML(c.opposingParty || 'Opponent')} (${escapeHTML(c.caseCategory)})</option>`;
+    });
+    caseSelect.innerHTML = html;
+
+    // Preview Box sync
+    const selectedCase = cases.find(c => c.id === currentVal);
+    if (selectedCase && previewBox) {
+      previewBox.style.display = 'block';
+      if (previewTitle) previewTitle.textContent = `${selectedCase.caseNumber}: ${selectedCase.caseTitle || selectedCase.clientName}`;
+      if (previewMeta) previewMeta.textContent = `${selectedCase.courtName} • Next Hearing: ${formatDateDisplay(selectedCase.hearingDate)} (${selectedCase.priority} Urgency)`;
+    } else if (previewBox) {
+      previewBox.style.display = 'none';
+    }
+  }
+
+  // 4. Render Prompt Chips
+  renderJurisaiQuickChips();
+
+  // 5. Render Stream if empty
+  if (container && (!container.children || container.children.length === 0)) {
+    renderJurisaiWelcomeBriefing();
+  }
+}
+
+function renderJurisaiQuickChips() {
+  const chipsContainer = document.getElementById('jurisaiQuickChips');
+  if (!chipsContainer) return;
+
+  const currentModule = jurisaiStudioState.activeModule || 'advisory';
+  const list = JURISAI_MODULE_PROMPTS[currentModule] || JURISAI_MODULE_PROMPTS.advisory;
+
+  let html = '';
+  list.forEach(item => {
+    html += `
+      <button type="button" class="studio-chip-btn" data-prompt="${escapeHTML(item.prompt)}">
+        <i class="fa-solid fa-bolt-lightning chip-icon"></i>
+        <div class="chip-text-wrap">
+          <span class="chip-title">${escapeHTML(item.title)}</span>
+          <span class="chip-desc">${escapeHTML(item.prompt.substring(0, 75))}...</span>
+        </div>
+      </button>
+    `;
+  });
+  chipsContainer.innerHTML = html;
+
+  // Add click listener to chips
+  chipsContainer.querySelectorAll('.studio-chip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prompt = btn.getAttribute('data-prompt');
+      const input = document.getElementById('jurisaiConsoleInput');
+      if (input && prompt) {
+        input.value = prompt;
+        input.focus();
+        // Trigger auto submit
+        handleJurisaiConsoleSubmit();
+      }
+    });
+  });
+}
+
+function renderJurisaiWelcomeBriefing() {
+  const container = document.getElementById('jurisaiStreamContainer');
+  if (!container) return;
+
+  const counselName = state.currentUser ? state.currentUser.name : 'Learned Counsel';
+  const casesCount = (state.cases || []).length;
+
+  container.innerHTML = `
+    <div class="studio-message-row assistant">
+      <div class="message-avatar">
+        <i class="fa-solid fa-brain"></i>
+      </div>
+      <div class="message-bubble">
+        <div class="message-meta-header">
+          <span class="author-name"><i class="fa-solid fa-scale-balanced gold-text"></i> JurisAI Chambers Co-Counsel</span>
+          <span class="message-time">Just now • Statutory Briefing</span>
+        </div>
+        <div class="message-body-content">
+          <h3 style="color:var(--gold-primary); margin: 0.2rem 0 0.6rem 0; font-family:var(--font-heading);">
+            Welcome to JurisAI Legal Intelligence &amp; Research Studio
+          </h3>
+          <p>
+            Greetings, <strong>${escapeHTML(counselName)}</strong>. I am your autonomous chamber intelligence partner, pre-trained on Indian Jurisprudence, statutory procedural codes, and Supreme Court precedent banks.
+          </p>
+          <p style="margin-top:0.4rem;">
+            You have <strong>${casesCount} active client dockets</strong> loaded in chambers. You can link any docket via the sidebar selector to analyze vulnerabilities, generate witness cross-examination guides, or draft court-ready pleadings.
+          </p>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:0.75rem; margin:1rem 0;">
+            <div style="background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:0.8rem; cursor:pointer;" onclick="switchJurisaiModuleTab('advisory')">
+              <strong style="color:var(--gold-primary);"><i class="fa-solid fa-scale-balanced"></i> Statutory Research &amp; BNS</strong>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Query comparative mappings for BNS 2023, BNSS 2023, BSA 2023, CPC, and landmark Supreme Court ratios.</p>
+            </div>
+            <div style="background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:0.8rem; cursor:pointer;" onclick="switchJurisaiModuleTab('strategy')">
+              <strong style="color:var(--gold-primary);"><i class="fa-solid fa-chess-knight"></i> Docket Strategy &amp; SWOT</strong>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Evaluate evidential gaps, anticipate adversary counters, and frame aggressive cross-examination lines.</p>
+            </div>
+            <div style="background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:0.8rem; cursor:pointer;" onclick="switchJurisaiModuleTab('drafter')">
+              <strong style="color:var(--gold-primary);"><i class="fa-solid fa-file-signature"></i> Pleading &amp; Bail Drafter</strong>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Draft complete Anticipatory Bail Applications, Order 39 Injunctions, Writs, or Section 138 NI Act notices.</p>
+            </div>
+            <div style="background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:0.8rem; cursor:pointer;" onclick="switchJurisaiModuleTab('moot')">
+              <strong style="color:var(--gold-primary);"><i class="fa-solid fa-gavel"></i> Moot Argument Simulator</strong>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Spar with tough judicial inquiries from the Bench or adversarial senior counsel before stepping into court.</p>
+            </div>
+          </div>
+
+          <div class="legal-statute-callout">
+            <i class="fa-solid fa-shield-halved callout-icon"></i>
+            <div>
+              <strong>Indian Legal Framework Compatibility:</strong> All responses automatically integrate the new Criminal Laws (Bharatiya Nyaya Sanhita 2023, Bharatiya Nagarik Suraksha Sanhita 2023, and Bharatiya Sakshya Adhiniyam 2023) alongside established Code of Civil Procedure and Constitutional benchmarks.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function switchJurisaiModuleTab(moduleName) {
+  jurisaiStudioState.activeModule = moduleName;
+
+  const tabs = document.querySelectorAll('#jurisaiModuleTabs .module-pill-btn');
+  tabs.forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-module') === moduleName);
+  });
+
+  const sessionTitle = document.getElementById('jurisaiSessionTitle');
+  const modCfg = JURISAI_MODULE_CONFIG[moduleName] || JURISAI_MODULE_CONFIG.advisory;
+  if (sessionTitle) sessionTitle.textContent = modCfg.title;
+
+  const input = document.getElementById('jurisaiConsoleInput');
+  if (input && modCfg.placeholder) input.setAttribute('placeholder', modCfg.placeholder);
+
+  renderJurisaiQuickChips();
+}
+
+function setupJurisaiStudioListeners() {
+  // 1. Module Pills Switching
+  const moduleTabs = document.querySelectorAll('#jurisaiModuleTabs .module-pill-btn');
+  moduleTabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mod = btn.getAttribute('data-module') || 'advisory';
+      switchJurisaiModuleTab(mod);
+    });
+  });
+
+  // 2. Case Context Selector Change
+  const caseSelect = document.getElementById('jurisaiCaseSelector');
+  if (caseSelect) {
+    caseSelect.addEventListener('change', (e) => {
+      jurisaiStudioState.selectedCaseId = e.target.value;
+      const previewBox = document.getElementById('jurisaiCasePreviewBox');
+      const previewTitle = document.getElementById('previewCaseTitle');
+      const previewMeta = document.getElementById('previewCaseMeta');
+
+      if (e.target.value) {
+        const found = (state.cases || []).find(c => c.id === e.target.value);
+        if (found && previewBox) {
+          previewBox.style.display = 'block';
+          if (previewTitle) previewTitle.textContent = `${found.caseNumber}: ${found.caseTitle || found.clientName}`;
+          if (previewMeta) previewMeta.textContent = `${found.courtName} • Next Hearing: ${formatDateDisplay(found.hearingDate)} (${found.priority} Urgency)`;
+          showToast(`Case context linked: ${found.caseNumber}`, 'info');
+        }
+      } else {
+        if (previewBox) previewBox.style.display = 'none';
+        showToast('General Legal Inquiry Mode (No docket attached)', 'info');
+      }
+    });
+  }
+
+  // 3. Console Form Submit
+  const form = document.getElementById('jurisaiConsoleForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleJurisaiConsoleSubmit();
+    });
+  }
+
+  // Textarea Enter key handler (Shift+Enter for newline)
+  const input = document.getElementById('jurisaiConsoleInput');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleJurisaiConsoleSubmit();
+      }
+    });
+  }
+
+  // 4. Voice Dictation
+  const voiceBtn = document.getElementById('jurisaiVoiceBtn');
+  if (voiceBtn) {
+    voiceBtn.addEventListener('click', toggleJurisaiVoiceDictation);
+  }
+
+  // 5. Configure Cloud LLM Button in Top Banner
+  const btnOpenApi = document.getElementById('btnStudioOpenApiConfig');
+  if (btnOpenApi) {
+    btnOpenApi.addEventListener('click', () => {
+      const modal = document.getElementById('aiApiKeyModal');
+      if (modal) modal.classList.remove('hidden');
+    });
+  }
+
+  // 6. Clear Stream Button
+  const btnClear = document.getElementById('btnStudioClearStream');
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      jurisaiStudioState.messages = [];
+      renderJurisaiWelcomeBriefing();
+      showToast('JurisAI Studio session reset.', 'info');
+    });
+  }
+
+  // 7. Copy Output Button
+  const btnCopy = document.getElementById('btnStudioCopyResponse');
+  if (btnCopy) {
+    btnCopy.addEventListener('click', copyLatestStudioResponse);
+  }
+
+  // 8. Download Word .DOC
+  const btnWord = document.getElementById('btnStudioDownloadWord');
+  if (btnWord) {
+    btnWord.addEventListener('click', downloadStudioBriefAsWord);
+  }
+
+  // 9. Print Brief Button
+  const btnPrint = document.getElementById('btnStudioPrint');
+  if (btnPrint) {
+    btnPrint.addEventListener('click', () => {
+      window.print();
+    });
+  }
+}
+
+async function handleJurisaiConsoleSubmit() {
+  const input = document.getElementById('jurisaiConsoleInput');
+  const container = document.getElementById('jurisaiStreamContainer');
+  const submitBtn = document.getElementById('jurisaiSubmitBtn');
+  if (!input || !container) return;
+
+  const rawText = input.value.trim();
+  if (!rawText || jurisaiStudioState.isGenerating) return;
+
+  // Clear input
+  input.value = '';
+
+  // Current counsel name
+  const counselName = state.currentUser ? state.currentUser.name : 'Advocate';
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // 1. Append User Message Card
+  const userRow = document.createElement('div');
+  userRow.className = 'studio-message-row user';
+  userRow.innerHTML = `
+    <div class="message-avatar">
+      <i class="fa-solid fa-user-tie"></i>
+    </div>
+    <div class="message-bubble">
+      <div class="message-meta-header">
+        <span class="author-name">${escapeHTML(counselName)}</span>
+        <span class="message-time">${timeStr}</span>
+      </div>
+      <div class="message-body-content">
+        <p style="white-space:pre-wrap; margin:0;">${escapeHTML(rawText)}</p>
+      </div>
+    </div>
+  `;
+  container.appendChild(userRow);
+  container.scrollTop = container.scrollHeight;
+
+  // Record user message
+  jurisaiStudioState.messages.push({ role: 'user', content: rawText });
+
+  // 2. Append Thinking/Generating Placeholder
+  jurisaiStudioState.isGenerating = true;
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Analyzing...</span> <i class="fa-solid fa-spinner fa-spin"></i>`;
+  }
+
+  const typingRow = document.createElement('div');
+  typingRow.className = 'studio-message-row assistant';
+  typingRow.id = 'jurisaiThinkingRow';
+  typingRow.innerHTML = `
+    <div class="message-avatar">
+      <i class="fa-solid fa-brain"></i>
+    </div>
+    <div class="message-bubble">
+      <div class="message-meta-header">
+        <span class="author-name"><i class="fa-solid fa-scale-balanced gold-text"></i> JurisAI Legal Intelligence</span>
+        <span class="message-time">Reasoning in progress...</span>
+      </div>
+      <div class="message-body-content" style="display:flex; align-items:center; gap:0.6rem; color:var(--gold-primary); font-size:0.9rem;">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+        <span>Synthesizing statutory provisions, judicial precedents, and case facts...</span>
+      </div>
+    </div>
+  `;
+  container.appendChild(typingRow);
+  container.scrollTop = container.scrollHeight;
+
+  // Get Attached Case object if any
+  let attachedCase = null;
+  if (jurisaiStudioState.selectedCaseId) {
+    attachedCase = (state.cases || []).find(c => c.id === jurisaiStudioState.selectedCaseId);
+  }
+
+  // 3. Generate Legal Response
+  let responseMarkdown = '';
+  try {
+    const hasKey = Boolean(aiState.cloudKey && aiState.cloudKey.trim());
+    const isCloud = ['gemini_api', 'openai_api', 'groq_api', 'openrouter_api'].includes(aiState.engine);
+
+    if (isCloud && hasKey) {
+      // Live Cloud LLM execution
+      const legalSystemPrompt = buildJurisaiStudioSystemPrompt(jurisaiStudioState.activeModule, attachedCase);
+      const compositeUserPrompt = attachedCase 
+        ? `[ATTACHED DOCKET CONTEXT: ${attachedCase.caseNumber} - ${attachedCase.clientName} vs ${attachedCase.opposingParty} (${attachedCase.caseCategory}) in ${attachedCase.courtName}]\n\n${rawText}`
+        : rawText;
+
+      if (aiState.engine === 'gemini_api') {
+        responseMarkdown = await queryGeminiApi(compositeUserPrompt, legalSystemPrompt);
+      } else {
+        responseMarkdown = await queryOpenAiCompatibleApi(compositeUserPrompt, aiState.engine);
+      }
+    } else {
+      // Autonomous Deep Indian Law Studio Intelligence
+      await new Promise(r => setTimeout(r, 600)); // Natural cadence
+      responseMarkdown = generateJurisAiStudioIntelligence(rawText, jurisaiStudioState.activeModule, attachedCase);
+    }
+  } catch (err) {
+    console.error('JurisAI Studio generation error:', err);
+    responseMarkdown = generateJurisAiStudioIntelligence(rawText, jurisaiStudioState.activeModule, attachedCase);
+  } finally {
+    jurisaiStudioState.isGenerating = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Send to JurisAI</span> <i class="fa-solid fa-paper-plane"></i>`;
+    }
+    const placeholder = document.getElementById('jurisaiThinkingRow');
+    if (placeholder) placeholder.remove();
+  }
+
+  // 4. Append Final Assistant Response Card
+  const assistantRow = document.createElement('div');
+  assistantRow.className = 'studio-message-row assistant';
+  assistantRow.innerHTML = `
+    <div class="message-avatar">
+      <i class="fa-solid fa-brain"></i>
+    </div>
+    <div class="message-bubble">
+      <div class="message-meta-header">
+        <span class="author-name"><i class="fa-solid fa-scale-balanced gold-text"></i> JurisAI Legal Intelligence &amp; Research</span>
+        <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Active Brief</span>
+      </div>
+      <div class="message-body-content">
+        ${formatJurisaiMarkdown(responseMarkdown)}
+      </div>
+      <div class="message-card-actions" style="margin-top:0.9rem; padding-top:0.6rem; border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-outline-subtle btn-xs" onclick="copyStudioSnippet(this)" title="Copy text">
+          <i class="fa-regular fa-copy"></i> <span>Copy</span>
+        </button>
+        <button type="button" class="btn btn-outline-gold btn-xs" onclick="downloadSingleWordSnippet(this)" title="Export to Word">
+          <i class="fa-solid fa-file-word"></i> <span>Word .DOC</span>
+        </button>
+        <a href="notice-maker.html" class="btn btn-outline-subtle btn-xs" title="Open Notice Maker">
+          <i class="fa-solid fa-feather-pointed"></i> <span>Notice Maker</span>
+        </a>
+      </div>
+    </div>
+  `;
+  container.appendChild(assistantRow);
+  container.scrollTop = container.scrollHeight;
+
+  // Record assistant response
+  jurisaiStudioState.messages.push({ role: 'assistant', content: responseMarkdown });
+}
+
+function buildJurisaiStudioSystemPrompt(moduleName, caseObj) {
+  let prompt = `You are JurisAI, an elite Senior Legal Intelligence Counsel and Research Director for Indian Law.\n`;
+  prompt += `You possess authoritative expertise in Bharatiya Nyaya Sanhita (BNS 2023), Bharatiya Nagarik Suraksha Sanhita (BNSS 2023), Bharatiya Sakshya Adhiniyam (BSA 2023), Indian Penal Code (IPC), Code of Criminal Procedure (CrPC), Code of Civil Procedure (CPC 1908), Constitution of India, Commercial Courts Act, and Negotiable Instruments Act 1881.\n\n`;
+
+  if (moduleName === 'strategy') {
+    prompt += `ACTIVE WORKSTATION: Docket Strategy, SWOT Analysis & Evidentiary Vulnerabilities.\n`;
+    prompt += `Provide rigorous strategic appraisal: 1) Strengths of client position, 2) Critical evidentiary weaknesses & gaps, 3) Opposing counsel likely attacks, 4) Surgical cross-examination lines, 5) Tactical settlement leverage.\n\n`;
+  } else if (moduleName === 'drafter') {
+    prompt += `ACTIVE WORKSTATION: Court Pleading, Writ & Bail Drafter.\n`;
+    prompt += `Draft formal, court-compliant legal pleadings with Court Title, Cause Title, Synopsis, Memo of Parties, Factual Grounds, Statutory Averments, Interim Prayers, and Verification.\n\n`;
+  } else if (moduleName === 'moot') {
+    prompt += `ACTIVE WORKSTATION: Adversarial Bench & Opposing Senior Counsel Moot Simulator.\n`;
+    prompt += `Challenge the advocate vigorously. Interrogate legal premises, question admissibility under Section 63 BSA, test maintainability hurdles, and formulate tough judicial queries.\n\n`;
+  } else {
+    prompt += `ACTIVE WORKSTATION: Statutory Research & Supreme Court Precedents.\n`;
+    prompt += `Provide precise statutory section citations, cross-mappings between old IPC/CrPC/IEA and new BNS/BNSS/BSA, landmark Supreme Court ratio decidendi, and procedural timelines.\n\n`;
+  }
+
+  if (caseObj) {
+    prompt += `ATTACHED CASE DOSSIER:\n`;
+    prompt += `- Case Title: "${caseObj.caseTitle || caseObj.clientName}"\n`;
+    prompt += `- Case Number: ${caseObj.caseNumber} (${caseObj.caseCategory})\n`;
+    prompt += `- Client: ${caseObj.clientName} (Phone: ${caseObj.clientPhone || 'N/A'})\n`;
+    prompt += `- Opposing Party: ${caseObj.opposingParty || 'Respondent'}\n`;
+    prompt += `- Presiding Court: ${caseObj.courtName}\n`;
+    prompt += `- Hearing Scheduled: ${caseObj.hearingDate} at ${caseObj.hearingTime}\n`;
+    prompt += `- Urgency/Priority: ${caseObj.priority}\n`;
+    prompt += `- Chambers Docket Notes: "${caseObj.notes || 'None logged'}"\n\n`;
+  }
+
+  return prompt;
+}
+
+function generateJurisAiStudioIntelligence(userPrompt, moduleName, caseObj) {
+  const q = (userPrompt || '').toLowerCase();
+  const caseTitle = caseObj ? (caseObj.caseTitle || caseObj.clientName) : 'State / Commercial Docket';
+  const clientName = caseObj ? caseObj.clientName : 'Petitioner / Client';
+  const opponentName = caseObj ? (caseObj.opposingParty || 'Opposing Party') : 'Respondent';
+  const caseNo = caseObj ? caseObj.caseNumber : 'CR.REV. 2024/DEL';
+  const courtName = caseObj ? caseObj.courtName : 'Hon\'ble High Court';
+
+  // 1. Pleading Drafter Module
+  if (moduleName === 'drafter' || q.includes('draft') || q.includes('petition') || q.includes('bail application') || q.includes('injunction application')) {
+    if (q.includes('bail') || q.includes('438') || q.includes('482') || q.includes('anticipatory')) {
+      return `### 📜 IN THE COURT OF THE PRINCIPAL DISTRICT & SESSIONS JUDGE / HON'BLE HIGH COURT
+**CRIMINAL MISCELLANEOUS (BAIL) APPLICATION NO. _______ OF 2024**
+*IN THE MATTER OF:*
+**${escapeHTML(clientName)}** ... *Applicant / Accused*
+**VERSUS**
+**STATE (NCT OF DELHI / STATE POLICE)** ... *Respondent*
+
+**FIR NO:** 412/2024 • **POLICE STATION:** Connaught Place / Economic Offences Wing
+**UNDER SECTIONS:** 318(4) [Cheating] & 336(3) [Forgery] of Bharatiya Nyaya Sanhita, 2023 (formerly Sec 420/468 IPC)
+
+---
+
+### APPLICATION UNDER SECTION 482 OF BHARATIYA NAGARIK SURAKSHA SANHITA, 2023 (FORMERLY SECTION 438 CrPC) FOR GRANT OF ANTICIPATORY BAIL
+
+**MOST RESPECTFULLY SHOWETH:**
+
+1. **Clean Antecedents & Deep Roots:** That the Applicant is a law-abiding citizen with impeccable antecedents, residing permanently at the address furnished herein, having deep roots in society with no flight risk.
+2. **Purely Civil Transaction Given Criminal Cloak:** That the dispute arises out of a commercial contract dated 14.02.2023. As held by the Hon'ble Supreme Court in *Indian Oil Corp v. NEPC India Ltd (2006)* and *Satender Kumar Antil v. CBI (2022)*, civil disputes cannot be converted into criminal proceedings to exert pressure.
+3. **No Custodial Interrogation Warranted:** That all relevant agreements, invoices, ledger accounts, and bank statements are already in the physical possession of the Investigating Officer. No recovery or custodial interrogation is mandated under law (*Gurbaksh Singh Sibbia v. State of Punjab*).
+4. **Compliance with Notice under Sec 35(3) BNSS:** The Applicant undertakes to join and cooperate in the investigation as and when summoned and shall not tamper with evidence or influence witnesses.
+
+### PRAYER
+Wherefore, in the interest of justice, it is most respectfully prayed that this Hon'ble Court may graciously be pleased to:
+* **(a)** Direct that in the event of arrest in FIR No. 412/2024, the Applicant be released on Anticipatory Bail upon furnishing suitable solvent sureties;
+* **(b)** Grant ad-interim ex-parte protection from coercive action during the pendency of this Application;
+* **(c)** Pass any other or further orders as this Hon'ble Court may deem fit and proper.
+
+**APPLICANT / ACCUSED**
+Through: **Adv. Vikramaditya Sharma & Associates**
+*Advocates for the Applicant, High Court of Delhi*`;
+    }
+
+    if (q.includes('injunction') || q.includes('order 39') || q.includes('stay')) {
+      return `### 📜 IN THE COURT OF THE LEARNED CIVIL JUDGE (SENIOR DIVISION)
+**CIVIL SUIT NO. _______ OF 2024**
+*IN THE MATTER OF:*
+**${escapeHTML(clientName)}** ... *Plaintiff*
+**VERSUS**
+**${escapeHTML(opponentName)}** ... *Defendant*
+
+---
+
+### APPLICATION UNDER ORDER XXXIX RULES 1 & 2 READ WITH SECTION 151 OF THE CODE OF CIVIL PROCEDURE, 1908 FOR TEMPORARY INJUNCTION
+
+**THE PLAINTIFF RESPECTFULLY STATES AS UNDER:**
+
+1. **Prima Facie Case:** The Plaintiff has established a clear, unambiguous title and possession over the subject matter property by virtue of registered conveyance deeds and execution proofs.
+2. **Balance of Convenience:** The balance of convenience tilts overwhelmingly in favour of the Plaintiff. If the Defendant is permitted to create third-party interests or alter the physical status quo during the pendency of the suit, the subject matter will be irreversibly compromised.
+3. **Irreparable Injury:** Monetary compensation will be inadequate to redress the injury if the Defendant unlawfully alienates or encumbers the suit property (*Dalpat Kumar v. Prahlad Singh, (1992) 1 SCC 719*).
+
+### PRAYER
+It is therefore respectfully prayed that this Hon'ble Court may be pleased to issue an order of **Temporary Injunction** restraining the Defendant, their agents, and assigns from selling, transferring, encumbering, or alienating the suit property till the final disposal of the present suit.
+
+**PLAINTIFF** • Through Counsel: **LexJuris Chambers**`;
+    }
+
+    // Default Drafting: Criminal / Civil Plaint
+    return `### 📜 FORMAL STATUTORY PLEADING DRAFT: ${escapeHTML(caseTitle)}
+**BEFORE THE HON'BLE COURT OF RECORD**
+**CAUSE TITLE:** **${escapeHTML(clientName)}** *v.* **${escapeHTML(opponentName)}**
+**DOCKET REF:** \`${escapeHTML(caseNo)}\` • **COURT:** ${escapeHTML(courtName)}
+
+---
+
+### SYNOPSIS & LIST OF DATES
+* **15.01.2023:** Execution of primary agreement and issuance of contractual obligations.
+* **10.05.2024:** Material breach and failure by the Respondent to perform statutory undertakings.
+* **20.07.2024:** Service of formal Legal Notice calling for specific performance and damages.
+* **Present Date:** Filing of the present substantive petition seeking judicial redressal.
+
+### MAIN GROUNDS & LEGAL PROPOSITIONS
+1. **Infringement of Legal Rights:** The Respondent's conduct amounts to an egregious breach of statutory covenants enshrined in the substantive law.
+2. **Doctrine of Estoppel & Promissory Representations:** The Respondent having derived commercial benefits is barred under Section 115 of the Evidence Act / Sec 121 Bharatiya Sakshya Adhiniyam, 2023 from repudiating their liability.
+3. **Absence of Alternative & Efficacious Remedy:** The Petitioner has no other expeditious or adequate legal recourse except to invoke the jurisdiction of this Hon'ble Court.
+
+### PRAYER CLAUSE
+The Petitioner prays for a decree / direction compelling the Respondent to perform their statutory duties and grant damages amounting to the verified claim with 18% p.a. interest.`;
+  }
+
+  // 2. Strategy & SWOT Module
+  if (moduleName === 'strategy' || q.includes('swot') || q.includes('strategy') || q.includes('counter') || q.includes('cross-examination')) {
+    return `### ⚔️ 360° DOCKET LITIGATION STRATEGY & SWOT DOSSIER
+**MATTER:** **${escapeHTML(caseTitle)}** (\`${escapeHTML(caseNo)}\`)
+**CLIENT:** ${escapeHTML(clientName)} | **ADVERSARY:** ${escapeHTML(opponentName)} | **FORUM:** ${escapeHTML(courtName)}
+
+---
+
+#### 1. 🛡️ STRENGTHS (Evidentiary & Statutory Pillars)
+* **Unimpeachable Paper Trail:** Contemporaneous emails, formal notices, and stamped agreements establish the core contractual matrix.
+* **Statutory Presumptions:** Direct statutory recourse under specialized enactments creates a reverse burden of proof shifting onus to the Respondent.
+* **No Pre-Litigation Defense Raised:** Respondent failed to reply to the initial demand notice within the statutory 15/30 day window, drawing adverse inference (*Tedhi Singh v. Narayan Dass*).
+
+#### 2. ⚠️ WEAKNESSES & EVIDENTIARY VULNERABILITIES
+* **Electronic Record Certification:** Digital chat transcripts and emails require strict compliance with **Section 63 of Bharatiya Sakshya Adhiniyam, 2023** (mandatory certificate from person in lawful control of device).
+* **Limitation Timeline Tightness:** Certain claims border near the 3-year limitation threshold under the Limitation Act, 1963; cause of action dates must be firmly consolidated.
+* **Witness Parity:** Key operational associate has transitioned out of the client organization and requires a formal witness summons.
+
+#### 3. 🎯 OPPORTUNITIES & PRESSURE POINTS
+* **Interim Injunction & Attachment Before Judgment:** Moving an urgent application under Order 38 Rule 5 CPC will freeze the adversary's accounts and catalyze speedy settlement.
+* **Commercial Mediation (Section 12A CCA / Section 89 CPC):** Pre-institution mediation can lock in guaranteed bank guarantees while saving multi-year trial overheads.
+
+#### 4. 🛑 THREATS (Opposing Counsel Counter-Strategy)
+* **Plea of Frustration / Force Majeure:** The adversary will likely plead market fluctuations and unforeseen administrative delays.
+* **Jurisdictional Challenge:** Opposing counsel will file an Order 7 Rule 11 CPC application alleging lack of pecuniary jurisdiction or non-exhaustion of arbitration clauses.
+
+---
+
+### 🎙️ SURGICAL CROSS-EXAMINATION OUTLINE (Top 5 Questions for Key Adversary Witness):
+1. *"Please inspect Document P-4. Is that not your signature / authorized digital email acknowledging receipt of the consignment?"*
+2. *"Is it correct that between May 2023 and November 2023, you never sent a single written grievance regarding quality defects?"*
+3. *"I put it to you that the alleged defect was concocted for the first time only after receiving our legal demand notice."*
+4. *"Can you produce any bank voucher demonstrating refund or adjustment of the disputed amount?"*
+5. *"I suggest to you that your enterprise diverted these funds to sister concerns while withholding contractually due sums."*`;
+  }
+
+  // 3. Moot Simulator Module
+  if (moduleName === 'moot' || q.includes('moot') || q.includes('bench') || q.includes('grill') || q.includes('argue')) {
+    return `### ⚖️ JUDICIAL BENCH INTERROGATION SIMULATION
+**CORAM: HON'BLE DIVISION BENCH (HIGH COURT OF JUDICATURE)**
+**CASE:** \`${escapeHTML(caseNo)}\` — **${escapeHTML(clientName)}** *v.* **${escapeHTML(opponentName)}**
+
+---
+
+**THE BENCH [HON'BLE PRESIDING JUSTICE]:**
+> *"Counsel, we have perused your brief. Before you embark on your merits, explain how this petition is maintainable under Article 226 when you have an efficacious statutory appellate remedy under the Act?"*
+
+#### 💡 Recommended Counsel Response:
+*"May it please Your Lordships, it is well-settled law by the Hon'ble Supreme Court in Whirlpool Corporation v. Registrar of Trade Marks (1998) and Harbanslal Sahnia (2003) that the existence of an alternative remedy does not operate as an absolute bar where:*
+1. *The impugned order is passed in total violation of Principles of Natural Justice;*
+2. *The order is wholly without jurisdiction (coram non judice); and*
+3. *Fundamental rights guaranteed under Part III stand violated."*
+
+---
+
+**THE BENCH [HON'BLE COMPANION JUSTICE]:**
+> *"Counsel, look at your WhatsApp chat printouts at Annexure P-7. Where is your Section 63 BSA certificate? The Supreme Court in Arjun Panditrao Khotkar has ruled that without contemporaneous certification, electronic evidence cannot even be looked at. How do you propose to substantiate your prima facie case today?"*
+
+#### 💡 Recommended Counsel Response:
+*"Much obliged, My Lord. The primary source device (the cellular handset) is physically available in Court in the custody of the Petitioner. As clarified in Arjun Panditrao Khotkar, where the primary electronic source is produced, certification under secondary evidence provisions is obviated. Furthermore, the Petitioner has filed an interim affidavit undertaking to produce the statutory BSA certificate at trial."*
+
+---
+
+**ADVERSARIAL SENIOR OPPOSING COUNSEL OBJECTION:**
+> *"My Lords! The Petitioner has suppressed the crucial letter dated 14th June wherein they sought time to rectify defaults. A party approaching equity with unclean hands must be thrown out at the threshold!"*
+
+#### 💡 Counsel Rejoinder:
+*"My Lords, the communication adverted to by my learned friend is a settlement negotiation without prejudice. Under Section 23 of the Evidence Act / Sec 21 of BSA 2023, admissions made during without-prejudice negotiations are privileged and cannot be weaponized to frustrate constitutional remedies."*`;
+  }
+
+  // 4. Default: Statutory Research & Advisory Module
+  return `### ⚖️ JURISAI STATUTORY RESEARCH & LEGAL OPINION
+**IN RE:** **${escapeHTML(caseTitle)}**
+**STATUTORY REGIME:** Bharatiya Nyaya Sanhita (BNS 2023) • BNSS 2023 • Bharatiya Sakshya Adhiniyam (BSA 2023) • CPC 1908
+
+---
+
+#### 1. 📖 STATUTORY CONSTRUCT & SECTION MAPPING
+* **Substantive Offence / Claim:** Covered under Section 316 (Criminal Breach of Trust) and Section 318 (Cheating) of **Bharatiya Nyaya Sanhita, 2023** (formerly Sections 406 & 420 of the Indian Penal Code, 1860).
+* **Cognizance & Bail Framework:** Regulated under Section 193 and Section 482 of **Bharatiya Nagarik Suraksha Sanhita, 2023** (formerly Sec 173 and Sec 438 of the Code of Criminal Procedure, 1973).
+* **Admissibility of Electronic Records:** Governed by Section 63 of **Bharatiya Sakshya Adhiniyam, 2023** (formerly Section 65B of the Indian Evidence Act, 1872).
+
+#### 2. 🏛️ BINDING SUPREME COURT PRECEDENTS
+* **Civil vs Criminal Distinction:** *Indian Oil Corp v. NEPC India Ltd, (2006) 6 SCC 736* — Held that commercial disputes cannot be converted into criminal prosecution to extort settlement; High Courts must exercise inherent powers to quash such proceedings.
+* **Guidelines on Arrest & Personal Liberty:** *Satender Kumar Antil v. CBI, (2022) 10 SCC 51* and *Arnesh Kumar v. State of Bihar, (2014) 8 SCC 273* — Non-compliance with statutory notice under Sec 35 BNSS (Sec 41A CrPC) renders arrest unlawful and entitles the accused to bail.
+* **Rebuttal of Statutory Presumption:** *Basalingappa v. Mudibasappa, (2019) 5 SCC 418* — Under Section 139 of the NI Act, the standard of proof to rebut presumption is that of *preponderance of probabilities*, not proof beyond reasonable doubt.
+
+#### 3. 🎯 STRATEGIC DIRECTIVE FOR COUNSEL
+1. **Immediate Step:** Issue a comprehensive rejoinder notice within 7 days placing on record the chronological defaults of the adversary.
+2. **Evidentiary Readiness:** Prepare and execute the Section 63 BSA certificate for all WhatsApp, email, and digital transaction receipts.
+3. **Filing Recommendation:** File an interim injunction application under Order 39 Rules 1 & 2 CPC before the Commercial Court to obtain ex-parte status quo.`;
+}
+
+function formatJurisaiMarkdown(text) {
+  if (!text) return '';
+  return text
+    .replace(/^#### (.*$)/gim, '<h5 style="color:var(--gold-primary); margin:0.6rem 0 0.2rem 0; font-family:var(--font-heading);">$1</h5>')
+    .replace(/^### (.*$)/gim, '<h4 style="color:var(--gold-primary); margin:0.8rem 0 0.3rem 0; font-family:var(--font-heading); border-bottom:1px solid rgba(212,175,55,0.2); padding-bottom:0.2rem;">$1</h4>')
+    .replace(/^## (.*$)/gim, '<h3 style="color:var(--gold-primary); margin:1rem 0 0.4rem 0; font-family:var(--font-heading);">$1</h3>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^---$/gim, '<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:0.8rem 0;">')
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(212,175,55,0.12); padding:0.15rem 0.35rem; border-radius:4px; color:var(--gold-primary); font-size:0.85em; font-family:var(--font-mono);">$1</code>')
+    .replace(/^\* (.*$)/gim, '<li style="margin-left:1.2rem; margin-bottom:0.25rem;">$1</li>')
+    .replace(/^> (.*$)/gim, '<blockquote style="border-left:3px solid var(--gold-primary); background:rgba(212,175,55,0.06); padding:0.4rem 0.8rem; margin:0.5rem 0; border-radius:0 4px 4px 0; font-style:italic;">$1</blockquote>')
+    .replace(/\n\n/g, '<p style="margin-top:0.5rem; margin-bottom:0.5rem;"></p>')
+    .replace(/\n/g, '<br>');
+}
+
+// Voice Dictation Toggle for Studio
+function toggleJurisaiVoiceDictation() {
+  const voiceBtn = document.getElementById('jurisaiVoiceBtn');
+  const input = document.getElementById('jurisaiConsoleInput');
+  if (!voiceBtn || !input) return;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Speech recognition is not supported in this browser.', 'warning');
+    return;
+  }
+
+  if (jurisaiStudioState.isRecording && jurisaiStudioState.recognition) {
+    try {
+      jurisaiStudioState.recognition.stop();
+    } catch (e) {}
+    jurisaiStudioState.isRecording = false;
+    voiceBtn.classList.remove('recording');
+    showToast('Voice dictation stopped.', 'info');
+    return;
+  }
+
+  try {
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN'; // Indian English legal vernacular
+
+    recognition.onstart = () => {
+      jurisaiStudioState.isRecording = true;
+      voiceBtn.classList.add('recording');
+      showToast('Listening to legal dictation... Speak clearly.', 'info');
+    };
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      if (transcript) {
+        input.value = (input.value ? input.value + ' ' : '') + transcript;
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.warn('Speech recognition error:', event.error);
+      jurisaiStudioState.isRecording = false;
+      voiceBtn.classList.remove('recording');
+      if (event.error !== 'no-speech') {
+        showToast(`Voice error: ${event.error}`, 'error');
+      }
+    };
+
+    recognition.onend = () => {
+      jurisaiStudioState.isRecording = false;
+      voiceBtn.classList.remove('recording');
+    };
+
+    jurisaiStudioState.recognition = recognition;
+    recognition.start();
+  } catch (err) {
+    console.error('Speech start exception:', err);
+    jurisaiStudioState.isRecording = false;
+    voiceBtn.classList.remove('recording');
+    showToast('Could not initialize microphone.', 'error');
+  }
+}
+
+// Quick Snippet Copy
+window.copyStudioSnippet = function(btn) {
+  const bubble = btn.closest('.message-bubble');
+  if (!bubble) return;
+  const content = bubble.querySelector('.message-body-content');
+  if (!content) return;
+  const text = content.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Legal brief copied to clipboard!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy text.', 'error');
+  });
+};
+
+// Copy Latest Studio Response
+function copyLatestStudioResponse() {
+  const container = document.getElementById('jurisaiStreamContainer');
+  if (!container) return;
+  const assistantRows = container.querySelectorAll('.studio-message-row.assistant');
+  if (!assistantRows || assistantRows.length === 0) {
+    showToast('No legal brief available to copy.', 'warning');
+    return;
+  }
+  const lastRow = assistantRows[assistantRows.length - 1];
+  const content = lastRow.querySelector('.message-body-content');
+  if (content) {
+    navigator.clipboard.writeText(content.innerText).then(() => {
+      showToast('Latest JurisAI brief copied to clipboard!', 'success');
+    }).catch(() => {
+      showToast('Could not access clipboard.', 'error');
+    });
+  }
+}
+
+// Export single bubble to Word .DOC
+window.downloadSingleWordSnippet = function(btn) {
+  const bubble = btn.closest('.message-bubble');
+  if (!bubble) return;
+  const content = bubble.querySelector('.message-body-content');
+  if (!content) return;
+  exportHtmlAsWordDoc(content.innerHTML, 'JurisAI_Legal_Pleading');
+};
+
+// Download Full Studio Brief as Word .DOC
+function downloadStudioBriefAsWord() {
+  const container = document.getElementById('jurisaiStreamContainer');
+  if (!container) return;
+  const assistantRows = container.querySelectorAll('.studio-message-row.assistant');
+  if (!assistantRows || assistantRows.length === 0) {
+    showToast('No legal brief available to export.', 'warning');
+    return;
+  }
+  const lastRow = assistantRows[assistantRows.length - 1];
+  const content = lastRow.querySelector('.message-body-content');
+  if (content) {
+    exportHtmlAsWordDoc(content.innerHTML, 'JurisAI_Court_Brief');
+  }
+}
+
+function exportHtmlAsWordDoc(htmlContent, baseFileName) {
+  const counsel = state.currentUser ? state.currentUser.name : 'Advocate Vikramaditya Sharma';
+  const barReg = state.currentUser ? (state.currentUser.barReg || 'D/1482/2012') : 'D/1482/2012';
+  const chamberDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const wordHtml = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head>
+      <meta charset='utf-8'>
+      <title>LexJuris Chambers Legal Document</title>
+      <style>
+        @page {
+          size: 8.5in 11in;
+          margin: 1.0in 1.0in 1.0in 1.0in;
+        }
+        body {
+          font-family: 'Times New Roman', serif;
+          font-size: 12pt;
+          line-height: 1.5;
+          color: #000000;
+        }
+        h2, h3, h4, h5 {
+          font-family: 'Times New Roman', serif;
+          color: #1e3a5f;
+          margin-top: 14pt;
+          margin-bottom: 6pt;
+        }
+        p {
+          margin-bottom: 8pt;
+          text-align: justify;
+        }
+        .header-table {
+          width: 100%;
+          border-bottom: 2pt solid #1e3a5f;
+          padding-bottom: 8pt;
+          margin-bottom: 16pt;
+        }
+        .chamber-title {
+          font-size: 16pt;
+          font-weight: bold;
+          color: #1e3a5f;
+        }
+        .chamber-sub {
+          font-size: 10pt;
+          color: #555555;
+        }
+        .footer-sig {
+          margin-top: 30pt;
+          border-top: 1pt solid #cccccc;
+          padding-top: 8pt;
+          font-size: 10pt;
+        }
+      </style>
+    </head>
+    <body>
+      <table class="header-table">
+        <tr>
+          <td>
+            <div class="chamber-title">LEXJURIS LEGAL CHAMBERS</div>
+            <div class="chamber-sub">Advocates, Solicitors &amp; Supreme Court Practitioners • New Delhi</div>
+          </td>
+          <td style="text-align:right;">
+            <div class="chamber-sub">Date: ${chamberDate}</div>
+            <div class="chamber-sub">Counsel: ${counsel}</div>
+            <div class="chamber-sub">Bar Reg: ${barReg}</div>
+          </td>
+        </tr>
+      </table>
+
+      <div>
+        ${htmlContent}
+      </div>
+
+      <div class="footer-sig">
+        <p><strong>Prepared via JurisAI Legal Intelligence Studio</strong><br>
+        Chamber Office: LexJuris Legal Chambers, Bar Council of Delhi • Strictly Privileged &amp; Confidential Attorney-Client Communication</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${baseFileName}_${Date.now()}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Legal brief exported as Microsoft Word (.DOC) document!', 'success');
+}

@@ -10069,3 +10069,509 @@ textarea:focus {
   color: #ffffff;
 }
 
+/* ==========================================================================
+   JURISAI LEGAL INTELLIGENCE & RESEARCH STUDIO WORKSPACE STYLES
+   ========================================================================== */
+.jurisai-workspace-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem 2rem;
+  max-width: 1720px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: calc(100vh - 80px);
+}
+
+.jurisai-top-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.75rem;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.jurisai-top-banner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100%;
+  background: radial-gradient(circle at right, rgba(212, 175, 55, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.jurisai-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  z-index: 1;
+}
+
+.jurisai-pulse-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1e3a5f, #0b192c);
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+  animation: pulse-ring 2.8s infinite;
+}
+
+.jurisai-banner-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.jurisai-banner-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.badge-role-jurisai {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--gold);
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.jurisai-banner-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+  margin-bottom: 0;
+}
+
+.jurisai-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  z-index: 1;
+}
+
+/* Main Split Body */
+.jurisai-workspace-body {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1.25rem;
+  align-items: stretch;
+  min-height: calc(100vh - 220px);
+}
+
+@media (max-width: 1100px) {
+  .jurisai-workspace-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sidebar Column */
+.jurisai-sidebar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.jurisai-module-card,
+.jurisai-context-card,
+.jurisai-prompts-library {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.module-card-header,
+.context-card-header,
+.library-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.jurisai-module-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.module-pill-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.module-pill-btn i {
+  font-size: 1.1rem;
+  color: var(--gold);
+  margin-top: 0.15rem;
+  transition: transform 0.2s ease;
+}
+
+.module-pill-btn .pill-title {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.module-pill-btn .pill-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.module-pill-btn:hover {
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.05);
+  transform: translateX(3px);
+}
+
+.module-pill-btn:hover i {
+  transform: scale(1.15);
+}
+
+.module-pill-btn.active {
+  background: linear-gradient(135deg, rgba(30, 58, 95, 0.12), rgba(212, 175, 55, 0.08));
+  border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.18);
+}
+
+.module-pill-btn.active .pill-title {
+  color: var(--gold);
+}
+
+/* Selected Case Preview */
+.selected-case-preview {
+  background: rgba(30, 58, 95, 0.06);
+  border: 1px dashed var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.8rem;
+  margin-top: 0.4rem;
+}
+
+.preview-case-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.preview-case-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+/* Prompt Chips */
+.prompts-chips-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.studio-chip-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.77rem;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+  line-height: 1.35;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.studio-chip-btn i {
+  font-size: 0.75rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.studio-chip-btn:hover {
+  background: rgba(212, 175, 55, 0.08);
+  border-color: var(--gold);
+  color: var(--text-primary);
+}
+
+/* Stream Panel (Right Column) */
+.jurisai-stream-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: calc(100vh - 220px);
+}
+
+.stream-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-card);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.stream-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stream-status-pill i {
+  color: #10b981;
+}
+
+.stream-model-tag {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+}
+
+/* Messages Scroll Feed */
+.jurisai-messages-scroll {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  scroll-behavior: smooth;
+  background: radial-gradient(circle at top right, rgba(30, 58, 95, 0.02), transparent 70%);
+}
+
+.studio-message-row {
+  display: flex;
+  gap: 1rem;
+  max-width: 90%;
+  animation: fadeIn 0.25s ease;
+}
+
+.studio-message-row.user-row {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.studio-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.studio-avatar.bot {
+  background: linear-gradient(135deg, #1e3a5f, #0b192c);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.studio-avatar.user {
+  background: var(--gold);
+  color: #0b192c;
+  font-weight: 700;
+}
+
+.studio-message-bubble {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-card);
+  border-radius: 14px;
+  padding: 1.15rem 1.35rem;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-xs);
+  position: relative;
+  word-break: break-word;
+}
+
+.studio-message-row.user-row .studio-message-bubble {
+  background: linear-gradient(135deg, rgba(30, 58, 95, 0.1), rgba(212, 175, 55, 0.06));
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.bubble-tag-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* Legal Cards within bot output */
+.legal-statute-callout {
+  background: rgba(30, 58, 95, 0.07);
+  border-left: 3px solid var(--gold);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin: 0.85rem 0;
+  font-size: 0.85rem;
+}
+
+.legal-citation-pill {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  margin-right: 0.35rem;
+}
+
+.legal-code-block {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.82rem;
+  overflow-x: auto;
+  margin: 0.85rem 0;
+  white-space: pre-wrap;
+  border: 1px solid #334155;
+}
+
+.bubble-actions-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Console Input Wrap */
+.jurisai-console-wrap {
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-card);
+}
+
+.jurisai-input-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  position: relative;
+}
+
+.jurisai-input-form textarea {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-card);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  padding-left: 2.8rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 58px;
+  max-height: 160px;
+  line-height: 1.45;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.jurisai-input-form textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+}
+
+.btn-console-icon.btn-voice {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.8rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: color 0.18s ease;
+  z-index: 2;
+}
+
+.btn-console-icon.btn-voice:hover {
+  color: var(--gold);
+}
+
+.btn-console-icon.btn-voice.recording {
+  color: #ef4444;
+  animation: pulse-ring 1s infinite;
+}
+
+.console-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.char-count-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+

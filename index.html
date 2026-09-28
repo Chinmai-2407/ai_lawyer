@@ -1189,6 +1189,167 @@
 
       </div>
     </main>
+
+    <!-- ================= JURISAI LEGAL INTELLIGENCE & RESEARCH STUDIO ================= -->
+    <main class="main-workspace jurisai-workspace-grid hidden" id="jurisaiWorkspace">
+      
+      <!-- Top JurisAI Studio Banner -->
+      <div class="jurisai-top-banner">
+        <div class="jurisai-banner-left">
+          <div class="jurisai-pulse-badge">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <div>
+            <div class="jurisai-banner-title-row">
+              <h2 class="jurisai-banner-title">JurisAI Legal Intelligence &amp; Research Studio</h2>
+              <span class="badge-role-jurisai" id="jurisaiEngineIndicator">
+                <i class="fa-solid fa-microchip"></i> <span id="jurisaiActiveEngineText">Smart Chambers Brain (Active)</span>
+              </span>
+            </div>
+            <p class="jurisai-banner-subtitle">Autonomous Legal Reasoning, Statutory Case Search, Pleading Drafter, Docket Strategy Analyzer &amp; Moot Argument Simulator.</p>
+          </div>
+        </div>
+
+        <div class="jurisai-banner-actions">
+          <button type="button" class="btn btn-outline-gold btn-sm" id="btnStudioOpenApiConfig">
+            <i class="fa-solid fa-key"></i> <span>Configure Cloud LLM</span>
+          </button>
+          <button type="button" class="btn btn-outline-subtle btn-sm" id="btnStudioClearStream" title="Clear current session">
+            <i class="fa-solid fa-broom"></i> <span>Clear Studio</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main JurisAI Split Workspace Container -->
+      <div class="jurisai-workspace-body">
+        
+        <!-- LEFT COLUMN: Specialized Legal Workstations & Docket Selector (360px) -->
+        <aside class="jurisai-sidebar-panel">
+          
+          <!-- Mode Selector Tabs -->
+          <div class="jurisai-module-card">
+            <div class="module-card-header">
+              <i class="fa-solid fa-cubes-stacked gold-text"></i>
+              <span>Select AI Legal Capability</span>
+            </div>
+            <div class="jurisai-module-pills" id="jurisaiModuleTabs">
+              <button type="button" class="module-pill-btn active" data-module="advisory">
+                <i class="fa-solid fa-scale-balanced"></i>
+                <div class="pill-info">
+                  <span class="pill-title">Legal Q&amp;A &amp; Research</span>
+                  <span class="pill-sub">Statutes, Landmark Precedents &amp; Sections</span>
+                </div>
+              </button>
+
+              <button type="button" class="module-pill-btn" data-module="strategy">
+                <i class="fa-solid fa-chess-knight"></i>
+                <div class="pill-info">
+                  <span class="pill-title">Docket Strategy &amp; SWOT</span>
+                  <span class="pill-sub">Vulnerabilities, Odds &amp; Opponent Counters</span>
+                </div>
+              </button>
+
+              <button type="button" class="module-pill-btn" data-module="drafter">
+                <i class="fa-solid fa-file-signature"></i>
+                <div class="pill-info">
+                  <span class="pill-title">Court Pleading Drafter</span>
+                  <span class="pill-sub">Bail, Injunction, Plaint &amp; Writs</span>
+                </div>
+              </button>
+
+              <button type="button" class="module-pill-btn" data-module="moot">
+                <i class="fa-solid fa-gavel"></i>
+                <div class="pill-info">
+                  <span class="pill-title">Moot Argument Simulator</span>
+                  <span class="pill-sub">Spar with Opposing Senior Counsel / Bench</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Case Context Attacher -->
+          <div class="jurisai-context-card">
+            <div class="context-card-header">
+              <i class="fa-solid fa-folder-open gold-text"></i>
+              <span>Link Case Brief Context</span>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.6rem;">
+              <select id="jurisaiCaseSelector" class="form-select-sm">
+                <option value="">-- General Inquiry (No Specific Case Attached) --</option>
+              </select>
+            </div>
+            <div class="selected-case-preview" id="jurisaiCasePreviewBox" style="display:none;">
+              <div class="preview-case-title" id="previewCaseTitle">Case: -</div>
+              <div class="preview-case-meta" id="previewCaseMeta">Court • Client vs Opponent</div>
+            </div>
+          </div>
+
+          <!-- Quick Statutory Prompts Library -->
+          <div class="jurisai-prompts-library">
+            <div class="library-header">
+              <i class="fa-solid fa-bolt-lightning gold-text"></i>
+              <span>Quick Actions &amp; Prompts</span>
+            </div>
+            <div class="prompts-chips-stack" id="jurisaiQuickChips">
+              <!-- Rendered dynamically based on selected module -->
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- RIGHT COLUMN: Interactive Legal Workstation & Stream (Flex 1) -->
+        <section class="jurisai-stream-panel">
+          
+          <!-- Stream Control Toolbar -->
+          <div class="stream-toolbar">
+            <div class="toolbar-left">
+              <span class="stream-status-pill">
+                <i class="fa-solid fa-circle-check"></i> <span id="jurisaiSessionTitle">Legal Research &amp; Advisory Mode</span>
+              </span>
+              <span class="stream-model-tag" id="jurisaiModelTag">Model: Gemini / Offline Indian Law</span>
+            </div>
+
+            <div class="toolbar-actions">
+              <button type="button" id="btnStudioCopyResponse" class="btn btn-outline-subtle btn-xs" title="Copy last AI response">
+                <i class="fa-regular fa-copy"></i> <span>Copy Output</span>
+              </button>
+              <button type="button" id="btnStudioDownloadWord" class="btn btn-outline-gold btn-xs" title="Download as editable Word brief">
+                <i class="fa-solid fa-file-word"></i> <span>Export .DOC</span>
+              </button>
+              <button type="button" id="btnStudioPrint" class="btn btn-outline-subtle btn-xs" title="Print Legal Intelligence Brief">
+                <i class="fa-solid fa-print"></i> <span>Print Brief</span>
+              </button>
+              <a href="notice-maker.html" class="btn btn-outline-gold btn-xs" title="Open Notice Studio">
+                <i class="fa-solid fa-feather-pointed"></i> <span>Notice Maker</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Interactive Chat / Generation Output Feed -->
+          <div class="jurisai-messages-scroll" id="jurisaiStreamContainer">
+            <!-- Populated with rich legal messages -->
+          </div>
+
+          <!-- Studio Input Console -->
+          <div class="jurisai-console-wrap">
+            <form id="jurisaiConsoleForm" class="jurisai-input-form" onsubmit="event.preventDefault();">
+              <button type="button" id="jurisaiVoiceBtn" class="btn-console-icon btn-voice" title="Dictate by voice">
+                <i class="fa-solid fa-microphone"></i>
+              </button>
+              <textarea id="jurisaiConsoleInput" rows="2" placeholder="Ask any legal proposition under Indian law, request drafting, or type case analysis instructions..." required></textarea>
+              <div class="console-actions">
+                <span class="char-count-hint" id="jurisaiInputHint">Press Enter to send, Shift+Enter for new line</span>
+                <button type="submit" id="jurisaiSubmitBtn" class="btn btn-gold btn-sm">
+                  <span>Send to JurisAI</span> <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </section>
+
+      </div>
+    </main>
   </div>
 
   <!-- ================= ADD / EDIT USER MODAL ================= -->
